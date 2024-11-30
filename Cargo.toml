@@ -9,4 +9,7 @@ name = "mergechannels"
 crate-type = ["cdylib"]
 
 [dependencies]
+ndarray = { version = "0.16.1", features = ["rayon", "matrixmultiply-threading"] }
+ndarray-stats = "0.6.0"
+numpy = "0.22.1"
 pyo3 = "0.22.0"
