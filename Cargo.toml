@@ -9,4 +9,5 @@ name = "mergechannels"
 crate-type = ["cdylib"]
 
 [dependencies]
+numpy = "0.23.0"
 pyo3 = "0.23.3"
