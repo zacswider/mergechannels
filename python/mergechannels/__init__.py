@@ -4,7 +4,6 @@ from .mergechannels import (
     axpy,
     create_rgb_from_arr,
     apply_color_map,
-    apply_color_map_with_take,
 )  # type: ignore
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "axpy",
     "create_rgb_from_arr",
     "apply_color_map",
-    "apply_color_map_with_take",
 ]
