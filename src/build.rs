@@ -51,3 +51,16 @@ fn open_lut_file(lut_file: &PathBuf) -> Result<Array2<u8>, Box<dyn Error>> {
 
     Ok(lut)
 }
+
+// fn main() -> io::Result<()> {
+//     let lut_dir = "/Users/zacswider/Desktop/luts";
+//     let lut_files = list_lut_files(&lut_dir).expect("Failed to read files");
+//     for lut_file in lut_files {
+//         match open_lut_file(&lut_file) {
+//             Ok(_) => println!("succesfully processed {}", lut_file.display()),
+//             Err(_) => eprintln!("failed to process {}", lut_file.display()),
+//         }
+//     }
+
+//     Ok(())
+// }
