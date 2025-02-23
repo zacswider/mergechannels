@@ -1,29 +1,53 @@
-use ndarray::{prelude::*, stack};
+use std::error::Error;
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, BufReader};
+use std::path::PathBuf;
 
-fn main() -> io::Result<()> {
-    let path = "/Applications/Fiji.app/luts/sepia.lut";
+use ndarray::Array2;
 
-    if let Ok(file) = File::open(&path) {
-        let reader = io::BufReader::new(file);
-
-        let mut lut: Array2<u8> = Array::zeros((3, 256));
-
-        for (index, line) in reader.lines().enumerate() {
-            let line = line?;
-            let words: Vec<&str> = line.split(' ').collect();
-            let nums: Vec<u8> = words.iter().map(|x| x.parse::<u8>().unwrap()).collect();
-
-            for (ch, lut_val) in nums.iter().enumerate() {
-                lut[[ch, index]] = *lut_val;
+fn list_lut_files(dir: &str) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+    let paths = std::fs::read_dir(dir)?
+        .filter_map(|res| res.ok())
+        .map(|dir_entry| dir_entry.path())
+        .filter_map(|path| {
+            if path.extension().map_or(false, |ext| ext == "lut") {
+                Some(path)
+            } else {
+                None
             }
-        }
+        })
+        .collect::<Vec<_>>();
+    Ok(paths)
+}
 
-        println!("shape is {:?}", lut.shape())
-    } else {
-        println!("Failed to open the file");
+fn open_lut_file(lut_file: &PathBuf) -> Result<Array2<u8>, Box<dyn Error>> {
+    let mut lut: Array2<u8> = Array2::zeros((3, 256));
+    let file = File::open(lut_file)
+        .map_err(|e| format!("Failed to open the file {}: {}", lut_file.display(), e))?;
+
+    let reader = BufReader::new(file);
+    for (idx, line) in reader.lines().enumerate() {
+        let line = line.map_err(|e| {
+            format!(
+                "Failed to read line {} of {}: {}",
+                idx,
+                lut_file.display(),
+                e
+            )
+        })?;
+
+        let intensity_mapping: Vec<u8> = line
+            .split(' ')
+            .map(|c| {
+                c.parse::<u8>()
+                    .map_err(|e| format!("Failed to parse '{}' to u8: {}", c, e))
+            })
+            .collect::<Result<Vec<u8>, String>>()?;
+
+        for (ch, val) in intensity_mapping.iter().enumerate() {
+            lut[[ch, idx]] = *val;
+        }
     }
 
-    Ok(())
+    Ok(lut)
 }
