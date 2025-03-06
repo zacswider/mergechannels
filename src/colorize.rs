@@ -4,6 +4,7 @@ use numpy::ndarray::{Array, Array3, ArrayView2};
 use numpy::{IntoPyArray, PyArray2, PyArray3, PyArrayMethods};
 use pyo3::prelude::*;
 use pyo3::{Bound, Python};
+
 // Create a (y, x, 3) array with ones
 fn create_rgb_from_arr(x: ArrayView2<u8>) -> Array3<u8> {
     Array::ones((x.shape()[0], x.shape()[1], 3))
