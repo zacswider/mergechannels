@@ -28,15 +28,22 @@ def main():
     cmaps_file = curr_file.parent.parent / "src" / "colorize" / "cmaps.rs"
     assert cmaps_file.exists()
 
-    cmaps_file_lines = ''
+    cmaps_file_lines = ""
+    cmaps_file_lines += "use lazy_static::lazy_static;\n"
+    cmaps_file_lines += "use std::collections::HashMap;\n\n"
+    cmaps_file_lines += "type Colormap = [[u8; 3]; 256];\n\n"
+    cmaps_file_lines += "lazy_static! {\n"
+    cmaps_file_lines += "\tpub static ref CMAPS: HashMap<&'static str, Colormap> = {\n"
+    cmaps_file_lines += "\t\tlet mut m = HashMap::new();\n"
     
     for lut_name, lut in lut_data.items():
-        if lut_name[0].isdigit():
-            lut_name = '_' + lut_name
-        cmaps_file_lines += f'pub const {lut_name.upper().replace(" ", "_").replace("-", "_")}: [[u8; 3]; 256] = [\n'
+        cmaps_file_lines += f'\t\tm.insert("{lut_name}", [\n'
         for i in range(256):
-            cmaps_file_lines += f'\t[{lut[i, 0]}, {lut[i, 1]}, {lut[i, 2]}],\n'
-        cmaps_file_lines += '];\n\n'
+            cmaps_file_lines += f'\t\t\t[{lut[i, 0]}, {lut[i, 1]}, {lut[i, 2]}],\n'
+        cmaps_file_lines += '\t\t]);\n\n'
+    
+    cmaps_file_lines += "\t};"
+    cmaps_file_lines += "}"
 
     with open(cmaps_file, "w") as f:
         f.write(cmaps_file_lines)
