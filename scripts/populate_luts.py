@@ -31,7 +31,9 @@ def main():
     cmaps_file_lines = ''
     
     for lut_name, lut in lut_data.items():
-        cmaps_file_lines += f'pub const {lut_name.upper()}: [[u8; 3]; 256] = [\n'
+        if lut_name[0].isdigit():
+            lut_name = '_' + lut_name
+        cmaps_file_lines += f'pub const {lut_name.upper().replace(" ", "_").replace("-", "_")}: [[u8; 3]; 256] = [\n'
         for i in range(256):
             cmaps_file_lines += f'\t[{lut[i, 0]}, {lut[i, 1]}, {lut[i, 2]}],\n'
         cmaps_file_lines += '];\n\n'
