@@ -1,5 +1,5 @@
 mod cmaps;
-use cmaps::BETTER_BLUE;
+use cmaps::BETTERBLUE;
 use numpy::ndarray::{Array, Array3, ArrayView2};
 use numpy::{IntoPyArray, PyArray2, PyArray3, PyArrayMethods};
 use pyo3::prelude::*;
@@ -27,7 +27,7 @@ fn apply_color_map(x: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
 
 fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
     match cmap_name {
-        "better_blue" => &BETTER_BLUE,
+        "better_blue" => &BETTERBLUE,
         _ => panic!("Invalid colormap name"),
     }
 }
