@@ -4,7 +4,7 @@
 #     "numpy",
 # ]
 # ///
-import os
+
 from pathlib import Path
 import numpy as np
 
@@ -41,7 +41,7 @@ def main():
         for i in range(256):
             cmaps_file_lines += f'\t\t\t[{lut[i, 0]}, {lut[i, 1]}, {lut[i, 2]}],\n'
         cmaps_file_lines += '\t\t]);\n\n'
-    
+    cmaps_file_lines += "\t\tm"
     cmaps_file_lines += "\t};"
     cmaps_file_lines += "}"
 

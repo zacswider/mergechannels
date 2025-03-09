@@ -12,14 +12,13 @@ lutsDir = getDirectory("luts");
 lutList = getFileList(lutsDir);
 for (i = 0; i < lutList.length; i++) {
     if (endsWith(lutList[i], ".lut")) {
-    	print(lutList[i]);
         lutName = substring(lutList[i], 0, lastIndexOf(lutList[i], "."));
         newImage("Temp", "8-bit Ramp", 256, 1, 1);
         run("LUT... ", "open=[" + lutsDir + lutList[i] + "]");
         Color.getLut(reds, greens, blues);
         rgbValues = "";
         for (j = 0; j < 256; j++) {
-        	rgbValues = rgbValues + reds[i] + "\t" + greens[i] + "\t" + blues[i] + "\n";
+        	rgbValues = rgbValues + reds[j] + "\t" + greens[j] + "\t" + blues[j] + "\n";
         }
         File.saveString(rgbValues, outputDir + lutName + ".txt");
         close();
