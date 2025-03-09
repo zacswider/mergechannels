@@ -48,7 +48,15 @@ def main():
     with open(cmaps_file, "w") as f:
         f.write(cmaps_file_lines)
 
+    lut_names_type_hint_file = curr_file.parent.parent / 'python' / 'mergechannels' / 'luts.py'
+    lut_names_lines = 'from typing import Literal\n\n'
+    lut_names_lines += 'COLORMAPS = Literal[\n'
+    for lut_name in lut_data:
+        lut_names_lines += f"\t'{lut_name}',\n"
+    lut_names_lines += ']\n'
 
+    with open(lut_names_type_hint_file, 'w') as f:
+        f.write(lut_names_lines)
 
 
 if __name__ == "__main__":
