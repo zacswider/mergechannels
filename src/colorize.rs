@@ -50,6 +50,7 @@ pub fn apply_color_map_py<'py>(
     cmap_name: &str,
 ) -> Bound<'py, PyArray3<u8>> {
     let x = unsafe { x.as_array() };
-    let rgb = apply_color_map(x, &load_cmap(cmap_name));
+    let cmap = load_cmap(cmap_name);
+    let rgb = apply_color_map(x, cmap);
     rgb.into_pyarray(py)
 }
