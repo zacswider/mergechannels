@@ -32,17 +32,6 @@ fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
 }
 
 #[pyfunction]
-#[pyo3(name = "create_rgb_from_arr")]
-pub fn create_rgb_from_arr_py<'py>(
-    py: Python<'py>,
-    x: &Bound<PyArray2<u8>>,
-) -> Bound<'py, PyArray3<u8>> {
-    let x = unsafe { x.as_array() };
-    let z = create_rgb_from_arr(x);
-    z.into_pyarray(py)
-}
-
-#[pyfunction]
 #[pyo3(name = "apply_color_map")]
 pub fn apply_color_map_py<'py>(
     py: Python<'py>,
