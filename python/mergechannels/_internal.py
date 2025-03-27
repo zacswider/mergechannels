@@ -20,6 +20,7 @@ def merge(
 				f'got {n_arrs} arrays of shapes {arr_shapes}'
 			)
 		# call merge rgb arrs here
+		return np.zeros((3,3))
 	if not n_arrs == n_colors:
 		raise ValueError(
 			'Expected an equal number of arrays to colorize and colormap names to apply. '
