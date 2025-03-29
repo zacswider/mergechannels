@@ -6,16 +6,18 @@ use pyo3::prelude::*;
 use pyo3::{Bound, Python};
 
 // Create a (y, x, 3) array with ones
-fn create_rgb_from_arr(x: ArrayView2<u8>) -> Array3<u8> {
+fn rgb_with_arr_shape(x: ArrayView2<u8>) -> Array3<u8> {
     Array::ones((x.shape()[0], x.shape()[1], 3))
 }
 
-fn apply_color_map(x: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
-    let mut rgb = create_rgb_from_arr(x);
-    for i in 0..x.shape()[0] {
-        for j in 0..x.shape()[1] {
-            let value = x[[i, j]];
-            let idx = value as usize;
+fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
+    let mut rgb = rgb_with_arr_shape(arr);
+    let shape_y = arr.shape()[0];
+    let shape_x = arr.shape()[1];
+
+    for i in 0..shape_y {
+        for j in 0..shape_x {
+            let idx = arr[[i, j]] as usize;
             let color = cmap[idx];
             rgb[[i, j, 0]] = color[0];
             rgb[[i, j, 1]] = color[1];
