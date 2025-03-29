@@ -2,10 +2,16 @@ from typing import Sequence, Literal
 
 import numpy as np
 
+import mergechannels as mc
+from mergechannels.luts import COLORMAPS
+
+
+BLENDING_OPTIONS = Literal['max', 'sum', 'mean', 'min']
+
 def merge(
 	arrs: Sequence[np.ndarray],
-	colors: Sequence[str] = (),
-	blending: Literal['sum', 'max', 'min'] = 'max',
+	colors: Sequence[COLORMAPS] = (),
+	blending: BLENDING_OPTIONS = 'max',
 ) -> np.ndarray:
 	'''
 	apply cmaps to arrays and blend the colors
@@ -32,4 +38,16 @@ def merge(
 			f'Expected every array to have the same shape, got {arr_shapes}'
 		)
 	# call apply and merge rgb arrs here
-	return np.zeros((3,3))
+	match n_arrs:
+		case 1:
+			return mc.apply_color_map(arr=arrs[0], cmap_name=colors[0])
+		case 2:
+			return mc.apply_colors_and_merge_2c(
+				arr1=arrs[0],
+				arr2=arrs[1],
+				cmap1_name=colors[0],
+				cmap2_name=colors[1],
+				blending=blending,
+			)
+		case _:
+			raise ValueError('have only gotten around to 1 and 2-channel blending')

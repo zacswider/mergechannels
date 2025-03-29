@@ -1,7 +1,9 @@
 mod cmaps;
+use std::vec;
+
 use cmaps::CMAPS;
 use numpy::ndarray::{Array, Array3, ArrayView2};
-use numpy::{IntoPyArray, PyArray2, PyArray3, PyArrayMethods};
+use numpy::{IntoPyArray, PyArray3, PyReadonlyArray2};
 use pyo3::prelude::*;
 use pyo3::{Bound, Python};
 
@@ -27,8 +29,12 @@ fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
     rgb
 }
 
-fn apply_colors_and_merge(arrs: Vec<ArrayView2<u8>>, cmaps: Vec<&[[u8; 3]; 256]>, blending: &str) -> Array3<u8> {
-    let first_arr = arrs[0];  // we guarantee that all arrays have the same shape before calling
+fn apply_colors_and_merge(
+    arrs: Vec<ArrayView2<u8>>,
+    cmaps: Vec<&[[u8; 3]; 256]>,
+    blending: &str,
+) -> Array3<u8> {
+    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];
     let shape_x = first_arr.shape()[1];
     let mut rgb = rgb_with_arr_shape(first_arr);
@@ -39,7 +45,7 @@ fn apply_colors_and_merge(arrs: Vec<ArrayView2<u8>>, cmaps: Vec<&[[u8; 3]; 256]>
                 let idx = arr[[i, j]] as usize;
                 let color = cmap[idx];
                 px_vals.push(color);
-            let color: [u8; 3] = match blending {
+                let color: [u8; 3] = match blending {
                     "max" => {
                         max_blending(&px_vals)
                     }
@@ -54,9 +60,9 @@ fn apply_colors_and_merge(arrs: Vec<ArrayView2<u8>>, cmaps: Vec<&[[u8; 3]; 256]>
                     }
                     _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
                 };
-            rgb[[i, j, 0]] = color[0];
-            rgb[[i, j, 1]] = color[1];
-            rgb[[i, j, 2]] = color[2];
+                rgb[[i, j, 0]] = color[0];
+                rgb[[i, j, 1]] = color[1];
+                rgb[[i, j, 2]] = color[2];
             }
         }
     }
@@ -137,11 +143,63 @@ fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
 #[pyo3(name = "apply_color_map")]
 pub fn apply_color_map_py<'py>(
     py: Python<'py>,
-    x: &Bound<PyArray2<u8>>,
+    arr: PyReadonlyArray2<'py, u8>,
     cmap_name: &str,
 ) -> Bound<'py, PyArray3<u8>> {
-    let x = unsafe { x.as_array() };
+    let arr = arr.as_array();
     let cmap = load_cmap(cmap_name);
-    let rgb = apply_color_map(x, cmap);
+    let rgb = apply_color_map(arr, cmap);
     rgb.into_pyarray(py)
 }
+
+#[pyfunction]
+#[pyo3(name = "apply_colors_and_merge_2c")]
+pub fn apply_colors_and_merge_2c_py<'py>(
+    py: Python<'py>,
+    arr1: PyReadonlyArray2<'py, u8>,
+    arr2: PyReadonlyArray2<'py, u8>,
+    cmap1_name: &str,
+    cmap2_name: &str,
+    blending: &str,
+) -> Bound<'py, PyArray3<u8>> {
+    let arrs = vec![
+        arr1.as_array(),
+        arr2.as_array(),
+    ];
+    let cmaps = vec![
+        load_cmap(cmap1_name),
+        load_cmap(cmap2_name),
+    ];
+    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
+    rgb.into_pyarray(py)
+}
+
+
+// #[pyfunction]
+// #[pyo3(name = "apply_colors_and_merge")]
+// pub fn apply_colors_and_merge_py<'py>(
+//     py: Python<'py>,
+//     vecs: PyList<PyArray2<>>,
+//     cmap_names: Vec<String>,
+//     blending: &str,
+// ) -> PyResult<Bound<'py, PyArray3<u8>>> {
+    // let n_channels = cmap_names.len() as usize;
+    //
+    // let mut arrays = Vec::with_capacity(n_channels);
+    // let mut cmaps = Vec::with_capacity(n_channels);
+    //
+    // for i in 0..n_channels {
+    //     let item = vecs.get_item(i)?;
+    //     let array = item.downcast::<PyArray2<u8>>()?;
+    //     arrays.push(unsafe { array.as_array() });
+    // }
+    //
+    // for i in 0..n_channels {
+    //     let cmap_name = &cmap_names[i];
+    //     let cmap: &[[u8; 3]; 256] = load_cmap(&cmap_name);
+    //     cmaps.push(cmap);
+    // }
+    //
+    // let rgb = apply_colors_and_merge(arrays, cmaps, blending);
+    // Ok(rgb.into_pyarray(py))
+// }
