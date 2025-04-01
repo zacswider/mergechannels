@@ -2,8 +2,8 @@ from typing import Sequence, Literal
 
 import numpy as np
 
-from luts import COLORMAPS
-from _blending import BLENDING_OPTIONS
+from .luts import COLORMAPS
+from ._blending import BLENDING_OPTIONS
 
 def merge(
 	arrs: Sequence[np.ndarray],
