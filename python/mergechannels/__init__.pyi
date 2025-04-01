@@ -2,7 +2,7 @@ from typing import Sequence, Literal
 
 import numpy as np
 
-from .luts import COLORMAPS
+from ._luts import COLORMAPS
 from ._blending import BLENDING_OPTIONS
 
 def merge(

@@ -8,7 +8,7 @@ from mergechannels import (
 	apply_colors_and_merge_3c,
 	apply_colors_and_merge_4c,
 )
-from .luts import COLORMAPS
+from ._luts import COLORMAPS
 from ._blending import BLENDING_OPTIONS
 
 def merge(
