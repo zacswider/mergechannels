@@ -174,32 +174,61 @@ pub fn apply_colors_and_merge_2c_py<'py>(
     rgb.into_pyarray(py)
 }
 
+#[pyfunction]
+#[pyo3(name = "apply_colors_and_merge_3c")]
+#[allow(clippy::too_many_arguments)]
+pub fn apply_colors_and_merge_3c_py<'py>(
+    py: Python<'py>,
+    arr1: PyReadonlyArray2<'py, u8>,
+    arr2: PyReadonlyArray2<'py, u8>,
+    arr3: PyReadonlyArray2<'py, u8>,
+    cmap1_name: &str,
+    cmap2_name: &str,
+    cmap3_name: &str,
+    blending: &str,
+) -> Bound<'py, PyArray3<u8>> {
+    let arrs = vec![
+        arr1.as_array(),
+        arr2.as_array(),
+        arr3.as_array(),
+    ];
+    let cmaps = vec![
+        load_cmap(cmap1_name),
+        load_cmap(cmap2_name),
+        load_cmap(cmap3_name),
+    ];
+    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
+    rgb.into_pyarray(py)
+}
 
-// #[pyfunction]
-// #[pyo3(name = "apply_colors_and_merge")]
-// pub fn apply_colors_and_merge_py<'py>(
-//     py: Python<'py>,
-//     vecs: PyList<PyArray2<>>,
-//     cmap_names: Vec<String>,
-//     blending: &str,
-// ) -> PyResult<Bound<'py, PyArray3<u8>>> {
-    // let n_channels = cmap_names.len() as usize;
-    //
-    // let mut arrays = Vec::with_capacity(n_channels);
-    // let mut cmaps = Vec::with_capacity(n_channels);
-    //
-    // for i in 0..n_channels {
-    //     let item = vecs.get_item(i)?;
-    //     let array = item.downcast::<PyArray2<u8>>()?;
-    //     arrays.push(unsafe { array.as_array() });
-    // }
-    //
-    // for i in 0..n_channels {
-    //     let cmap_name = &cmap_names[i];
-    //     let cmap: &[[u8; 3]; 256] = load_cmap(&cmap_name);
-    //     cmaps.push(cmap);
-    // }
-    //
-    // let rgb = apply_colors_and_merge(arrays, cmaps, blending);
-    // Ok(rgb.into_pyarray(py))
-// }
+#[pyfunction]
+#[pyo3(name = "apply_colors_and_merge_4c")]
+#[allow(clippy::too_many_arguments)]
+pub fn apply_colors_and_merge_4c_py<'py>(
+    py: Python<'py>,
+    arr1: PyReadonlyArray2<'py, u8>,
+    arr2: PyReadonlyArray2<'py, u8>,
+    arr3: PyReadonlyArray2<'py, u8>,
+    arr4: PyReadonlyArray2<'py, u8>,
+    cmap1_name: &str,
+    cmap2_name: &str,
+    cmap3_name: &str,
+    cmap4_name: &str,
+    blending: &str,
+) -> Bound<'py, PyArray3<u8>> {
+    let arrs = vec![
+        arr1.as_array(),
+        arr2.as_array(),
+        arr3.as_array(),
+        arr4.as_array(),
+    ];
+    let cmaps = vec![
+        load_cmap(cmap1_name),
+        load_cmap(cmap2_name),
+        load_cmap(cmap3_name),
+        load_cmap(cmap4_name),
+    ];
+    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
+    rgb.into_pyarray(py)
+}
+

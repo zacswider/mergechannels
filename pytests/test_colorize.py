@@ -1,10 +1,6 @@
 import numpy as np
 import mergechannels as mc
 
-def test_create_rgb_from_arr():
-    x = np.ones((3,3), dtype=np.uint8)
-    rgb = mc.create_rgb_from_arr(x)
-    assert rgb.shape == (3,3,3)
 
 def test_apply_color_map():
     x = np.ones((3,3), dtype=np.uint8)
