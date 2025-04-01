@@ -153,82 +153,15 @@ pub fn apply_color_map_py<'py>(
 }
 
 #[pyfunction]
-#[pyo3(name = "apply_colors_and_merge_2c")]
-pub fn apply_colors_and_merge_2c_py<'py>(
+#[pyo3(name = "apply_colors_and_merge_nc")]
+pub fn apply_colors_and_merge_nc_py<'py>(
     py: Python<'py>,
-    arr1: PyReadonlyArray2<'py, u8>,
-    arr2: PyReadonlyArray2<'py, u8>,
-    cmap1_name: &str,
-    cmap2_name: &str,
+    py_arrs: Vec<PyReadonlyArray2<'py, u8>>,
+    cmap_names: Vec<String>,
     blending: &str,
 ) -> Bound<'py, PyArray3<u8>> {
-    let arrs = vec![
-        arr1.as_array(),
-        arr2.as_array(),
-    ];
-    let cmaps = vec![
-        load_cmap(cmap1_name),
-        load_cmap(cmap2_name),
-    ];
+    let arrs: Vec<ArrayView2<u8>> = py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+    let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names.iter().map(|name| load_cmap(name)).collect();
     let rgb = apply_colors_and_merge(arrs, cmaps, blending);
     rgb.into_pyarray(py)
 }
-
-#[pyfunction]
-#[pyo3(name = "apply_colors_and_merge_3c")]
-#[allow(clippy::too_many_arguments)]
-pub fn apply_colors_and_merge_3c_py<'py>(
-    py: Python<'py>,
-    arr1: PyReadonlyArray2<'py, u8>,
-    arr2: PyReadonlyArray2<'py, u8>,
-    arr3: PyReadonlyArray2<'py, u8>,
-    cmap1_name: &str,
-    cmap2_name: &str,
-    cmap3_name: &str,
-    blending: &str,
-) -> Bound<'py, PyArray3<u8>> {
-    let arrs = vec![
-        arr1.as_array(),
-        arr2.as_array(),
-        arr3.as_array(),
-    ];
-    let cmaps = vec![
-        load_cmap(cmap1_name),
-        load_cmap(cmap2_name),
-        load_cmap(cmap3_name),
-    ];
-    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
-    rgb.into_pyarray(py)
-}
-
-#[pyfunction]
-#[pyo3(name = "apply_colors_and_merge_4c")]
-#[allow(clippy::too_many_arguments)]
-pub fn apply_colors_and_merge_4c_py<'py>(
-    py: Python<'py>,
-    arr1: PyReadonlyArray2<'py, u8>,
-    arr2: PyReadonlyArray2<'py, u8>,
-    arr3: PyReadonlyArray2<'py, u8>,
-    arr4: PyReadonlyArray2<'py, u8>,
-    cmap1_name: &str,
-    cmap2_name: &str,
-    cmap3_name: &str,
-    cmap4_name: &str,
-    blending: &str,
-) -> Bound<'py, PyArray3<u8>> {
-    let arrs = vec![
-        arr1.as_array(),
-        arr2.as_array(),
-        arr3.as_array(),
-        arr4.as_array(),
-    ];
-    let cmaps = vec![
-        load_cmap(cmap1_name),
-        load_cmap(cmap2_name),
-        load_cmap(cmap3_name),
-        load_cmap(cmap4_name),
-    ];
-    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
-    rgb.into_pyarray(py)
-}
-
