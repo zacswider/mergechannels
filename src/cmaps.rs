@@ -3,6 +3,12 @@ use std::collections::HashMap;
 
 type Colormap = [[u8; 3]; 256];
 
+pub fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
+    CMAPS
+        .get(cmap_name)
+        .unwrap_or_else(|| panic!("Invalid colormap name: {}", cmap_name))
+}
+
 lazy_static! {
 	pub static ref CMAPS: HashMap<&'static str, Colormap> = {
 		let mut m = HashMap::new();

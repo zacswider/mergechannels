@@ -1,18 +1,11 @@
-mod cmaps;
-use std::vec;
-
-use cmaps::CMAPS;
 use numpy::ndarray::{Array, Array3, ArrayView2};
-use numpy::{IntoPyArray, PyArray3, PyReadonlyArray2};
-use pyo3::prelude::*;
-use pyo3::{Bound, Python};
 
 // Create a (y, x, 3) array with ones
 fn rgb_with_arr_shape(x: ArrayView2<u8>) -> Array3<u8> {
     Array::ones((x.shape()[0], x.shape()[1], 3))
 }
 
-fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
+pub fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
     let mut rgb = rgb_with_arr_shape(arr);
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
@@ -29,7 +22,7 @@ fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
     rgb
 }
 
-fn apply_colors_and_merge(
+pub fn apply_colors_and_merge(
     arrs: Vec<ArrayView2<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
     blending: &str,
@@ -131,37 +124,4 @@ fn mean_blending(px_vals: &Vec<[u8; 3]>) -> [u8; 3] {
     let g: u8 = (g / n_channels) as u8;
     let b: u8 = (b / n_channels) as u8;
     [r, g, b]
-}
-
-fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
-    CMAPS
-        .get(cmap_name)
-        .unwrap_or_else(|| panic!("Invalid colormap name: {}", cmap_name))
-}
-
-#[pyfunction]
-#[pyo3(name = "apply_color_map")]
-pub fn apply_color_map_py<'py>(
-    py: Python<'py>,
-    arr: PyReadonlyArray2<'py, u8>,
-    cmap_name: &str,
-) -> Bound<'py, PyArray3<u8>> {
-    let arr = arr.as_array();
-    let cmap = load_cmap(cmap_name);
-    let rgb = apply_color_map(arr, cmap);
-    rgb.into_pyarray(py)
-}
-
-#[pyfunction]
-#[pyo3(name = "apply_colors_and_merge_nc")]
-pub fn apply_colors_and_merge_nc_py<'py>(
-    py: Python<'py>,
-    py_arrs: Vec<PyReadonlyArray2<'py, u8>>,
-    cmap_names: Vec<String>,
-    blending: &str,
-) -> Bound<'py, PyArray3<u8>> {
-    let arrs: Vec<ArrayView2<u8>> = py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-    let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names.iter().map(|name| load_cmap(name)).collect();
-    let rgb = apply_colors_and_merge(arrs, cmaps, blending);
-    rgb.into_pyarray(py)
 }
