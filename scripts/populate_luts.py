@@ -5,13 +5,21 @@
 # ]
 # ///
 
+'''
+This script converts the luts in the `assets/converted` directory into 
+1) a lazy static hashmap that with the rgb values for each lut
+2) a type hint file for the lut names so that the names are autocompleted in IDEs
+
+This script can be invoked with `uv run scripts/populate_luts.py`
+'''
+
 from pathlib import Path
 import numpy as np
 
 
 def main():
     curr_file = Path(__file__).absolute()
-    luts_dir = curr_file.parent.parent / "assets" / "luts"
+    luts_dir = curr_file.parent.parent / "assets" / "converted"
     lut_files = list(luts_dir.glob("*.txt"))
     lut_data: dict[str, np.ndarray] = {}
     for lut_file in lut_files:
@@ -25,7 +33,7 @@ def main():
             assert lut.shape == (256, 3)
             lut_data[lut_file.stem] = lut
     
-    cmaps_file = curr_file.parent.parent / "src" / "colorize" / "cmaps.rs"
+    cmaps_file = curr_file.parent.parent / "src" / "cmaps.rs"
     assert cmaps_file.exists()
 
     cmaps_file_lines = ""
@@ -48,7 +56,7 @@ def main():
     with open(cmaps_file, "w") as f:
         f.write(cmaps_file_lines)
 
-    lut_names_type_hint_file = curr_file.parent.parent / 'python' / 'mergechannels' / 'luts.py'
+    lut_names_type_hint_file = curr_file.parent.parent / 'python' / 'mergechannels' / '_luts.py'
     lut_names_lines = 'from typing import Literal\n\n'
     lut_names_lines += 'COLORMAPS = Literal[\n'
     for lut_name in lut_data:
