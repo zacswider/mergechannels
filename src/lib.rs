@@ -1,3 +1,4 @@
+mod blend;
 mod cmaps;
 mod colorize;
 mod interface;
