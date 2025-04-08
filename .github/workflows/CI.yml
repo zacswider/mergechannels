@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - main
-      # - mvp
+      - mvp
     tags:
       - '*'
   pull_request:
@@ -19,7 +19,55 @@ permissions:
   contents: read
 
 jobs:
+  rust_checks_and_python_tests:
+    name: Rust Checks and Python Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Setup Rust toolchain
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      
+      # Run Rust format check
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+      
+      # Run Clippy
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+      
+      # Run Cargo tests
+      - name: Run Cargo tests
+        run: cargo test
+      
+      # Setup Python for testing
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      
+      # Install UV
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+      
+      # Create virtual environment and install the project
+      - name: Create virtual environment and install
+        run: |
+          uv venv .venv
+          source .venv/bin/activate
+          pip install -e .
+      
+      # Run pytest
+      - name: Run pytest
+        run: |
+          source .venv/bin/activate
+          pip install pytest
+          pytest
+
   linux:
+    needs: rust_checks_and_python_tests
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -55,6 +103,7 @@ jobs:
           path: dist
 
   musllinux:
+    needs: rust_checks_and_python_tests
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -86,6 +135,7 @@ jobs:
           path: dist
 
   windows:
+    needs: rust_checks_and_python_tests
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -113,6 +163,7 @@ jobs:
           path: dist
 
   macos:
+    needs: rust_checks_and_python_tests
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -139,6 +190,7 @@ jobs:
           path: dist
 
   sdist:
+    needs: rust_checks_and_python_tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
