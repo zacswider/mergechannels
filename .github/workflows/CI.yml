@@ -43,10 +43,10 @@ jobs:
       - name: Run Cargo tests
         run: cargo test
       
-      # Setup Python for testing
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.x
+      # # Setup Python for testing
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: 3.x
       
       # Install UV
       - name: Install UV
@@ -55,7 +55,7 @@ jobs:
       # Create virtual environment and install the project
       - name: Create virtual environment and install
         run: |
-          uv venv .venv
+          uv venv .venv --python 3.11
           source .venv/bin/activate
           pip install -e .
       
