@@ -77,7 +77,7 @@ mod tests {
     fn test_sum_blending() {
         let px_vals = vec![[100, 100, 100], [200, 200, 200]];
         let result = sum_blending(&px_vals);
-        assert_eq!(result, [200, 200, 200]); // should fail
+        assert_eq!(result, [255, 255, 255]);
     }
 
     #[test]
