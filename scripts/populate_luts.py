@@ -31,7 +31,7 @@ def main():
                 lut_vals.append(line_vals)
             lut = np.array(lut_vals, dtype='uint8')
             assert lut.shape == (256, 3)
-            lut_data[lut_file.stem] = lut
+            lut_data[lut_file.stem.replace('%', '/')] = lut
     
     cmaps_file = curr_file.parent.parent / "src" / "cmaps.rs"
     assert cmaps_file.exists()
