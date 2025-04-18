@@ -6,11 +6,7 @@ fn rgb_with_arr_shape(x: ArrayView2<u8>) -> Array3<u8> {
     Array::ones((x.shape()[0], x.shape()[1], 3))
 }
 
-pub fn apply_color_map(
-    arr: ArrayView2<u8>,
-    cmap: &[[u8; 3]; 256],
-    saturation_limits: (f64, f64),
-) -> Array3<u8> {
+pub fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
     let mut rgb = rgb_with_arr_shape(arr);
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
@@ -31,7 +27,6 @@ pub fn apply_colors_and_merge(
     arrs: Vec<ArrayView2<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
     blending: &str,
-    saturation_limits: Vec<(f64, f64)>,
 ) -> Array3<u8> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];

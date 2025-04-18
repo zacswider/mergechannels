@@ -11,25 +11,16 @@ from ._blending import BLENDING_OPTIONS
 
 def merge(
 	arrs: Sequence[np.ndarray],
-	colors: Sequence[COLORMAPS] = (),
-	saturation_limits: Sequence[tuple[float, float]] = (),
+	colors: Sequence[COLORMAPS],
 	blending: BLENDING_OPTIONS = 'max',
 ) -> np.ndarray:
 	'''
 	apply cmaps to arrays and blend the colors
 	'''
+	# region validation
 	n_arrs = len(arrs)
 	n_colors = len(colors)
-	if n_arrs > 0 and n_colors == 0:
-		arr_shapes = [arr.shape for arr in arrs]
-		if not all([len(arr_shape) == 3 for arr_shape in arr_shapes]):
-			raise ValueError(
-				'Expected a sequence of pre-colorized arrays, '
-				f'got {n_arrs} arrays of shapes {arr_shapes}'
-			)
-		# call merge rgb arrs here
-		return np.zeros((3,3))
-	if not n_arrs == n_colors:
+	if not n_arrs == n_colors and n_arrs > 0:
 		raise ValueError(
 			'Expected an equal number of arrays to colorize and colormap names to apply. '
 			f'Got {n_arrs} arrays and {n_colors} colors'
@@ -39,23 +30,22 @@ def merge(
 		raise ValueError(
 			f'Expected every array to have the same shape, got {arr_shapes}'
 		)
-	# call apply and merge rgb arrs here
+	if not len(arr_shapes[0]) == 2:
+		raise ValueError(
+			f'Expected every array to be 2D, got {arr_shapes[0]}'
+		)
+	arr_dtypes = [arr.dtype for arr in arrs]
+	if not len(set(arr_dtypes)) == 1:
+		raise ValueError(
+			f'Expected every array to have the same dtype, got {arr_dtypes}'
+		)
+	# endregion
+	
 	match n_arrs:
 		case 1:
-			if len(saturation_limits) == 0:
-				lowhigh = np.asarray([0.2, 99.8])
-			else:
-				lowhigh = np.asarray(saturation_limits)
-			low, high = np.percentile(arrs[0], lowhigh)
-			return apply_color_map(arr=arrs[0], cmap_name=colors[0], saturation_limits=(low, high))
+			return apply_color_map(arr=arrs[0], cmap_name=colors[0])
 		case _:
-			if len(arrs) > len(saturation_limits):
-				lowhigh = np.asarray([0.002, 0.998]) * 100
-				saturation_limits = []
-				for arr in arrs:
-					low, high = np.percentile(arr, lowhigh)
-					saturation_limits.append((low, high))
-			return apply_colors_and_merge_nc(arrs, colors, blending, saturation_limits)
+			return apply_colors_and_merge_nc(arrs, colors, blending)
 
 
 
