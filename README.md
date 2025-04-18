@@ -1,3 +1,5 @@
+[![CI](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml/badge.svg)](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml)
+
 # mergechannels
 
 This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and for historical reasons many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things likes speed and memory usage (e.g., not casting large arrays to floating point dtypes, not creating multiple whole arrays just to add them together), so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust.
