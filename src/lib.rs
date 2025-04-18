@@ -1,14 +1,15 @@
-use pyo3::prelude::*;
+mod blend;
+mod cmaps;
+mod colorize;
+mod interface;
 
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
-}
+use interface::{apply_color_map_py, apply_colors_and_merge_nc_py};
+use pyo3::prelude::*;
 
 /// A Python module implemented in Rust.
 #[pymodule]
 fn mergechannels(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(apply_color_map_py, m)?)?;
+    m.add_function(wrap_pyfunction!(apply_colors_and_merge_nc_py, m)?)?;
     Ok(())
 }
