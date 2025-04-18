@@ -1,4 +1,6 @@
 [![CI](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml/badge.svg)](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![PyPI](https://img.shields.io/pypi/v/mergechannels)
 
 # mergechannels
 
