@@ -60,8 +60,44 @@ jobs:
           pip install pytest
           pytest
 
+  tox_tests:
+    name: Tox Tests (${{ matrix.python-version }}) # Add python version to name for clarity
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+      fail-fast: true # Optional: prevent other matrix jobs from cancelling if one fails
+    steps:
+      - uses: actions/checkout@v4
+
+      # Set up the specific Python version for this matrix job
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install UV using the official action, enabling caching
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          # Enable uv's cache for faster subsequent runs
+          enable-cache: true
+
+      # Install tox and tox-uv using uv tool install
+      # This installs them into an isolated environment managed by uv
+      - name: Install Tox with tox-uv plugin using UV
+        run: uv tool install tox --with tox-uv
+
+      # Run Tox using uvx
+      # uvx ensures that the 'tox' command installed via 'uv tool install' is used
+      - name: Run Tox tests via uvx
+        run: |
+          PY_VERSION=$(echo ${{ matrix.python-version }} | tr -d '.')
+          uvx tox -e py$PY_VERSION
+
+
   build:
-    needs: rust_checks_and_python_tests
+    needs: [rust_checks_and_python_tests, tox_tests]
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform.runner }}
     strategy:
