@@ -41,8 +41,7 @@ def merge(
 		)
 	# endregion
 
-	match n_arrs:
-		case 1:
-			return apply_color_map(arr=arrs[0], cmap_name=colors[0])
-		case _:
-			return apply_colors_and_merge_nc(arrs, colors, blending)
+	if n_arrs == 1:
+		return apply_color_map(arr=arrs[0], cmap_name=colors[0])
+	else:
+		return apply_colors_and_merge_nc(arrs, colors, blending)
