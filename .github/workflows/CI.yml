@@ -43,21 +43,14 @@ jobs:
       - name: Run Cargo tests
         run: cargo test
       
-      # # Setup Python for testing
-      # - uses: actions/setup-python@v5
-      #   with:
-      #     python-version: 3.x
-      
       # Install UV
       - name: Install UV
         uses: astral-sh/setup-uv@v5
-      
-      # Create virtual environment and install the project
-      - name: Create virtual environment and install
-        run: |
-          uv venv .venv --python 3.11
-          source .venv/bin/activate
-          pip install -e .
+        with:
+          enable-cache: true
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
       
       # Run pytest
       - name: Run pytest
