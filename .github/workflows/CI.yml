@@ -10,8 +10,6 @@ on:
     branches:
       - main
       - mvp
-    tags:
-      - '*'
   pull_request:
   workflow_dispatch:
 
@@ -63,8 +61,9 @@ jobs:
           pip install pytest
           pytest
 
-  linux:
+  build:
     needs: rust_checks_and_python_tests
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -101,6 +100,7 @@ jobs:
 
   musllinux:
     needs: rust_checks_and_python_tests
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -133,6 +133,7 @@ jobs:
 
   windows:
     needs: rust_checks_and_python_tests
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -161,6 +162,7 @@ jobs:
 
   macos:
     needs: rust_checks_and_python_tests
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       matrix:
@@ -188,6 +190,7 @@ jobs:
 
   sdist:
     needs: rust_checks_and_python_tests
+    if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -206,7 +209,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}
-    needs: [linux, musllinux, windows, macos, sdist]
+    needs: [build, musllinux, windows, macos, sdist]
     permissions:
       # Use to sign the release artifacts
       id-token: write
