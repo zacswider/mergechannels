@@ -34,7 +34,7 @@ indent-width = 4
 # Assume Python 3.11
 target-version = "py311"
 
-select = [
+lint.select = [
     "E4",
     "E7",
     "E9",
@@ -52,7 +52,7 @@ select = [
     'Q',    # flake8 quotes
 ]
 
-ignore = [
+lint.ignore = [
     "PLE1205", # logging-too-many-args
     "PLR0904", # too-many-public-methods
     "PLR0911", # too-many-return-statements
@@ -66,10 +66,11 @@ ignore = [
     'E741',    # ambiguous-variable-name
     'F722',    # forward-annotation-syntax-error
     'E722',    # allow bare except
+    'D100',    # missing module docstring
 ]
 
-fixable = ["ALL"]
-unfixable = []
+lint.fixable = ["ALL"]
+lint.unfixable = []
 
 [format]
 quote-style = "single"
