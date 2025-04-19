@@ -3,6 +3,9 @@ import mergechannels as mc
 
 
 def test_apply_color_map():
+    '''
+    Test that the color map is applied correctly
+    '''
     x = np.ones((1, 1), dtype=np.uint8)
     rgb = mc.apply_color_map(x, 'betterBlue')
     assert rgb.shape == (1,1,3)
@@ -23,6 +26,9 @@ def test_apply_color_map():
     )
 
 def test_apply_colors_and_merge_low_sum():
+    '''
+    Test that the colors are merged correctly with sum blending and low values
+    '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_sum = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'sum')
@@ -36,6 +42,9 @@ def test_apply_colors_and_merge_low_sum():
     )
 
 def test_apply_colors_and_merge_high_sum():
+    '''
+    Test that the colors are merged correctly with sum blending and high values
+    '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_sum = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'sum')
@@ -49,6 +58,9 @@ def test_apply_colors_and_merge_high_sum():
     )
 
 def test_apply_colors_and_merge_low_max():
+    '''
+    Test that the colors are merged correctly with max blending and low values
+    '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_max = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'max')
@@ -62,6 +74,9 @@ def test_apply_colors_and_merge_low_max():
     )
 
 def test_apply_colors_and_merge_high_max():
+    '''
+    Test that the colors are merged correctly with max blending and high values
+    '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_max = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'max')
@@ -75,6 +90,9 @@ def test_apply_colors_and_merge_high_max():
     )
 
 def test_apply_colors_and_merge_low_min():
+    '''
+    Test that the colors are merged correctly with min blending and low values
+    '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_min = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'min')
@@ -88,6 +106,9 @@ def test_apply_colors_and_merge_low_min():
     )
 
 def test_apply_colors_and_merge_high_min():
+    '''
+    Test that the colors are merged correctly with min blending and high values
+    '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_min = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'min')
@@ -101,6 +122,9 @@ def test_apply_colors_and_merge_high_min():
     )
 
 def test_apply_colors_and_merge_low_mean():
+    '''
+    Test that the colors are merged correctly with mean blending and low values
+    '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_mean = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'mean')
@@ -116,6 +140,9 @@ def test_apply_colors_and_merge_low_mean():
     )
 
 def test_apply_colors_and_merge_high_mean():
+    '''
+    Test that the colors are merged correctly with mean blending and high values
+    '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_mean = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'mean')

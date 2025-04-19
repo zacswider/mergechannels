@@ -18,6 +18,9 @@ import numpy as np
 
 
 def main():
+    '''
+    Build the lazy static hashmap and the type hint file for the lut names
+    '''
     curr_file = Path(__file__).absolute()
     luts_dir = curr_file.parent.parent / 'assets' / 'converted'
     lut_files = list(luts_dir.glob('*.txt'))
