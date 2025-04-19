@@ -24,25 +24,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       # Setup Rust toolchain
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      
+
       # Run Rust format check
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
-      
+
       # Run Clippy
       - name: Run Clippy
         run: cargo clippy -- -D warnings
-      
+
       # Run Cargo tests
       - name: Run Cargo tests
         run: cargo test
-      
+
       # Install UV
       - name: Install UV
         uses: astral-sh/setup-uv@v5
@@ -55,7 +55,7 @@ jobs:
       - name: Run pre-commit
         shell: bash -l {0}
         run: uv run pre-commit run --all-files
-      
+
       # Run pytest
       - name: Run pytest
         run: |
