@@ -1,0 +1,86 @@
+
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+line-length = 100
+indent-width = 4
+
+# Assume Python 3.11
+target-version = "py311"
+
+lint.select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    'W291', # trailing-whitespace
+    'W292', # no-newline-at-eof
+    'W293', # blank-line-at-eof
+    'D100', # missing module docstring
+    'D101', # missing class docstring
+    'D102', # missing method docstring
+    'D103', # missing function docstring
+    'D417', # missing argument descriptions
+    'E501', # line-too-long
+    'F621', # too many args in star unpacking
+    'Q',    # flake8 quotes
+]
+
+lint.ignore = [
+    "PLE1205", # logging-too-many-args
+    "PLR0904", # too-many-public-methods
+    "PLR0911", # too-many-return-statements
+    "PLR0912", # too-many-branches
+    "PLR0913", # too-many-arguments
+    "PLR0914", # too-many-locals
+    "PLR0915", # too-many-statements
+    "PLR1702", # too-many-nested-blocks
+    "PLW0603", # global-statement
+    "PLW1514", # unspecified-encoding
+    'E741',    # ambiguous-variable-name
+    'F722',    # forward-annotation-syntax-error
+    'E722',    # allow bare except
+    'D100',    # missing module docstring
+]
+
+lint.fixable = ["ALL"]
+lint.unfixable = []
+
+[format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = true
+line-ending = "auto"
+docstring-code-format = false
+
+docstring-code-line-length = "dynamic"
+
+[lint.flake8-quotes]
+inline-quotes = 'single'
+docstring-quotes = 'single'

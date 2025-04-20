@@ -27,7 +27,7 @@ for (i = 0; i < lutList.length; i++) {
 }
 
 // Process built-in lookup tables
-builtInLuts = newArray("Fire", "Grays", "Ice", "Spectrum", "3-3-2 RGB", 
+builtInLuts = newArray("Fire", "Grays", "Ice", "Spectrum", "3-3-2 RGB",
                        "Red", "Green", "Blue", "Cyan", "Magenta", "Yellow", "Red/Green");
 
 for (i = 0; i < builtInLuts.length; i++) {

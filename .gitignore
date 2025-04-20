@@ -73,3 +73,7 @@ docs/_build/
 
 # ignore images
 *.tif*
+
+# ignore notebooks
+*.ipynb
+*.ju.py
