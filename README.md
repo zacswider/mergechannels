@@ -41,7 +41,8 @@ plt.show()
 print(colorized.shape, colorized.dtype)
 >> (512, 512, 3) uint8
 ```
-![colorize a single image](assets/readme_images/camera_red-green.png)
+![colorize a single image](https://raw.githubusercontent.com/zacswider/README_Images/main/camera_red-green.png
+)
 
 
 ### apply a different colormap to each channel
@@ -75,7 +76,7 @@ d.imshow(
 fig.tight_layout()
 plt.show()
 ```
-![apply a different colormap to each channel](assets/readme_images/cells_multicolor.png)
+![max and min multicolor blending](https://raw.githubusercontent.com/zacswider/README_Images/main/cells_multicolor.png)
 
 
 ## Roadmap
