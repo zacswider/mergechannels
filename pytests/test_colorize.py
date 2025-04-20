@@ -156,13 +156,3 @@ def test_apply_colors_and_merge_high_mean():
             [[[127, 168, 127]]]
         )
     )
-
-def test_python_version():
-    '''
-    Test that fails only on Python 3.12
-    '''
-    import sys
-    if sys.version_info[:2] == (3, 12):
-        assert False, 'This test is expected to fail on Python 3.12'
-    else:
-        assert True
