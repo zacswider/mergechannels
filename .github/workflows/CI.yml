@@ -28,19 +28,15 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      # Run Rust format check
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
 
-      # Run Clippy
       - name: Run Clippy
         run: cargo clippy -- -D warnings
 
-      # Run Cargo tests
       - name: Run Cargo tests
         run: cargo test
 
-      # Install UV
       - name: Install UV
         uses: astral-sh/setup-uv@v5
         with:
@@ -52,13 +48,6 @@ jobs:
       - name: Run pre-commit
         shell: bash -l {0}
         run: uv run pre-commit run --all-files
-
-      # Run pytest
-      - name: Run pytest
-        run: |
-          source .venv/bin/activate
-          pip install pytest
-          pytest
 
   tox_tests:
     name: Tox Tests (${{ matrix.python-version }}) # Add python version to name for clarity
