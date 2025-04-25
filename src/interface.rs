@@ -1,9 +1,28 @@
 use crate::cmaps;
 use crate::colorize;
+use crate::inputs::ArrayContainer;
 use numpy::ndarray::ArrayView2;
+use numpy::{Element, PyReadonlyArrayDyn};
 use numpy::{IntoPyArray, PyArray3, PyReadonlyArray2};
 use pyo3::prelude::*;
 use pyo3::{Bound, Python};
+
+#[pyfunction]
+#[pyo3(name = "test_dynamic_arrays")]
+pub fn test_dynamic_arrays_py<'py, T>(
+    py: Python<'py>,
+    arr: PyReadonlyArrayDyn<'py, T>,
+    cmap_name: &str,
+) -> Bound<'py>
+where
+    T: Element + numpy::types::NumPyType,
+{
+    let container = ArrayContainer::new(arr)?;
+    // let arr = arr.as_array();
+    // let cmap = cmaps::load_cmap(cmap_name);
+    // let rgb = colorize::apply_color_map(arr, cmap);
+    // rgb.into_pyarray(py)
+}
 
 #[pyfunction]
 #[pyo3(name = "apply_color_map")]

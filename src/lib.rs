@@ -2,6 +2,7 @@ mod blend;
 mod cmaps;
 mod colorize;
 mod interface;
+mod inputs;
 
 use interface::{apply_color_map_py, apply_colors_and_merge_nc_py};
 use pyo3::prelude::*;
