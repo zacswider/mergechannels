@@ -6,6 +6,10 @@ fn rgb_with_arr_shape(x: ArrayView2<u8>) -> Array3<u8> {
     Array::ones((x.shape()[0], x.shape()[1], 3))
 }
 
+pub fn colorize_single_channel_8bit(
+    arr:
+)
+
 pub fn apply_color_map(arr: ArrayView2<u8>, cmap: &[[u8; 3]; 256]) -> Array3<u8> {
     let mut rgb = rgb_with_arr_shape(arr);
     let shape_y = arr.shape()[0];

@@ -2,12 +2,7 @@ use crate::cmaps;
 use crate::colorize;
 use numpy::ndarray::ArrayView2;
 use numpy::npyffi::{npy_uint32, npy_uint8};
-use numpy::PyArrayDyn;
-use numpy::PyReadonlyArray;
-use numpy::PyUntypedArray;
-use numpy::PyUntypedArrayMethods;
-use numpy::{Element, PyReadonlyArrayDyn};
-use numpy::{IntoPyArray, PyArray3, PyReadonlyArray2};
+use numpy::{PyArrayDyn, PyUntypedArray, PyUntypedArrayMethods, PyReadonlyArray, Element, PyReadonlyArrayDyn, IntoPyArray, PyArray3, PyReadonlyArray2};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
@@ -19,6 +14,8 @@ pub fn dispatch_single_channel_py(
     array_reference: &Bound<'_, PyAny>,
     low: u8,
     high: u8,
+    ndim: usize,
+    dtype: &str,
     cmap_name: &str,
     // ) -> PyResult<(Bound<'py, PyArrayDyn<u8>)> {
 ) -> PyResult<(())> {
@@ -26,11 +23,12 @@ pub fn dispatch_single_channel_py(
     let arr_dtype = untyped_array.dtype().to_string();
     println!("arr dtype is {:?}", arr_dtype);
     match arr_dtype.as_str() {
-        "uint8" => println!("processing uint8 array!"),
+        "uint8" => {
+            println!("processing uint8 array!");
+            let arr_dyn_8bit = untyped_array.extract::<PyReadonlyArrayDyn<'_, u8>>()?;
+
+        },
         "uint16" => println!("processing uint16 array!"),
-        "uint32" => println!("processing uint32 array!"),
-        "float32" => println!("processing float32 array!"),
-        "float64" => println!("processing float64 array!"),
         _ => panic!("Received unsupported dtype: {:?}", arr_dtype),
     }
     Ok(())
