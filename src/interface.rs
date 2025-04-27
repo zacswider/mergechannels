@@ -1,6 +1,7 @@
 use crate::cmaps;
 use crate::colorize;
 use numpy::ndarray::ArrayView2;
+use numpy::npyffi::{npy_uint32, npy_uint8};
 use numpy::PyArrayDyn;
 use numpy::PyReadonlyArray;
 use numpy::PyUntypedArray;
@@ -8,62 +9,27 @@ use numpy::PyUntypedArrayMethods;
 use numpy::{Element, PyReadonlyArrayDyn};
 use numpy::{IntoPyArray, PyArray3, PyReadonlyArray2};
 use pyo3::prelude::*;
-use pyo3::{Bound, Python};
 use pyo3::types::PyAny;
+use pyo3::{Bound, Python};
 
 #[pyfunction]
-#[pyo3(name = "dispace_single_channel")]
-pub fn dispace_single_channel_py(
+#[pyo3(name = "dispatch_single_channel")]
+pub fn dispatch_single_channel_py(
     py: Python<'_>,
     array_reference: &Bound<'_, PyAny>,
     low: u8,
     high: u8,
     cmap_name: &str,
-// ) -> PyResult<(Bound<'py, PyArrayDyn<u8>)> {
+    // ) -> PyResult<(Bound<'py, PyArrayDyn<u8>)> {
 ) -> PyResult<(())> {
-    Ok(())
-}
-
-#[pyfunction]
-#[pyo3(name = "test_dynamic_arrays")]
-pub fn test_dynamic_arrays_py(
-    arr_probably: &Bound<'_, PyAny>,
-) -> PyResult<()> {
-    let untyped_array = arr_probably.downcast::<PyUntypedArray>()?;
-    let _dtype = untyped_array.dtype();
-    let s: String = _dtype.to_string();
-    println!("dtype={:?}", _dtype);
-    println!("s={:?}", s);
-    Ok(())
-}
-
-#[pyfunction]
-#[pyo3(name = "apply_color_map")]
-pub fn apply_color_map_py<'py>(
-    py: Python<'py>,
-    arr: &Bound<'py, PyAny>,
-    low: u8,
-    high: u8,
-    cmap_name: &str,
-) -> PyResult<(Bound<'py, PyArray3<u8>>)> {
-    let untyped_array = arr.downcast::<PyUntypedArray>()?;
-    let array_dtype = untyped_array.dtype().to_string();
-    /*
-    * possible dtypes should be uint8, uint16, uint32, uint64, float16, float32, float64
-    */
-    match array_dtype {
-        "uint8" => ...,
-        _ => panic!("unsupported!")
+    let untyped_array = array_reference.downcast::<PyUntypedArray>()?;
+    let arr_dtype = untyped_array.dtype().to_string();
+    println!("arr dtype is {:?}", arr_dtype);
+    match arr_dtype.as_str() {
+        "uint8" => println!("processing uint8 array!"),
+        _ => println!("processing something else"),
     }
-    let array_ndim = untyped_array.ndim();
-    if array_ndim != 2 {
-        panic!("only 2d arrays supported")
-    }
-    let downcasted = arr.downcast::<PyReadonlyArrayDyn<'py, Element>>()?;
-    // let arr = arr.as_array();
-    // let cmap = cmaps::load_cmap(cmap_name);
-    // let rgb = colorize::apply_color_map(arr, cmap);
-    // rgb.into_pyarray(py)
+    Ok(())
 }
 
 #[pyfunction]
