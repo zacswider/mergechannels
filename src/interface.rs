@@ -27,7 +27,11 @@ pub fn dispatch_single_channel_py(
     println!("arr dtype is {:?}", arr_dtype);
     match arr_dtype.as_str() {
         "uint8" => println!("processing uint8 array!"),
-        _ => println!("processing something else"),
+        "uint16" => println!("processing uint16 array!"),
+        "uint32" => println!("processing uint32 array!"),
+        "float32" => println!("processing float32 array!"),
+        "float64" => println!("processing float64 array!"),
+        _ => panic!("Received unsupported dtype: {:?}", arr_dtype),
     }
     Ok(())
 }
