@@ -6,15 +6,19 @@ from ._luts import COLORMAPS
 from ._blending import BLENDING_OPTIONS
 
 def merge(
-	arrs: Sequence[np.ndarray],
-	colors: Sequence[COLORMAPS] = (),
-	blending: Literal[BLENDING_OPTIONS] = 'max',
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[COLORMAPS] = (),
+    blending: Literal[BLENDING_OPTIONS] = 'max',
     saturation_limits: tuple[float, float] = (0.2, 99.8),
 ) -> np.ndarray:
     ...
 
-def apply_color_map(
+def test_dynamic_arrays(
     arr: np.ndarray,
+) -> None:
+    ...
+
+def apply_color_map(
     cmap_name: COLORMAPS,
     saturation_limits: tuple[float, float] = (0.2, 99.8),
 ) -> np.ndarray: ...
