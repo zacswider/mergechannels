@@ -96,7 +96,7 @@ pub fn colorize_stack_8bit(
         for n in 0..shape_n {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let idx = arr[[n, y, x]];
+                    let idx = arr[[n, y, x]] as usize;
                     let color = cmap[idx];
                     rgb[[n, y, x, 0]] = color[0];
                     rgb[[n, y, x, 1]] = color[1];
@@ -177,6 +177,11 @@ pub fn colorize_stack_16bit(
     rgb
 }
 
+/// check if all limits for a series of u8 ArrayViews are 0.0 and 255.0
+
+fn all_normalized(limits: &Vec<&[f64; 2]>) -> bool {
+    limits.iter().all(|&[low, high]| *low == 0.0 && *high == 255.0)
+}
 
 pub fn merge_2d_u8(
     arrs: Vec<ArrayView2<u8>>,
@@ -188,8 +193,13 @@ pub fn merge_2d_u8(
     let shape_y = first_arr.shape()[0];
     let shape_x = first_arr.shape()[1];
     let mut rgb = img_to_rgb(first_arr);
-    let per_ch_norms = per_ch_offset_and_scale(limits);
 
+    if all_normalized(&limits) {
+        // fast path - direct lookup
+        println!("doing the fast path")
+    } else {
+        let per_ch_norms = per_ch_offset_and_scale(limits);
+    }
 
 
     for i in 0..shape_y {
