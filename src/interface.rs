@@ -88,61 +88,33 @@ pub fn dispatch_multi_channel_py<'py>(
         .into_iter()
         .collect()
     {
-        println!("Processing 2D u8 arrays")
+        println!("Processing 2D u8 arrays");
+        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending);
+    } else if let Ok(arrs) = array_references
+        .try_iter()
+        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u8>>())
+        .into_iter()
+        .collect()
+    {
+        println!("Processing 3D u8 arrays")
+    } else if let Ok(arrs) = array_references
+        .try_iter()
+        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u16>>())
+        .into_iter()
+        .collect()
+    {
+        println!("Processing 2D u16 arrays")
+    } else if let Ok(arrs) = array_references
+        .try_iter()
+        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u16>>())
+        .into_iter()
+        .collect()
+    {
+        println!("Processing 3D u16 arrays")
     } else {
         println!("Error!")
     }
-
-    let untyped_array = array_reference.downcast::<PyUntypedArray>()?;
-    let dtype = untyped_array.dtype().to_string();
-    let ndim = untyped_array.ndim();
-    match dtype.as_str() {
-        "uint8" => {
-            println!("doing uint8");
-            match ndim {
-                2 => {
-                    println!("doing 2D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_8bit(arr, low, high, cmap);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
-                }
-                3 => {
-                    println!("doing 3D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_8bit(arr, low, high, cmap);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
-                }
-                _ => panic!("Recieved unsupported number of dimensions {:?}", ndim),
-            }
-        }
-        "uint16" => {
-            println!("doing uint16");
-            match ndim {
-                2 => {
-                    println!("doing 2D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_16bit(arr, low, high, cmap);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
-                }
-                3 => {
-                    println!("doing 3D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_16bit(arr, low, high, cmap);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
-                }
-                _ => panic!("Recieved unsupported number of dimensions {:?}", ndim),
-            }
-        }
-        _ => panic!("Received unsupported dtype: {:?}", dtype),
-    }
+    Ok(rgb.into_dyn().into_pyarray(py));
 }
 
 // #[pyfunction]
