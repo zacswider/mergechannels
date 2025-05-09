@@ -1,4 +1,9 @@
-pub fn max_blending(px_vals: &Vec<[u8; 3]>) -> [u8; 3] {
+use smallvec::SmallVec;
+
+pub const MAX_N_CH: usize = 5;
+pub type BlendFn = fn(&SmallVec<[[u8; 3]; 5]>) -> [u8; 3];
+
+pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     let mut r: u8 = 0;
     let mut g: u8 = 0;
     let mut b: u8 = 0;
@@ -68,7 +73,9 @@ mod tests {
 
     #[test]
     fn test_max_blending() {
-        let px_vals = vec![[100, 100, 100], [200, 200, 200]];
+        let mut px_vals: SmallVec<[[u8; 3]; 5]> = SmallVec::new();
+        px_vals.push([100, 100, 100]);
+        px_vals.push([200, 200, 200]);
         let result = max_blending(&px_vals);
         assert_eq!(result, [200, 200, 200]);
     }
