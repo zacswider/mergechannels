@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::blend;
 use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use pyo3::panic;
+use smallvec::SmallVec;
 
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
@@ -178,11 +179,11 @@ pub fn colorize_stack_16bit(
 }
 
 /// check if all limits for a series of u8 ArrayViews are 0.0 and 255.0
-
 fn all_normalized(limits: &Vec<&[f64; 2]>) -> bool {
     limits.iter().all(|&[low, high]| *low == 0.0 && *high == 255.0)
 }
 
+/// Merge n 2d arrays together
 pub fn merge_2d_u8(
     arrs: Vec<ArrayView2<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
@@ -192,28 +193,56 @@ pub fn merge_2d_u8(
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];
     let shape_x = first_arr.shape()[1];
+    let n_ch = arrs.len();
     let mut rgb = img_to_rgb(first_arr);
 
     if all_normalized(&limits) {
         // fast path - direct lookup
-        println!("doing the fast path")
-    } else {
-        let per_ch_norms = per_ch_offset_and_scale(limits);
-    }
-
-
-    for i in 0..shape_y {
-        for j in 0..shape_x {
-            let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(arrs.len());
-            for (ch, (arr, cmap)) in arrs.iter().zip(cmaps.iter()).enumerate() {
-                if let Some(ch_norms) = per_ch_norms.get(&ch) {
-                    let [offset, scale] = ch_norms;
-                } else {
-                    panic!("Tried to find the norm values for {}, but they could not be found", ch);
+        for i in 0..shape_y {
+            for j in 0..shape_x {
+                let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(n_ch);
+                for (arr, cmap) in arrs.iter().zip(cmaps.iter()) {
+                    let idx = arr[[i, j]] as usize;
+                    let color = cmap[idx];
+                    px_vals.push(color);
+                    let color: [u8; 3] = match blending {
+                        "max" => {
+                            blend::max_blending(&px_vals)
+                        }
+                        "sum" => {
+                            blend::sum_blending(&px_vals)
+                        }
+                        "min" => {
+                            blend::min_blending(&px_vals)
+                        }
+                        "mean" => {
+                            blend::mean_blending(&px_vals)
+                        }
+                        _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
+                    };
+                    rgb[[i, j, 0]] = color[0];
+                    rgb[[i, j, 1]] = color[1];
+                    rgb[[i, j, 2]] = color[2];
                 }
-                let idx = arr[[i, j]] as usize;
-                let color = cmap[idx];
-                px_vals.push(color);
+            }
+        }
+    } else {
+        // slow path - normalize on the fly
+        let per_ch_norms = per_ch_offset_and_scale(limits);
+        for i in 0..shape_y {
+            for j in 0..shape_x {
+                let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(n_ch);
+                for (ch, (arr, cmap)) in arrs.iter().zip(cmaps.iter()).enumerate() {
+                    if let Some(ch_norms) = per_ch_norms.get(&ch) {
+                        let [offset, scale] = ch_norms;
+                        let value = arr[[i, j]];
+                        let normalize_value = ((value as f32) - offset) * scale;
+                        let idx = normalize_value.clamp(0.0, 255.0) as usize;
+                        let color = cmap[idx];
+                        px_vals.push(color);
+                    } else {
+                        panic!("Tried to find the norm values for {}, but they could not be found", ch);
+                    }
                 let color: [u8; 3] = match blending {
                     "max" => {
                         blend::max_blending(&px_vals)
@@ -232,6 +261,90 @@ pub fn merge_2d_u8(
                 rgb[[i, j, 0]] = color[0];
                 rgb[[i, j, 1]] = color[1];
                 rgb[[i, j, 2]] = color[2];
+                }
+            }
+        }
+    }
+    rgb
+}
+
+/// Merge n 3d arrays together
+pub fn merge_3d_u8(
+    arrs: Vec<ArrayView3<u8>>,
+    cmaps: Vec<&[[u8; 3]; 256]>,
+    limits: Vec<&[f64; 2]>,
+    blending: &str,
+) -> Array4<u8> {
+    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
+    let shape_n = first_arr.shape()[0];
+    let shape_y = first_arr.shape()[1];
+    let shape_x = first_arr.shape()[2];
+    let n_ch = arrs.len();
+    let mut rgb = stack_to_rgb(first_arr);
+    let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
+    let blend_fn: blend::BlendFn = match blending {
+        "max" => blend::max_blending,
+        "sum" => blend::sum_blending,  // need to update fxn args in blend
+        "min" => blend::min_blending,
+        "mean" => blend::mean_blending,
+        _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
+    };
+
+    if all_normalized(&limits) {
+        // fast path - direct lookup
+        // allocate memory here on the stack or heap
+        for n in 0..shape_n {
+            for i in 0..shape_y {
+                for j in 0..shape_x {
+                    px_vals.clear();
+                    for (arr, cmap) in arrs.iter().zip(cmaps.iter()) {
+                        let idx = arr[[n, i, j]] as usize;
+                        let color = cmap[idx];
+                        px_vals.push(color);
+                    }
+                    let color: [u8; 3] = blend_fn(&px_vals);
+                    rgb[[n, i, j, 0]] = color[0];
+                    rgb[[n, i, j, 1]] = color[1];
+                    rgb[[n, i, j, 2]] = color[2];
+                }
+            }
+        }
+    } else {
+        // slow path - normalize on the fly
+        let per_ch_norms = per_ch_offset_and_scale(limits);
+        for i in 0..shape_y {
+            for j in 0..shape_x {
+                let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(n_ch);
+                for (ch, (arr, cmap)) in arrs.iter().zip(cmaps.iter()).enumerate() {
+                    if let Some(ch_norms) = per_ch_norms.get(&ch) {
+                        let [offset, scale] = ch_norms;
+                        let value = arr[[i, j]];
+                        let normalize_value = ((value as f32) - offset) * scale;
+                        let idx = normalize_value.clamp(0.0, 255.0) as usize;
+                        let color = cmap[idx];
+                        px_vals.push(color);
+                    } else {
+                        panic!("Tried to find the norm values for {}, but they could not be found", ch);
+                    }
+                let color: [u8; 3] = match blending {
+                    "max" => {
+                        blend::max_blending(&px_vals)
+                    }
+                    "sum" => {
+                        blend::sum_blending(&px_vals)
+                    }
+                    "min" => {
+                        blend::min_blending(&px_vals)
+                    }
+                    "mean" => {
+                        blend::mean_blending(&px_vals)
+                    }
+                    _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
+                };
+                rgb[[i, j, 0]] = color[0];
+                rgb[[i, j, 1]] = color[1];
+                rgb[[i, j, 2]] = color[2];
+                }
             }
         }
     }
