@@ -16,8 +16,9 @@ fn stack_to_rgb<T>(a: ArrayView3<T>) -> Array4<u8> {
 }
 
 ///pre-calculate the offset and scale factors for a given channel
-fn offset_and_scale(low: f64, high: f64) -> [f32; 2] {
-    let offset = low as f32;
+fn offset_and_scale(lowhigh: &[f64; 2]) -> [f32; 2] {
+    let [low, high] = lowhigh;
+    let offset = *low as f32;
     let range = high - low;
     let scale = if range.abs() > 1e-9 {
         255.0 / range
@@ -29,15 +30,16 @@ fn offset_and_scale(low: f64, high: f64) -> [f32; 2] {
 }
 
 ///pre-calculate the offset and scale factors for each channel
+///returned object is a SmallVec containing arrays with the offset and scale for each channel
 fn per_ch_offset_and_scale(
     limits: Vec<&[f64; 2]>,
-) -> HashMap<usize, [f32; 2]> {
-    let mut hm = HashMap::new();
-    for (idx, tup) in limits.iter().enumerate() {
-        let offset_scale = offset_and_scale(tup[0], tup[1]);
-        hm.insert(idx, offset_scale);
+) -> SmallVec<[[f32; 2]; blend::MAX_N_CH]> {
+    let mut limit_vals: SmallVec<[[f32; 2]; blend::MAX_N_CH]> = SmallVec::new();
+    for &lowhigh in limits.iter() {
+        let offset_scale = offset_and_scale(lowhigh);
+        limit_vals.push(offset_scale);
     }
-    hm
+    limit_vals
 }
 
 ///apply a colormap to a single 8-bit image
@@ -232,7 +234,8 @@ pub fn merge_2d_u8(
         for i in 0..shape_y {
             for j in 0..shape_x {
                 let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(n_ch);
-                for (ch, (arr, cmap)) in arrs.iter().zip(cmaps.iter()).enumerate() {
+                for ((arr, cmap), limit_vals) in arrs.iter().zip(cmaps.iter()).zip(limits.iter()) {
+                    let off
                     if let Some(ch_norms) = per_ch_norms.get(&ch) {
                         let [offset, scale] = ch_norms;
                         let value = arr[[i, j]];
@@ -284,7 +287,7 @@ pub fn merge_3d_u8(
     let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
     let blend_fn: blend::BlendFn = match blending {
         "max" => blend::max_blending,
-        "sum" => blend::sum_blending,  // need to update fxn args in blend
+        "sum" => blend::sum_blending,
         "min" => blend::min_blending,
         "mean" => blend::mean_blending,
         _ => return Err(MergeError::InvalidBlendingMode(blending.to_string())),
@@ -292,7 +295,6 @@ pub fn merge_3d_u8(
 
     if all_normalized(&limits) {
         // fast path - direct lookup
-        // allocate memory here on the stack or heap
         for n in 0..shape_n {
             for i in 0..shape_y {
                 for j in 0..shape_x {
@@ -348,5 +350,5 @@ pub fn merge_3d_u8(
             }
         }
     }
-    rgb
+    Ok(rgb)
 }
