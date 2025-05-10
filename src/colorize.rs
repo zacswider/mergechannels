@@ -42,6 +42,15 @@ fn per_ch_offset_and_scale(
     limit_vals
 }
 
+/// normalize a u8 value as a colormap index given pre-calculated offset and scale values
+fn as_idx<T>(val: T, offset: f32, scale: f32) -> usize
+where T: Into<f32>
+{
+    let normalized_value = ((val.into()) - offset) * scale;
+    let idx = normalized_value.clamp(0.0, 255.0) as usize;
+    idx
+}
+
 ///apply a colormap to a single 8-bit image
 pub fn colorize_single_channel_8bit(
     arr: ArrayView2<u8>,
@@ -52,6 +61,7 @@ pub fn colorize_single_channel_8bit(
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
     let mut rgb = img_to_rgb(arr);
+    let lowhigh: [f64; 2] = [low, high];
 
     if low == 0.0 && high == 255.0 {
         // fast path - direct lookup
@@ -66,12 +76,11 @@ pub fn colorize_single_channel_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(low, high);
+        let [offset, scale] = offset_and_scale(&lowhigh);
         for y in 0..shape_y {
             for x in 0..shape_x {
-                let value = arr[[y, x]];
-                let normalized_value = ((value as f32) - offset) * scale;
-                let idx = normalized_value.clamp(0.0, 255.0) as usize;
+                let val = arr[[y, x]];
+                let idx = as_idx(val, offset, scale);
                 let color = cmap[idx];
                 rgb[[y, x, 0]] = color[0];
                 rgb[[y, x, 1]] = color[1];
@@ -93,6 +102,7 @@ pub fn colorize_stack_8bit(
     let shape_y = arr.shape()[1];
     let shape_x = arr.shape()[2];
     let mut rgb = stack_to_rgb(arr);
+    let lowhigh: [f64; 2] = [low, high];
 
     if low == 0.0 && high == 255.0 {
         // fast path - direct lookup
@@ -109,13 +119,12 @@ pub fn colorize_stack_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(low, high);
+        let [offset, scale] = offset_and_scale(&lowhigh);
         for n in 0..shape_n {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let value = arr[[n, y, x]];
-                    let normalized_value = ((value as f32) - offset) * scale;
-                    let idx = normalized_value.clamp(0.0, 255.0) as usize;
+                    let val = arr[[n, y, x]];
+                    let idx = as_idx(val, offset, scale);
                     let color = cmap[idx];
                     rgb[[n, y, x, 0]] = color[0];
                     rgb[[n, y, x, 1]] = color[1];
@@ -137,12 +146,12 @@ pub fn colorize_single_channel_16bit(
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
     let mut rgb = img_to_rgb(arr);
-    let [offset, scale] = offset_and_scale(low, high);
+    let lowhigh: [f64; 2] = [low, high];
+    let [offset, scale] = offset_and_scale(&lowhigh);
     for y in 0..shape_y {
         for x in 0..shape_x {
-            let value = arr[[y, x]];
-            let normalized_value = ((value as f32) - offset) * scale;
-            let idx = normalized_value.clamp(0.0, 255.0) as usize;
+            let val = arr[[y, x]];
+            let idx = as_idx(val, offset, scale);
             let color = cmap[idx];
             rgb[[y, x, 0]] = color[0];
             rgb[[y, x, 1]] = color[1];
@@ -163,13 +172,13 @@ pub fn colorize_stack_16bit(
     let shape_y = arr.shape()[1];
     let shape_x = arr.shape()[2];
     let mut rgb = stack_to_rgb(arr);
-    let [offset, scale] = offset_and_scale(low, high);
+    let lowhigh: [f64; 2] = [low, high];
+    let [offset, scale] = offset_and_scale(&lowhigh);
     for n in 0..shape_n {
         for y in 0..shape_y {
             for x in 0..shape_x {
-                let value = arr[[n, y, x]];
-                let normalized_value = ((value as f32) - offset) * scale;
-                let idx = normalized_value.clamp(0.0, 255.0) as usize;
+                let val = arr[[n, y, x]];
+                let idx = as_idx(val, offset, scale);
                 let color = cmap[idx];
                 rgb[[n, y, x, 0]] = color[0];
                 rgb[[n, y, x, 1]] = color[1];
