@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::blend;
+use crate::blend::{self, MergeError};
 use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use pyo3::panic;
 use smallvec::SmallVec;
@@ -274,7 +274,7 @@ pub fn merge_3d_u8(
     cmaps: Vec<&[[u8; 3]; 256]>,
     limits: Vec<&[f64; 2]>,
     blending: &str,
-) -> Array4<u8> {
+) -> Result<Array4<u8>, MergeError> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_n = first_arr.shape()[0];
     let shape_y = first_arr.shape()[1];
@@ -287,7 +287,7 @@ pub fn merge_3d_u8(
         "sum" => blend::sum_blending,  // need to update fxn args in blend
         "min" => blend::min_blending,
         "mean" => blend::mean_blending,
-        _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
+        _ => return Err(MergeError::InvalidBlendingMode(blending.to_string())),
     };
 
     if all_normalized(&limits) {
