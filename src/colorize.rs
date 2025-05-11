@@ -219,31 +219,31 @@ pub fn merge_2d_u8(
                 px_vals.clear();
                 for (arr, cmap) in arrs.iter().zip(cmaps.iter()) {
                     let idx = arr[[i, j]] as usize;
-                    let px_color = cmap[idx];
-                    px_vals.push(px_color);
+                    let ch_color = cmap[idx];
+                    px_vals.push(ch_color);
                 }
-                let color: [u8; 3] = blend_fn(&px_vals);
-                rgb[[i, j, 0]] = color[0];
-                rgb[[i, j, 1]] = color[1];
-                rgb[[i, j, 2]] = color[2];
+                let px_color: [u8; 3] = blend_fn(&px_vals);
+                rgb[[i, j, 0]] = px_color[0];
+                rgb[[i, j, 1]] = px_color[1];
+                rgb[[i, j, 2]] = px_color[2];
             }
         }
     } else {
         // slow path - normalize on the fly
-        let offsets_and_scales = per_ch_offset_and_scale(limits);  // left off here - just do this
-        // once outside the loop and then apply inside
+        let offsets_and_scales = per_ch_offset_and_scale(limits);
         for i in 0..shape_y {
             for j in 0..shape_x {
                 px_vals.clear();
-                for ((arr, cmap), lowhigh) in arrs.iter().zip(cmaps.iter()).zip(limits.iter()) {
-                    let [offset, scale] = offset_and_scale(&lowhigh);
+                for ((arr, cmap), offset_scale) in arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter()) {
+                    let [offset, scale] = offset_scale;
                     let val = arr[[i, j]];
-                    let idx = as_idx(val, offset, scale);
-                    let color = cmap[idx];
-                let color = blend_fn(&px_vals);
-                rgb[[i, j, 0]] = color[0];
-                rgb[[i, j, 1]] = color[1];
-                rgb[[i, j, 2]] = color[2];
+                    let idx = as_idx(val, *offset, *scale);
+                    let ch_color = cmap[idx];
+                    px_vals.push(ch_color);
+                let px_color = blend_fn(&px_vals);
+                rgb[[i, j, 0]] = px_color[0];
+                rgb[[i, j, 1]] = px_color[1];
+                rgb[[i, j, 2]] = px_color[2];
                 }
             }
         }
