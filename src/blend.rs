@@ -1,6 +1,6 @@
-use std::fmt;
-use std::error::Error;
 use smallvec::SmallVec;
+use std::error::Error;
+use std::fmt;
 
 pub const MAX_N_CH: usize = 5;
 

@@ -28,9 +28,7 @@ fn offset_and_scale(lowhigh: &[f64; 2]) -> [f32; 2] {
 
 ///pre-calculate the offset and scale factors for each channel
 ///returned object is a SmallVec containing arrays with the offset and scale for each channel
-fn per_ch_offset_and_scale(
-    limits: Vec<&[f64; 2]>,
-) -> SmallVec<[[f32; 2]; blend::MAX_N_CH]> {
+fn per_ch_offset_and_scale(limits: Vec<&[f64; 2]>) -> SmallVec<[[f32; 2]; blend::MAX_N_CH]> {
     let mut limit_vals: SmallVec<[[f32; 2]; blend::MAX_N_CH]> = SmallVec::new();
     for &lowhigh in limits.iter() {
         let offset_scale = offset_and_scale(lowhigh);
@@ -41,7 +39,8 @@ fn per_ch_offset_and_scale(
 
 /// normalize a u8 value as a colormap index given pre-calculated offset and scale values
 fn as_idx<T>(val: T, offset: f32, scale: f32) -> usize
-where T: Into<f32>
+where
+    T: Into<f32>,
 {
     let normalized_value = ((val.into()) - offset) * scale;
     let idx = normalized_value.clamp(0.0, 255.0) as usize;
@@ -188,7 +187,9 @@ pub fn colorize_stack_16bit(
 
 /// check if all limits for a series of u8 ArrayViews are 0.0 and 255.0
 fn all_normalized(limits: &Vec<&[f64; 2]>) -> bool {
-    limits.iter().all(|&[low, high]| *low == 0.0 && *high == 255.0)
+    limits
+        .iter()
+        .all(|&[low, high]| *low == 0.0 && *high == 255.0)
 }
 
 /// Merge n 2d arrays together
@@ -201,7 +202,6 @@ pub fn merge_2d_u8(
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];
     let shape_x = first_arr.shape()[1];
-    let n_ch = arrs.len();
     let mut rgb = img_to_rgb(first_arr);
     let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
     let blend_fn: blend::BlendFn = match blending {
@@ -234,16 +234,18 @@ pub fn merge_2d_u8(
         for i in 0..shape_y {
             for j in 0..shape_x {
                 px_vals.clear();
-                for ((arr, cmap), offset_scale) in arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter()) {
+                for ((arr, cmap), offset_scale) in
+                    arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
+                {
                     let [offset, scale] = offset_scale;
                     let val = arr[[i, j]];
                     let idx = as_idx(val, *offset, *scale);
                     let ch_color = cmap[idx];
                     px_vals.push(ch_color);
-                let px_color = blend_fn(&px_vals);
-                rgb[[i, j, 0]] = px_color[0];
-                rgb[[i, j, 1]] = px_color[1];
-                rgb[[i, j, 2]] = px_color[2];
+                    let px_color = blend_fn(&px_vals);
+                    rgb[[i, j, 0]] = px_color[0];
+                    rgb[[i, j, 1]] = px_color[1];
+                    rgb[[i, j, 2]] = px_color[2];
                 }
             }
         }
@@ -262,7 +264,6 @@ pub fn merge_3d_u8(
     let shape_n = first_arr.shape()[0];
     let shape_y = first_arr.shape()[1];
     let shape_x = first_arr.shape()[2];
-    let n_ch = arrs.len();
     let mut rgb = stack_to_rgb(first_arr);
     let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
     let blend_fn: blend::BlendFn = match blending {
@@ -281,51 +282,36 @@ pub fn merge_3d_u8(
                     px_vals.clear();
                     for (arr, cmap) in arrs.iter().zip(cmaps.iter()) {
                         let idx = arr[[n, i, j]] as usize;
-                        let color = cmap[idx];
-                        px_vals.push(color);
+                        let ch_color = cmap[idx];
+                        px_vals.push(ch_color);
                     }
-                    let color: [u8; 3] = blend_fn(&px_vals);
-                    rgb[[n, i, j, 0]] = color[0];
-                    rgb[[n, i, j, 1]] = color[1];
-                    rgb[[n, i, j, 2]] = color[2];
+                    let px_color: [u8; 3] = blend_fn(&px_vals);
+                    rgb[[n, i, j, 0]] = px_color[0];
+                    rgb[[n, i, j, 1]] = px_color[1];
+                    rgb[[n, i, j, 2]] = px_color[2];
                 }
             }
         }
     } else {
         // slow path - normalize on the fly
-        let per_ch_norms = per_ch_offset_and_scale(limits);
-        for i in 0..shape_y {
-            for j in 0..shape_x {
-                let mut px_vals: Vec<[u8; 3]> = Vec::with_capacity(n_ch);
-                for (ch, (arr, cmap)) in arrs.iter().zip(cmaps.iter()).enumerate() {
-                    if let Some(ch_norms) = per_ch_norms.get(&ch) {
-                        let [offset, scale] = ch_norms;
-                        let value = arr[[i, j]];
-                        let normalize_value = ((value as f32) - offset) * scale;
-                        let idx = normalize_value.clamp(0.0, 255.0) as usize;
-                        let color = cmap[idx];
-                        px_vals.push(color);
-                    } else {
-                        panic!("Tried to find the norm values for {}, but they could not be found", ch);
+        let offsets_and_scales = per_ch_offset_and_scale(limits);
+        for n in 0..shape_n {
+            for i in 0..shape_y {
+                for j in 0..shape_x {
+                    px_vals.clear();
+                    for ((arr, cmap), offset_scale) in
+                        arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
+                    {
+                        let [offset, scale] = offset_scale;
+                        let val = arr[[n, i, j]];
+                        let idx = as_idx(val, *offset, *scale);
+                        let ch_color = cmap[idx];
+                        px_vals.push(ch_color);
                     }
-                let color: [u8; 3] = match blending {
-                    "max" => {
-                        blend::max_blending(&px_vals)
-                    }
-                    "sum" => {
-                        blend::sum_blending(&px_vals)
-                    }
-                    "min" => {
-                        blend::min_blending(&px_vals)
-                    }
-                    "mean" => {
-                        blend::mean_blending(&px_vals)
-                    }
-                    _ => panic!("received invalid argument for `blending`: {blending}, valid arguments are 'max', 'sum', 'min', and 'mean'")
-                };
-                rgb[[i, j, 0]] = color[0];
-                rgb[[i, j, 1]] = color[1];
-                rgb[[i, j, 2]] = color[2];
+                    let px_color = blend_fn(&px_vals);
+                    rgb[[n, i, j, 0]] = px_color[0];
+                    rgb[[n, i, j, 1]] = px_color[1];
+                    rgb[[n, i, j, 2]] = px_color[2];
                 }
             }
         }
