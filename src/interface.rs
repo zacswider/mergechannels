@@ -108,21 +108,32 @@ pub fn dispatch_multi_channel_py<'py>(
     py: Python<'py>,
     array_references: &Bound<'py, PyAny>,
     cmap_names: Vec<String>,
-    lows: Vec<f64>,
-    highs: Vec<f64>,
+    blending: &str,
+    limits: Vec<Vec<f64>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names
         .iter()
         .map(|name| cmaps::load_cmap(name))
-        .collect();
+        .collect();  // TODO don't panic inside load_cmap
+    if let Ok(limits) = limits
+        .into_iter()
+        .map(
+            |v| v
+                .as_slice()
+                .try_into()
+        ) {
+        println!("yay");
+    } else {
+        println!("boo")
+    }
     if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u8>>())
         .into_iter()
-        .collect()
+        .collect::<Result<Vec<PyReadonlyArray2<u8>>, pyo3::PyErr>>()
     {
         println!("Processing 2D u8 arrays");
-        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending);
+        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits);
     } else if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u8>>())
