@@ -50,16 +50,14 @@ where
 ///apply a colormap to a single 8-bit image
 pub fn colorize_single_channel_8bit(
     arr: ArrayView2<u8>,
-    low: f64,
-    high: f64,
     cmap: &[[u8; 3]; 256],
+    limits: &[f64; 2],
 ) -> Array3<u8> {
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
     let mut rgb = img_to_rgb(arr);
-    let lowhigh: [f64; 2] = [low, high];
 
-    if low == 0.0 && high == 255.0 {
+    if limits[0] == 0.0 && limits[1] == 255.0 {
         // fast path - direct lookup
         for y in 0..shape_y {
             for x in 0..shape_x {
@@ -72,7 +70,7 @@ pub fn colorize_single_channel_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(&lowhigh);
+        let [offset, scale] = offset_and_scale(limits);
         for y in 0..shape_y {
             for x in 0..shape_x {
                 let val = arr[[y, x]];
@@ -90,17 +88,15 @@ pub fn colorize_single_channel_8bit(
 /// apply a colormap to a stack of 8 bit images
 pub fn colorize_stack_8bit(
     arr: ArrayView3<u8>,
-    low: f64,
-    high: f64,
     cmap: &[[u8; 3]; 256],
+    limits: &[f64; 2],
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
     let shape_x = arr.shape()[2];
     let mut rgb = stack_to_rgb(arr);
-    let lowhigh: [f64; 2] = [low, high];
 
-    if low == 0.0 && high == 255.0 {
+    if limits[0] == 0.0 && limits[1] == 255.0 {
         // fast path - direct lookup
         for n in 0..shape_n {
             for y in 0..shape_y {
@@ -115,7 +111,7 @@ pub fn colorize_stack_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(&lowhigh);
+        let [offset, scale] = offset_and_scale(limits);
         for n in 0..shape_n {
             for y in 0..shape_y {
                 for x in 0..shape_x {
@@ -135,15 +131,13 @@ pub fn colorize_stack_8bit(
 /// apply a colormap to a single 16 bit image, normalizing the intensity lookups on the fly
 pub fn colorize_single_channel_16bit(
     arr: ArrayView2<u16>,
-    low: f64,
-    high: f64,
     cmap: &[[u8; 3]; 256],
+    limits: &[f64; 2],
 ) -> Array3<u8> {
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
     let mut rgb = img_to_rgb(arr);
-    let lowhigh: [f64; 2] = [low, high];
-    let [offset, scale] = offset_and_scale(&lowhigh);
+    let [offset, scale] = offset_and_scale(limits);
     for y in 0..shape_y {
         for x in 0..shape_x {
             let val = arr[[y, x]];
@@ -160,16 +154,14 @@ pub fn colorize_single_channel_16bit(
 /// apply a colormap to a stack of 16 bit images, normalizing the intensity lookups on the fly
 pub fn colorize_stack_16bit(
     arr: ArrayView3<u16>,
-    low: f64,
-    high: f64,
     cmap: &[[u8; 3]; 256],
+    limits: &[f64; 2],
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
     let shape_x = arr.shape()[2];
     let mut rgb = stack_to_rgb(arr);
-    let lowhigh: [f64; 2] = [low, high];
-    let [offset, scale] = offset_and_scale(&lowhigh);
+    let [offset, scale] = offset_and_scale(limits);
     for n in 0..shape_n {
         for y in 0..shape_y {
             for x in 0..shape_x {
@@ -196,8 +188,8 @@ fn all_normalized(limits: &Vec<&[f64; 2]>) -> bool {
 pub fn merge_2d_u8(
     arrs: Vec<ArrayView2<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
-    limits: Vec<&[f64; 2]>,
     blending: &str,
+    limits: Vec<&[f64; 2]>,
 ) -> Result<Array3<u8>, MergeError> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];
@@ -257,8 +249,8 @@ pub fn merge_2d_u8(
 pub fn merge_3d_u8(
     arrs: Vec<ArrayView3<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
-    limits: Vec<&[f64; 2]>,
     blending: &str,
+    limits: Vec<&[f64; 2]>,
 ) -> Result<Array4<u8>, MergeError> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_n = first_arr.shape()[0];

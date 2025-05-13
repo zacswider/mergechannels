@@ -42,8 +42,7 @@ pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
     cmap_name: &str,
-    low: f64,
-    high: f64,
+    limits: [f64; 2],
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let untyped_array = array_reference.downcast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
@@ -53,11 +52,11 @@ pub fn dispatch_single_channel_py<'py>(
             println!("doing uint8");
             match ndim {
                 2 => {
-                    println!("doing 2D");
+                    println!("Processing 2D uint8 image");
                     let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_8bit(arr, low, high, cmap);
+                    let rgb = colorize::colorize_single_channel_8bit(arr, cmap, &limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 3 => {
@@ -65,7 +64,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_8bit(arr, low, high, cmap);
+                    let rgb = colorize::colorize_stack_8bit(arr, cmap, &limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 _ => {
@@ -81,7 +80,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_16bit(arr, low, high, cmap);
+                    let rgb = colorize::colorize_single_channel_16bit(arr, cmap, &limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 3 => {
@@ -89,7 +88,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_16bit(arr, low, high, cmap);
+                    let rgb = colorize::colorize_stack_16bit(arr, cmap, &limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 _ => {
