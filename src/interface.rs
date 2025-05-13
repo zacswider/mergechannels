@@ -4,9 +4,37 @@ use numpy::{
     IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
 };
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
+
+#[derive(Debug)]
+pub enum DispatchError {
+    UnsupportedDataType(String),
+    UnsupportedNumberOfDimensions(usize),
+}
+
+impl std::fmt::Display for DispatchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DispatchError::UnsupportedDataType(dtype) => {
+                write!(f, "Received unsupported dtype: {}", dtype)
+            }
+            DispatchError::UnsupportedNumberOfDimensions(ndim) => {
+                write!(f, "Received unsupported number of dimensions: {}", ndim)
+            }
+        }
+    }
+}
+
+impl std::error::Error for DispatchError {}
+
+impl From<DispatchError> for PyErr {
+    fn from(err: DispatchError) -> Self {
+        PyValueError::new_err(err.to_string())
+    }
+}
 
 #[pyfunction]
 #[pyo3(name = "dispatch_single_channel")]
@@ -40,7 +68,9 @@ pub fn dispatch_single_channel_py<'py>(
                     let rgb = colorize::colorize_stack_8bit(arr, low, high, cmap);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
-                _ => panic!("Recieved unsupported number of dimensions {:?}", ndim),
+                _ => {
+                    return Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into());
+                }
             }
         }
         "uint16" => {
@@ -62,10 +92,14 @@ pub fn dispatch_single_channel_py<'py>(
                     let rgb = colorize::colorize_stack_16bit(arr, low, high, cmap);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
-                _ => panic!("Recieved unsupported number of dimensions {:?}", ndim),
+                _ => {
+                    return Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into());
+                }
             }
         }
-        _ => panic!("Received unsupported dtype: {:?}", dtype),
+        _ => {
+            return Err(DispatchError::UnsupportedDataType(dtype).into());
+        }
     }
 }
 
