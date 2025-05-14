@@ -1,5 +1,7 @@
 use crate::blend::{self, MergeError};
-use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
+use numpy::{
+    ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3},
+};
 use smallvec::SmallVec;
 
 /// Create a (y, x, 3) array with ones
@@ -13,9 +15,9 @@ fn stack_to_rgb<T>(a: ArrayView3<T>) -> Array4<u8> {
 }
 
 ///pre-calculate the offset and scale factors for a given channel
-fn offset_and_scale(lowhigh: &[f64; 2]) -> [f32; 2] {
+fn offset_and_scale(lowhigh: [f64; 2]) -> [f32; 2] {
     let [low, high] = lowhigh;
-    let offset = *low as f32;
+    let offset = low as f32;
     let range = high - low;
     let scale = if range.abs() > 1e-9 {
         255.0 / range
@@ -28,9 +30,9 @@ fn offset_and_scale(lowhigh: &[f64; 2]) -> [f32; 2] {
 
 ///pre-calculate the offset and scale factors for each channel
 ///returned object is a SmallVec containing arrays with the offset and scale for each channel
-fn per_ch_offset_and_scale(limits: Vec<&[f64; 2]>) -> SmallVec<[[f32; 2]; blend::MAX_N_CH]> {
+fn per_ch_offset_and_scale(limits: Vec<[f64; 2]>) -> SmallVec<[[f32; 2]; blend::MAX_N_CH]> {
     let mut limit_vals: SmallVec<[[f32; 2]; blend::MAX_N_CH]> = SmallVec::new();
-    for &lowhigh in limits.iter() {
+    for lowhigh in limits.into_iter() {
         let offset_scale = offset_and_scale(lowhigh);
         limit_vals.push(offset_scale);
     }
@@ -51,7 +53,7 @@ where
 pub fn colorize_single_channel_8bit(
     arr: ArrayView2<u8>,
     cmap: &[[u8; 3]; 256],
-    limits: &[f64; 2],
+    limits: [f64; 2],
 ) -> Array3<u8> {
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
@@ -89,7 +91,7 @@ pub fn colorize_single_channel_8bit(
 pub fn colorize_stack_8bit(
     arr: ArrayView3<u8>,
     cmap: &[[u8; 3]; 256],
-    limits: &[f64; 2],
+    limits: [f64; 2],
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
@@ -132,7 +134,7 @@ pub fn colorize_stack_8bit(
 pub fn colorize_single_channel_16bit(
     arr: ArrayView2<u16>,
     cmap: &[[u8; 3]; 256],
-    limits: &[f64; 2],
+    limits: [f64; 2],
 ) -> Array3<u8> {
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
@@ -155,7 +157,7 @@ pub fn colorize_single_channel_16bit(
 pub fn colorize_stack_16bit(
     arr: ArrayView3<u16>,
     cmap: &[[u8; 3]; 256],
-    limits: &[f64; 2],
+    limits: [f64; 2],
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
@@ -178,10 +180,10 @@ pub fn colorize_stack_16bit(
 }
 
 /// check if all limits for a series of u8 ArrayViews are 0.0 and 255.0
-fn all_normalized(limits: &Vec<&[f64; 2]>) -> bool {
+fn all_normalized(limits: &Vec<[f64; 2]>) -> bool {
     limits
         .iter()
-        .all(|&[low, high]| *low == 0.0 && *high == 255.0)
+        .all(|&[low, high]| low == 0.0 && high == 255.0)
 }
 
 /// Merge n 2d arrays together
@@ -189,7 +191,7 @@ pub fn merge_2d_u8(
     arrs: Vec<ArrayView2<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
     blending: &str,
-    limits: Vec<&[f64; 2]>,
+    limits: Vec<[f64; 2]>,
 ) -> Result<Array3<u8>, MergeError> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_y = first_arr.shape()[0];
@@ -250,7 +252,7 @@ pub fn merge_3d_u8(
     arrs: Vec<ArrayView3<u8>>,
     cmaps: Vec<&[[u8; 3]; 256]>,
     blending: &str,
-    limits: Vec<&[f64; 2]>,
+    limits: Vec<[f64; 2]>,
 ) -> Result<Array4<u8>, MergeError> {
     let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
     let shape_n = first_arr.shape()[0];
