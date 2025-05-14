@@ -1,5 +1,7 @@
 use crate::cmaps;
 use crate::colorize;
+use ndarray::ArrayView2;
+use ndarray::ArrayView3;
 use numpy::{
     IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -56,7 +58,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_8bit(arr, cmap, &limits);
+                    let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 3 => {
@@ -64,7 +66,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_8bit(arr, cmap, &limits);
+                    let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 _ => {
@@ -80,7 +82,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_16bit(arr, cmap, &limits);
+                    let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 3 => {
@@ -88,7 +90,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_16bit(arr, cmap, &limits);
+                    let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
                 _ => {
@@ -114,18 +116,16 @@ pub fn dispatch_multi_channel_py<'py>(
     let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names
         .iter()
         .map(|name| cmaps::load_cmap(name))
-        .collect();  // TODO don't panic inside load_cmap
-    if let Ok(limits) = limits
+        .collect(); // TODO don't panic inside load_cmap
+    let limits = limits
         .into_iter()
-        .map(
-            |v| v
-                .as_slice()
+        .map(|v| {
+            v.as_slice()
                 .try_into()
-        ) {
-        println!("yay");
-    } else {
-        println!("boo")
-    }
+                .map_err(|_| format!("Expected a vector of length 2, got {}", v.len()))
+        })
+        .collect::<Result<Vec<[f64; 2]>, _>>()
+        .unwrap();
     if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u8>>())
@@ -133,47 +133,41 @@ pub fn dispatch_multi_channel_py<'py>(
         .collect::<Result<Vec<PyReadonlyArray2<u8>>, pyo3::PyErr>>()
     {
         println!("Processing 2D u8 arrays");
-        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits);
+        let arrs: Vec<ArrayView2<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
+        return Ok(rgb.into_dyn().into_pyarray(py));
     } else if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u8>>())
         .into_iter()
-        .collect()
+        .collect::<Result<Vec<PyReadonlyArray3<u8>>, pyo3::PyErr>>()
     {
-        println!("Processing 3D u8 arrays")
+        println!("Processing 3D u8 arrays");
+        let arrs: Vec<ArrayView3<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+        let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
+        return Ok(rgb.into_dyn().into_pyarray(py));
     } else if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u16>>())
         .into_iter()
-        .collect()
+        .collect::<Result<Vec<PyReadonlyArray2<u16>>, pyo3::PyErr>>()
     {
-        println!("Processing 2D u16 arrays")
+        println!("Processing 2D u16 arrays");
+        let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+        let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
+        return Ok(rgb.into_dyn().into_pyarray(py));
     } else if let Ok(arrs) = array_references
         .try_iter()
         .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u16>>())
         .into_iter()
-        .collect()
+        .collect::<Result<Vec<PyReadonlyArray3<u16>>, pyo3::PyErr>>()
     {
-        println!("Processing 3D u16 arrays")
+        println!("Processing 3D u16 arrays");
+        let arrs: Vec<ArrayView3<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+        let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
+        return Ok(rgb.into_dyn().into_pyarray(py));
     } else {
-        println!("Error!")
+        println!("Error!");
+        panic!("");
     }
-    Ok(rgb.into_dyn().into_pyarray(py));
 }
-
-// #[pyfunction]
-// #[pyo3(name = "apply_colors_and_merge_nc")]
-// pub fn apply_colors_and_merge_nc_py<'py>(
-//     py: Python<'py>,
-//     py_arrs: Vec<PyReadonlyArray2<'py, u8>>,
-//     cmap_names: Vec<String>,
-//     blending: &str,
-// ) -> Bound<'py, PyArray3<u8>> {
-//     let arrs: Vec<ArrayView2<u8>> = py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-//     let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names
-//         .iter()
-//         .map(|name| cmaps::load_cmap(name))
-//         .collect();
-//     let rgb = colorize::apply_colors_and_merge(arrs, cmaps, blending);
-//     rgb.into_pyarray(py)
-// }
