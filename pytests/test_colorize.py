@@ -7,7 +7,7 @@ def test_apply_color_map():
     Test that the color map is applied correctly
     '''
     x = np.ones((1, 1), dtype=np.uint8)
-    rgb = mc.apply_color_map(x, 'betterBlue')
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', (0, 255))
     assert rgb.shape == (1,1,3)
     assert rgb.dtype == np.uint8
     assert np.allclose(
@@ -17,7 +17,7 @@ def test_apply_color_map():
         )
     )
     x = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb = mc.apply_color_map(x, 'betterBlue')
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', (0, 255))
     assert np.allclose(
         rgb,
         np.array(
@@ -31,7 +31,12 @@ def test_apply_colors_and_merge_low_sum():
     '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
-    rgb_sum = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'sum')
+    rgb_sum = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'sum',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
     assert np.allclose(
@@ -47,7 +52,12 @@ def test_apply_colors_and_merge_high_sum():
     '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb_sum = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'sum')
+    rgb_sum = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'sum',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
     assert np.allclose(
@@ -63,7 +73,12 @@ def test_apply_colors_and_merge_low_max():
     '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
-    rgb_max = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'max')
+    rgb_max = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'max',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
     assert np.allclose(
@@ -79,7 +94,12 @@ def test_apply_colors_and_merge_high_max():
     '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb_max = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'max')
+    rgb_max = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'max',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
     assert np.allclose(
@@ -95,7 +115,12 @@ def test_apply_colors_and_merge_low_min():
     '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
-    rgb_min = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'min')
+    rgb_min = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'min',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
     assert np.allclose(
@@ -111,7 +136,12 @@ def test_apply_colors_and_merge_high_min():
     '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb_min = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'min')
+    rgb_min = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'min',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
     assert np.allclose(
@@ -127,7 +157,12 @@ def test_apply_colors_and_merge_low_mean():
     '''
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
-    rgb_mean = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'mean')
+    rgb_mean = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'mean',
+        [(0, 255), (0, 255)],
+    )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
     assert np.allclose(
@@ -145,7 +180,12 @@ def test_apply_colors_and_merge_high_mean():
     '''
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb_mean = mc.apply_colors_and_merge_nc([x, y], ['betterBlue', 'betterOrange'], 'mean')
+    rgb_mean = mc.dispatch_multi_channel(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        'mean',
+        [(0, 255), (0, 255)]
+    )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
     assert np.allclose(
