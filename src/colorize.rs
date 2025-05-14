@@ -312,3 +312,89 @@ pub fn merge_3d_u8(
     }
     Ok(rgb)
 }
+
+pub fn merge_2d_u16(
+    arrs: Vec<ArrayView2<u16>>,
+    cmaps: Vec<&[[u8; 3]; 256]>,
+    blending: &str,
+    limits: Vec<[f64; 2]>,
+) -> Result<Array3<u8>, MergeError> {
+    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
+    let shape_y = first_arr.shape()[0];
+    let shape_x = first_arr.shape()[1];
+    let mut rgb = img_to_rgb(first_arr);
+    let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
+    let blend_fn: blend::BlendFn = match blending {
+        "max" => blend::max_blending,
+        "sum" => blend::sum_blending,
+        "min" => blend::min_blending,
+        "mean" => blend::mean_blending,
+        _ => return Err(MergeError::InvalidBlendingMode(blending.to_string())),
+    };
+    // slow path - normalize on the fly
+    let offsets_and_scales = per_ch_offset_and_scale(limits);
+    for i in 0..shape_y {
+        for j in 0..shape_x {
+            px_vals.clear();
+            for ((arr, cmap), offset_scale) in
+                arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
+            {
+                let [offset, scale] = offset_scale;
+                let val = arr[[i, j]];
+                let idx = as_idx(val, *offset, *scale);
+                let ch_color = cmap[idx];
+                px_vals.push(ch_color);
+                let px_color = blend_fn(&px_vals);
+                rgb[[i, j, 0]] = px_color[0];
+                rgb[[i, j, 1]] = px_color[1];
+                rgb[[i, j, 2]] = px_color[2];
+            }
+        }
+    }
+    Ok(rgb)
+}
+
+pub fn merge_3d_u16(
+    arrs: Vec<ArrayView3<u16>>,
+    cmaps: Vec<&[[u8; 3]; 256]>,
+    blending: &str,
+    limits: Vec<[f64; 2]>,
+) -> Result<Array4<u8>, MergeError> {
+    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
+    let shape_n = first_arr.shape()[0];
+    let shape_y = first_arr.shape()[1];
+    let shape_x = first_arr.shape()[2];
+    let mut rgb = stack_to_rgb(first_arr);
+    let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
+    let blend_fn: blend::BlendFn = match blending {
+        "max" => blend::max_blending,
+        "sum" => blend::sum_blending,
+        "min" => blend::min_blending,
+        "mean" => blend::mean_blending,
+        _ => return Err(MergeError::InvalidBlendingMode(blending.to_string())),
+    };
+
+    // slow path - normalize on the fly
+    let offsets_and_scales = per_ch_offset_and_scale(limits);
+    for n in 0..shape_n {
+        for i in 0..shape_y {
+            for j in 0..shape_x {
+                px_vals.clear();
+                for ((arr, cmap), offset_scale) in
+                    arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
+                {
+                    let [offset, scale] = offset_scale;
+                    let val = arr[[n, i, j]];
+                    let idx = as_idx(val, *offset, *scale);
+                    let ch_color = cmap[idx];
+                    px_vals.push(ch_color);
+                }
+                let px_color = blend_fn(&px_vals);
+                rgb[[n, i, j, 0]] = px_color[0];
+                rgb[[n, i, j, 1]] = px_color[1];
+                rgb[[n, i, j, 2]] = px_color[2];
+            }
+        }
+    }
+    Ok(rgb)
+}
