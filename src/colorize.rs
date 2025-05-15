@@ -43,8 +43,7 @@ where
     T: Into<f32>,
 {
     let normalized_value = ((val.into()) - offset) * scale;
-    let idx = normalized_value.clamp(0.0, 255.0) as usize;
-    idx
+    normalized_value.clamp(0.0, 255.0) as usize
 }
 
 ///apply a colormap to a single 8-bit image
@@ -178,7 +177,7 @@ pub fn colorize_stack_16bit(
 }
 
 /// check if all limits for a series of u8 ArrayViews are 0.0 and 255.0
-fn all_normalized(limits: &Vec<[f64; 2]>) -> bool {
+fn all_normalized(limits: &[[f64; 2]]) -> bool {
     limits
         .iter()
         .all(|&[low, high]| low == 0.0 && high == 255.0)

@@ -70,9 +70,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
-                _ => {
-                    return Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into());
-                }
+                _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
             }
         }
         "uint16" => {
@@ -94,14 +92,10 @@ pub fn dispatch_single_channel_py<'py>(
                     let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
                     return Ok(rgb.into_dyn().into_pyarray(py));
                 }
-                _ => {
-                    return Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into());
-                }
+                _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
             }
         }
-        _ => {
-            return Err(DispatchError::UnsupportedDataType(dtype).into());
-        }
+        _ => Err(DispatchError::UnsupportedDataType(dtype).into()),
     }
 }
 
@@ -109,7 +103,7 @@ fn convert_to_2d_u8<'py>(
     arr_ref_iterator: &mut Bound<'py, PyIterator>,
 ) -> Result<Vec<PyReadonlyArray2<'py, u8>>, pyo3::PyErr> {
     let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
-    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+    for py_arr_ref in arr_ref_iterator {
         let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u8>>()?;
         arrs.push(py_arr);
     }
@@ -120,7 +114,7 @@ fn convert_to_3d_u8<'py>(
     arr_ref_iterator: &mut Bound<'py, PyIterator>,
 ) -> Result<Vec<PyReadonlyArray3<'py, u8>>, pyo3::PyErr> {
     let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
-    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+    for py_arr_ref in arr_ref_iterator {
         let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u8>>()?;
         arrs.push(py_arr);
     }
@@ -131,7 +125,7 @@ fn convert_to_2d_u16<'py>(
     arr_ref_iterator: &mut Bound<'py, PyIterator>,
 ) -> Result<Vec<PyReadonlyArray2<'py, u16>>, pyo3::PyErr> {
     let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
-    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+    for py_arr_ref in arr_ref_iterator {
         let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u16>>()?;
         arrs.push(py_arr);
     }
@@ -142,7 +136,7 @@ fn convert_to_3d_u16<'py>(
     arr_ref_iterator: &mut Bound<'py, PyIterator>,
 ) -> Result<Vec<PyReadonlyArray3<'py, u16>>, pyo3::PyErr> {
     let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
-    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+    for py_arr_ref in arr_ref_iterator {
         let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u16>>()?;
         arrs.push(py_arr);
     }
