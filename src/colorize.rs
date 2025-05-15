@@ -1,7 +1,5 @@
 use crate::blend::{self, MergeError};
-use numpy::{
-    ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3},
-};
+use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use smallvec::SmallVec;
 
 /// Create a (y, x, 3) array with ones
