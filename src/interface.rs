@@ -9,6 +9,7 @@ use numpy::{
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
+use pyo3::types::PyIterator;
 use pyo3::{Bound, Python};
 
 #[derive(Debug)]
@@ -104,6 +105,50 @@ pub fn dispatch_single_channel_py<'py>(
     }
 }
 
+fn convert_to_2d_u8<'py>(
+    arr_ref_iterator: &mut Bound<'py, PyIterator>,
+) -> Result<Vec<PyReadonlyArray2<'py, u8>>, pyo3::PyErr> {
+    let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
+    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u8>>()?;
+        arrs.push(py_arr);
+    }
+    Ok(arrs)
+}
+
+fn convert_to_3d_u8<'py>(
+    arr_ref_iterator: &mut Bound<'py, PyIterator>,
+) -> Result<Vec<PyReadonlyArray3<'py, u8>>, pyo3::PyErr> {
+    let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
+    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u8>>()?;
+        arrs.push(py_arr);
+    }
+    Ok(arrs)
+}
+
+fn convert_to_2d_u16<'py>(
+    arr_ref_iterator: &mut Bound<'py, PyIterator>,
+) -> Result<Vec<PyReadonlyArray2<'py, u16>>, pyo3::PyErr> {
+    let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
+    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u16>>()?;
+        arrs.push(py_arr);
+    }
+    Ok(arrs)
+}
+
+fn convert_to_3d_u16<'py>(
+    arr_ref_iterator: &mut Bound<'py, PyIterator>,
+) -> Result<Vec<PyReadonlyArray3<'py, u16>>, pyo3::PyErr> {
+    let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
+    while let Some(py_arr_ref) = arr_ref_iterator.next() {
+        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u16>>()?;
+        arrs.push(py_arr);
+    }
+    Ok(arrs)
+}
+
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel")]
 pub fn dispatch_multi_channel_py<'py>(
@@ -126,48 +171,33 @@ pub fn dispatch_multi_channel_py<'py>(
         })
         .collect::<Result<Vec<[f64; 2]>, _>>()
         .unwrap();
-    if let Ok(arrs) = array_references
-        .try_iter()
-        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u8>>())
-        .into_iter()
-        .collect::<Result<Vec<PyReadonlyArray2<u8>>, pyo3::PyErr>>()
-    {
-        println!("Processing 2D u8 arrays");
-        let arrs: Vec<ArrayView2<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-        let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
-        return Ok(rgb.into_dyn().into_pyarray(py));
-    } else if let Ok(arrs) = array_references
-        .try_iter()
-        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u8>>())
-        .into_iter()
-        .collect::<Result<Vec<PyReadonlyArray3<u8>>, pyo3::PyErr>>()
-    {
-        println!("Processing 3D u8 arrays");
-        let arrs: Vec<ArrayView3<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-        let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
-        return Ok(rgb.into_dyn().into_pyarray(py));
-    } else if let Ok(arrs) = array_references
-        .try_iter()
-        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray2<u16>>())
-        .into_iter()
-        .collect::<Result<Vec<PyReadonlyArray2<u16>>, pyo3::PyErr>>()
-    {
-        println!("Processing 2D u16 arrays");
-        let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-        let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
-        return Ok(rgb.into_dyn().into_pyarray(py));
-    } else if let Ok(arrs) = array_references
-        .try_iter()
-        .map(|arr_ref| arr_ref.extract::<PyReadonlyArray3<u16>>())
-        .into_iter()
-        .collect::<Result<Vec<PyReadonlyArray3<u16>>, pyo3::PyErr>>()
-    {
-        println!("Processing 3D u16 arrays");
-        let arrs: Vec<ArrayView3<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-        let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
-        return Ok(rgb.into_dyn().into_pyarray(py));
+    if let Ok(mut array_iterator) = array_references.try_iter() {
+        println!("successfully created iterator from input arguments");
+        if let Ok(arrs) = convert_to_2d_u8(&mut array_iterator) {
+            println!("Processing 2D u8 arrays");
+            let arrs: Vec<ArrayView2<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+            let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
+            return Ok(rgb.into_dyn().into_pyarray(py));
+        } else if let Ok(arrs) = convert_to_3d_u8(&mut array_iterator) {
+            println!("Processing 3D u8 arrays");
+            let arrs: Vec<ArrayView3<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+            let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
+            return Ok(rgb.into_dyn().into_pyarray(py));
+        } else if let Ok(arrs) = convert_to_2d_u16(&mut array_iterator) {
+            println!("Processing 2D u16 arrays");
+            let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+            let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
+            return Ok(rgb.into_dyn().into_pyarray(py));
+        } else if let Ok(arrs) = convert_to_3d_u16(&mut array_iterator) {
+            println!("Processing 3D u16 arrays");
+            let arrs: Vec<ArrayView3<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+            let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
+            return Ok(rgb.into_dyn().into_pyarray(py));
+        } else {
+            println!("Error!");
+            panic!("are we panicking here????");
+        }
     } else {
-        println!("Error!");
-        panic!("");
+        panic!("failed to create iterator from input arguments");
     }
 }
