@@ -60,7 +60,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
                     let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
+                    Ok(rgb.into_dyn().into_pyarray(py))
                 }
                 3 => {
                     println!("doing 3D");
@@ -68,7 +68,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
                     let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
+                    Ok(rgb.into_dyn().into_pyarray(py))
                 }
                 _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
             }
@@ -82,7 +82,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
                     let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
+                    Ok(rgb.into_dyn().into_pyarray(py))
                 }
                 3 => {
                     println!("doing 3D");
@@ -90,7 +90,7 @@ pub fn dispatch_single_channel_py<'py>(
                     let arr = py_arr.as_array();
                     let cmap = cmaps::load_cmap(cmap_name);
                     let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
-                    return Ok(rgb.into_dyn().into_pyarray(py));
+                    Ok(rgb.into_dyn().into_pyarray(py))
                 }
                 _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
             }
@@ -171,25 +171,24 @@ pub fn dispatch_multi_channel_py<'py>(
             println!("Processing 2D u8 arrays");
             let arrs: Vec<ArrayView2<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
             let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
-            return Ok(rgb.into_dyn().into_pyarray(py));
+            Ok(rgb.into_dyn().into_pyarray(py))
         } else if let Ok(arrs) = convert_to_3d_u8(&mut array_iterator) {
             println!("Processing 3D u8 arrays");
             let arrs: Vec<ArrayView3<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
             let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
-            return Ok(rgb.into_dyn().into_pyarray(py));
+            Ok(rgb.into_dyn().into_pyarray(py))
         } else if let Ok(arrs) = convert_to_2d_u16(&mut array_iterator) {
             println!("Processing 2D u16 arrays");
             let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
             let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
-            return Ok(rgb.into_dyn().into_pyarray(py));
+            Ok(rgb.into_dyn().into_pyarray(py))
         } else if let Ok(arrs) = convert_to_3d_u16(&mut array_iterator) {
             println!("Processing 3D u16 arrays");
             let arrs: Vec<ArrayView3<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
             let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
-            return Ok(rgb.into_dyn().into_pyarray(py));
+            Ok(rgb.into_dyn().into_pyarray(py))
         } else {
-            println!("Error!");
-            panic!("are we panicking here????");
+            panic!("failed to convert input arrays to the correct type");
         }
     } else {
         panic!("failed to create iterator from input arguments");
