@@ -15,14 +15,14 @@ def merge(
     ...
 
 def dispatch_single_channel(
-    arr: np.ndarray,
+    array_reference: np.ndarray,
     cmap_name: str,
     limits: tuple[float, float],
 ) -> np.ndarray:
     ...
 
 def dispatch_multi_channel(
-    arrs: Sequence[np.ndarray],
+    array_references: Sequence[np.ndarray],
     cmap_names: Sequence[str],
     blending: Literal[BLENDING_OPTIONS],
     limits: Sequence[tuple[float, float]],

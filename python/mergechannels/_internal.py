@@ -48,7 +48,7 @@ def merge(
 			low, high = np.percentile(arrs[0], np.array(saturation_limits) * 100)
 			limits = (low, high)
 		return dispatch_single_channel(
-			arr=arrs[0],
+			array_reference=arrs[0],
 			cmap_name=colors[0],
 			limits=limits,
 		)
@@ -58,7 +58,7 @@ def merge(
 		else:
 			limits = tuple(np.percentile(arr, np.array(saturation_limits) * 100) for arr in arrs)
 		return dispatch_multi_channel(
-			arrs=arrs,
+			array_references=arrs,
 			cmap_names=colors,
 			blending=blending,
 			limits=limits,  # type: ignore
