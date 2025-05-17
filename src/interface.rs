@@ -1,7 +1,10 @@
+use std::any;
+
 use crate::cmaps;
 use crate::colorize;
 use ndarray::ArrayView2;
 use ndarray::ArrayView3;
+use numpy::dtype;
 use numpy::{
     IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -143,6 +146,18 @@ fn convert_to_3d_u16<'py>(
     Ok(arrs)
 }
 
+fn consensus_value<'a, T>(
+    dtypes: &'a [T],
+) -> Result<&'a T, String>
+where T: PartialEq + std::fmt::Debug,
+{
+    let (first, rest) = dtypes.split_first().ok_or("No dtypes found".to_string())?;
+    if !rest.iter().all(|dtype| dtype == first) {
+        return  Err(format!("Expected all arrays to have the same dtype, got {:?}", dtypes));
+    }
+    Ok(first)
+}
+
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel")]
 pub fn dispatch_multi_channel_py<'py>(
@@ -165,6 +180,24 @@ pub fn dispatch_multi_channel_py<'py>(
         })
         .collect::<Result<Vec<[f64; 2]>, _>>()
         .unwrap();
+    let mut dtypes: Vec<String> = Vec::new();
+    let mut ndims: Vec<usize> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for array_reference in array_iterator {
+            let arr_ref = array_reference?;
+            let untyped_array = arr_ref.downcast::<PyUntypedArray>()?;
+            dtypes.push(untyped_array.dtype().to_string());
+            ndims.push(untyped_array.ndim());
+        }
+    }
+    let dtype = consensus_value(&dtypes);
+    let ndim = consensus_value(&ndims);
+    fn all_normalized(limits: &[[f64; 2]]) -> bool {
+        limits
+            .iter()
+            .all(|&[low, high]| low == 0.0 && high == 255.0)
+    }
+
     if let Ok(mut array_iterator) = array_references.try_iter() {
         println!("successfully created iterator from input arguments");
         if let Ok(arrs) = convert_to_2d_u8(&mut array_iterator) {
@@ -179,7 +212,9 @@ pub fn dispatch_multi_channel_py<'py>(
             Ok(rgb.into_dyn().into_pyarray(py))
         } else if let Ok(arrs) = convert_to_2d_u16(&mut array_iterator) {
             println!("Processing 2D u16 arrays");
+            println!("received arrs with length {}", arrs.len());
             let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+            println!("create arrs with length {}", arrs.len());
             let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
             Ok(rgb.into_dyn().into_pyarray(py))
         } else if let Ok(arrs) = convert_to_3d_u16(&mut array_iterator) {
