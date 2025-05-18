@@ -206,14 +206,14 @@ pub fn dispatch_multi_channel_py<'py>(
                 let arrs: Vec<ArrayView2<u8>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
                 let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
-                return Ok(rgb.into_dyn().into_pyarray(py));
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arrs = extract_3d_u8_arrays(array_references);
                 let arrs: Vec<ArrayView3<u8>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
                 let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
-                return Ok(rgb.into_dyn().into_pyarray(py));
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
         },
@@ -223,14 +223,14 @@ pub fn dispatch_multi_channel_py<'py>(
                 let arrs: Vec<ArrayView2<u16>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
                 let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
-                return Ok(rgb.into_dyn().into_pyarray(py));
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arrs = extract_3d_u16_arrays(array_references);
                 let arrs: Vec<ArrayView3<u16>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
                 let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
-                return Ok(rgb.into_dyn().into_pyarray(py));
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
         },
