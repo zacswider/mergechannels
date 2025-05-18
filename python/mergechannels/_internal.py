@@ -31,9 +31,9 @@ def merge(
 		raise ValueError(
 			f'Expected every array to have the same shape, got {arr_shapes}'
 		)
-	if not len(arr_shapes[0]) == 2:
+	if len(arr_shapes[0]) not in (2, 3):
 		raise ValueError(
-			f'Expected every array to be 2D, got {arr_shapes[0]}'
+			f'Expected every array to be 2D or 3D, got {arr_shapes[0]}'
 		)
 	arr_dtypes = [arr.dtype for arr in arrs]
 	if not len(set(arr_dtypes)) == 1:
