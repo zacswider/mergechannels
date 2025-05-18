@@ -88,60 +88,79 @@ pub fn dispatch_single_channel_py<'py>(
     }
 }
 
-fn convert_to_2d_u8<'py>(
-    arr_ref_iterator: &mut Bound<'py, PyIterator>,
-) -> Result<Vec<PyReadonlyArray2<'py, u8>>, pyo3::PyErr> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
-    for py_arr_ref in arr_ref_iterator {
-        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u8>>()?;
-        arrs.push(py_arr);
-    }
-    Ok(arrs)
-}
-
-fn convert_to_3d_u8<'py>(
-    arr_ref_iterator: &mut Bound<'py, PyIterator>,
-) -> Result<Vec<PyReadonlyArray3<'py, u8>>, pyo3::PyErr> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
-    for py_arr_ref in arr_ref_iterator {
-        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u8>>()?;
-        arrs.push(py_arr);
-    }
-    Ok(arrs)
-}
-
-fn convert_to_2d_u16<'py>(
-    arr_ref_iterator: &mut Bound<'py, PyIterator>,
-) -> Result<Vec<PyReadonlyArray2<'py, u16>>, pyo3::PyErr> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
-    for py_arr_ref in arr_ref_iterator {
-        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray2<u16>>()?;
-        arrs.push(py_arr);
-    }
-    Ok(arrs)
-}
-
-fn convert_to_3d_u16<'py>(
-    arr_ref_iterator: &mut Bound<'py, PyIterator>,
-) -> Result<Vec<PyReadonlyArray3<'py, u16>>, pyo3::PyErr> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
-    for py_arr_ref in arr_ref_iterator {
-        let py_arr = py_arr_ref.unwrap().extract::<PyReadonlyArray3<u16>>()?;
-        arrs.push(py_arr);
-    }
-    Ok(arrs)
-}
-
-fn consensus_value<'a, T>(
-    dtypes: &'a [T],
-) -> Result<&'a T, String>
-where T: PartialEq + std::fmt::Debug,
+fn consensus_value<T>(dtypes: &[T]) -> Result<&T, String>
+where
+    T: PartialEq + std::fmt::Debug,
 {
     let (first, rest) = dtypes.split_first().ok_or("No dtypes found".to_string())?;
     if !rest.iter().all(|dtype| dtype == first) {
-        return  Err(format!("Expected all arrays to have the same dtype, got {:?}", dtypes));
+        return Err(format!(
+            "Expected all arrays to have the same dtype, got {:?}",
+            dtypes
+        ));
     }
     Ok(first)
+}
+
+fn extract_2d_u8_arrays<'py>(
+    array_references: &Bound<'py, PyAny>,
+) -> Vec<PyReadonlyArray2<'py, u8>> {
+    let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for py_arr_ref in array_iterator {
+            let py_arr = py_arr_ref
+                .unwrap()
+                .extract::<PyReadonlyArray2<u8>>()
+                .unwrap();
+            arrs.push(py_arr);
+        }
+    }
+    arrs
+}
+fn extract_3d_u8_arrays<'py>(
+    array_references: &Bound<'py, PyAny>,
+) -> Vec<PyReadonlyArray3<'py, u8>> {
+    let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for py_arr_ref in array_iterator {
+            let py_arr = py_arr_ref
+                .unwrap()
+                .extract::<PyReadonlyArray3<u8>>()
+                .unwrap();
+            arrs.push(py_arr);
+        }
+    }
+    arrs
+}
+fn extract_2d_u16_arrays<'py>(
+    array_references: &Bound<'py, PyAny>,
+) -> Vec<PyReadonlyArray2<'py, u16>> {
+    let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for py_arr_ref in array_iterator {
+            let py_arr = py_arr_ref
+                .unwrap()
+                .extract::<PyReadonlyArray2<u16>>()
+                .unwrap();
+            arrs.push(py_arr);
+        }
+    }
+    arrs
+}
+fn extract_3d_u16_arrays<'py>(
+    array_references: &Bound<'py, PyAny>,
+) -> Vec<PyReadonlyArray3<'py, u16>> {
+    let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for py_arr_ref in array_iterator {
+            let py_arr = py_arr_ref
+                .unwrap()
+                .extract::<PyReadonlyArray3<u16>>()
+                .unwrap();
+            arrs.push(py_arr);
+        }
+    }
+    arrs
 }
 
 #[pyfunction]
@@ -157,6 +176,7 @@ pub fn dispatch_multi_channel_py<'py>(
         .iter()
         .map(|name| cmaps::load_cmap(name))
         .collect(); // TODO don't panic inside load_cmap
+
     let limits = limits
         .into_iter()
         .map(|v| {
@@ -166,6 +186,7 @@ pub fn dispatch_multi_channel_py<'py>(
         })
         .collect::<Result<Vec<[f64; 2]>, _>>()
         .unwrap();
+
     let mut dtypes: Vec<String> = Vec::new();
     let mut ndims: Vec<usize> = Vec::new();
     if let Ok(array_iterator) = array_references.try_iter() {
@@ -176,42 +197,43 @@ pub fn dispatch_multi_channel_py<'py>(
             ndims.push(untyped_array.ndim());
         }
     }
-    let dtype = consensus_value(&dtypes);
-    let ndim = consensus_value(&ndims);
-    fn all_normalized(limits: &[[f64; 2]]) -> bool {
-        limits
-            .iter()
-            .all(|&[low, high]| low == 0.0 && high == 255.0)
-    }
-
-    if let Ok(mut array_iterator) = array_references.try_iter() {
-        println!("successfully created iterator from input arguments");
-        if let Ok(arrs) = convert_to_2d_u8(&mut array_iterator) {
-            println!("Processing 2D u8 arrays");
-            let arrs: Vec<ArrayView2<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-            let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
-            Ok(rgb.into_dyn().into_pyarray(py))
-        } else if let Ok(arrs) = convert_to_3d_u8(&mut array_iterator) {
-            println!("Processing 3D u8 arrays");
-            let arrs: Vec<ArrayView3<u8>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-            let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
-            Ok(rgb.into_dyn().into_pyarray(py))
-        } else if let Ok(arrs) = convert_to_2d_u16(&mut array_iterator) {
-            println!("Processing 2D u16 arrays");
-            println!("received arrs with length {}", arrs.len());
-            let arrs: Vec<ArrayView2<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-            println!("create arrs with length {}", arrs.len());
-            let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
-            Ok(rgb.into_dyn().into_pyarray(py))
-        } else if let Ok(arrs) = convert_to_3d_u16(&mut array_iterator) {
-            println!("Processing 3D u16 arrays");
-            let arrs: Vec<ArrayView3<u16>> = arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-            let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
-            Ok(rgb.into_dyn().into_pyarray(py))
-        } else {
-            panic!("failed to convert input arrays to the correct type");
-        }
-    } else {
-        panic!("failed to create iterator from input arguments");
+    let dtype = consensus_value(&dtypes).unwrap();
+    let ndim = consensus_value(&ndims).unwrap();
+    match dtype.as_str() {
+        "uint8" => match ndim {
+            2 => {
+                let py_arrs = extract_2d_u8_arrays(array_references);
+                let arrs: Vec<ArrayView2<u8>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
+                return Ok(rgb.into_dyn().into_pyarray(py));
+            }
+            3 => {
+                let py_arrs = extract_3d_u8_arrays(array_references);
+                let arrs: Vec<ArrayView3<u8>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
+                return Ok(rgb.into_dyn().into_pyarray(py));
+            }
+            _ => Err(DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
+        },
+        "uint16" => match ndim {
+            2 => {
+                let py_arrs = extract_2d_u16_arrays(array_references);
+                let arrs: Vec<ArrayView2<u16>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
+                return Ok(rgb.into_dyn().into_pyarray(py));
+            }
+            3 => {
+                let py_arrs = extract_3d_u16_arrays(array_references);
+                let arrs: Vec<ArrayView3<u16>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits).unwrap();
+                return Ok(rgb.into_dyn().into_pyarray(py));
+            }
+            _ => Err(DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
+        },
+        _ => Err(DispatchError::UnsupportedDataType(dtype.clone()).into()),
     }
 }
