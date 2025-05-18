@@ -41,8 +41,7 @@ plt.show()
 print(colorized.shape, colorized.dtype)
 >> (512, 512, 3) uint8
 ```
-![colorize a single image](https://raw.githubusercontent.com/zacswider/README_Images/main/camera_red-green.png
-)
+![colorize a single image](https://raw.githubusercontent.com/zacswider/README_Images/main/camera_red-green.png)
 
 
 ### apply a different colormap to each channel
@@ -52,38 +51,66 @@ import matplotlib.pyplot as plt
 import mergechannels as mc
 
 cells, nuclei = data.cells3d().max(axis=0)
-cells = to_uint8(cells)     # normalize your own arrays, mergechannels doesn't currently handle this
-nuclei = to_uint8(nuclei)   # normalize your own arrays, mergechannels doesn't currently handle this
-
-fig, axes = plt.subplots(2, 2, figsize=(6, 6), dpi=150)
+assert cells.dtype == 'uint16' and nuclei.dtype == 'uint16'
+fig, axes = plt.subplots(1, 2, figsize=(3, 6), dpi=300)
 for ax in axes.ravel(): ax.axis('off')
-(a, b, c, d) = axes.ravel()
-a.imshow(cells, cmap='gray')
-b.imshow(nuclei, cmap='gray')
-c.imshow(
+(a, b) = axes.ravel()
+a.imshow(mc.merge([cells, nuclei],['Orange Hot', 'Cyan Hot']))
+b.imshow(mc.merge([cells, nuclei],['I Blue', 'I Forest'], blending='min'))
+fig.tight_layout()
+plt.show()
+```
+![max and min multicolor blending](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_normal_and_inverted.png)
+
+### apply a colormap to a whole stack
+```python
+from skimage import data
+from matplotlib import pyplot as plt
+import mergechannels as mc
+
+volume = data.cells3d()
+cells = volume[:, 0]
+nuclei = volume[:, 1]
+merged = mc.merge([cells, nuclei],['Orange Hot', 'Cyan Hot'])
+plt.imshow(merged[24]); plt.show()
+```
+![colorize a whole stack of images](https://raw.githubusercontent.com/zacswider/README_Images/main/merged_stacks.png)
+
+### adjust the saturation limits when applying colormaps
+``` python
+from skimage import data
+import matplotlib.pyplot as plt
+import mergechannels as mc
+
+cells, nuclei = data.cells3d().max(axis=0)
+channels = [cells, nuclei]
+colormaps = ['I Blue', 'I Forest']
+fig, axes = plt.subplots(1, 2, figsize=(3, 6), dpi=300)
+for ax in axes.ravel(): ax.axis('off')
+(a, b) = axes.ravel()
+a.imshow(mc.merge(channels, colormaps, blending='min'))
+b.imshow(
     mc.merge(
-        [cells, nuclei],
-        ['Orange Hot', 'Cyan Hot'],  # maximum blending is the default
-    ),
-)
-d.imshow(
-    mc.merge(
-        [cells, nuclei],
-        ['I Blue', 'I Forest'],
-        blending='min',     # use minimum blending with inverted colormaps
+        channels,
+        colormaps,
+        blending='min',
+        saturation_limits=(
+            0.01,  # bottom 1% of pixels set to black point
+            0.97,  # top 3% of pixels set to white point
+        ),
     ),
 )
 fig.tight_layout()
 plt.show()
 ```
-![max and min multicolor blending](https://raw.githubusercontent.com/zacswider/README_Images/main/cells_multicolor.png)
+![adjust saturation limits](https://raw.githubusercontent.com/zacswider/README_Images/main/adjust_sat_lims.png)
 
 
 ## Roadmap
-mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2D 8-bit images and that's it.
+mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2D and 3D 8-bit or 16-bit images and that's it.
 - Add support for any numerical dtype
-- Add support for 3D images
 - Add option to return any colormap as a matplotlib colormap
+- Add option to pass external colormaps to mergechannels
 - Add support for directly passing matplotlib colormaps instead of colormap names
 - Parallelize colormap application on large images (if it's helpful)
 - Add option to overlay binary or instance masks onto colorized images
