@@ -1,13 +1,13 @@
 # Import Rust functions
 from .mergechannels import (  # type: ignore
-	apply_color_map,
-	apply_colors_and_merge_nc,
+	dispatch_single_channel,
+	dispatch_multi_channel,
 )
-
 from ._internal import merge
 
+
 __all__ = [
-	'apply_color_map',
-	'apply_colors_and_merge_nc',
+	'dispatch_single_channel',
+	'dispatch_multi_channel',
 	'merge',
 ]
