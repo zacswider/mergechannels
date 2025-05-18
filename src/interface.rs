@@ -1,10 +1,7 @@
-use std::any;
-
 use crate::cmaps;
 use crate::colorize;
 use ndarray::ArrayView2;
 use ndarray::ArrayView3;
-use numpy::dtype;
 use numpy::{
     IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -12,7 +9,6 @@ use numpy::{
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
-use pyo3::types::PyIterator;
 use pyo3::{Bound, Python};
 
 #[derive(Debug)]
@@ -54,50 +50,40 @@ pub fn dispatch_single_channel_py<'py>(
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
     match dtype.as_str() {
-        "uint8" => {
-            println!("doing uint8");
-            match ndim {
-                2 => {
-                    println!("Processing 2D uint8 image");
-                    let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
-                    Ok(rgb.into_dyn().into_pyarray(py))
-                }
-                3 => {
-                    println!("doing 3D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
-                    Ok(rgb.into_dyn().into_pyarray(py))
-                }
-                _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        "uint8" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
+                let arr = py_arr.as_array();
+                let cmap = cmaps::load_cmap(cmap_name);
+                let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
-        }
-        "uint16" => {
-            println!("doing uint16");
-            match ndim {
-                2 => {
-                    println!("doing 2D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
-                    Ok(rgb.into_dyn().into_pyarray(py))
-                }
-                3 => {
-                    println!("doing 3D");
-                    let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
-                    let arr = py_arr.as_array();
-                    let cmap = cmaps::load_cmap(cmap_name);
-                    let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
-                    Ok(rgb.into_dyn().into_pyarray(py))
-                }
-                _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
+                let arr = py_arr.as_array();
+                let cmap = cmaps::load_cmap(cmap_name);
+                let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
+                Ok(rgb.into_dyn().into_pyarray(py))
             }
-        }
+            _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
+        "uint16" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
+                let arr = py_arr.as_array();
+                let cmap = cmaps::load_cmap(cmap_name);
+                let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
+                let arr = py_arr.as_array();
+                let cmap = cmaps::load_cmap(cmap_name);
+                let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
         _ => Err(DispatchError::UnsupportedDataType(dtype).into()),
     }
 }
