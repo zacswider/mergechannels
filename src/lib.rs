@@ -2,6 +2,7 @@ mod blend;
 mod cmaps;
 mod colorize;
 mod interface;
+mod errors;
 
 use interface::{dispatch_multi_channel_py, dispatch_single_channel_py};
 use pyo3::prelude::*;
