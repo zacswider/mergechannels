@@ -1,4 +1,4 @@
-
+use std::error::Error;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
@@ -28,3 +28,24 @@ impl From<DispatchError> for PyErr {
         PyValueError::new_err(err.to_string())
     }
 }
+
+#[derive(Debug)]
+pub enum MergeError {
+    InvalidBlendingMode(String),
+}
+
+impl std::fmt::Display for MergeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MergeError::InvalidBlendingMode(mode) => {
+                write!(
+                    f,
+                    "Invalid blending mode: `{}`. Valid modes are 'max', 'sum', 'min', and 'mean'.",
+                    mode
+                )
+            }
+        }
+    }
+}
+
+impl Error for MergeError {}

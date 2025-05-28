@@ -1,4 +1,5 @@
-use crate::blend::{self, MergeError};
+use crate::blend::{self};
+use crate::errors::MergeError;
 use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use smallvec::SmallVec;
 
