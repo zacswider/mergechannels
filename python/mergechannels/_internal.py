@@ -1,4 +1,7 @@
-from typing import Sequence
+from typing import (
+	Sequence,
+	Union,
+)
 
 import numpy as np
 
@@ -12,8 +15,8 @@ from ._blending import BLENDING_OPTIONS
 def apply_color_map(
 	arr: np.ndarray,
 	color: COLORMAPS,
-	percentiles: tuple[float, float] | None = None,
-	saturation_limits: tuple[float, float] | None = None,
+	percentiles: Union[tuple[float, float], None] = None,
+	saturation_limits: Union[tuple[float, float], None] = None,
 ) -> np.ndarray:
 	'''
 	apply a color map to an array
@@ -35,8 +38,8 @@ def merge(
 	arrs: Sequence[np.ndarray],
 	colors: Sequence[COLORMAPS],
 	blending: BLENDING_OPTIONS = 'max',
-	percentiles: Sequence[tuple[float, float]] | None = None,
-	saturation_limits: Sequence[tuple[float, float]] | None = None,
+	percentiles: Union[Sequence[tuple[float, float]], None] = None,
+	saturation_limits: Union[Sequence[tuple[float, float]], None] = None,
 ) -> np.ndarray:
 	'''
 	apply cmaps to arrays and blend the colors
