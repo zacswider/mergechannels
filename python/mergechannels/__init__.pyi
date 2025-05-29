@@ -6,11 +6,20 @@ from python.mergechannels._blending import BLENDING_OPTIONS
 from python.mergechannels._luts import COLORMAPS
 
 
+def apply_color_map(
+	arr: np.ndarray,
+	color: COLORMAPS,
+	percentiles: tuple[float, float] | None = None,
+	saturation_limits: tuple[float, float] | None = None,
+) -> np.ndarray:
+    ...
+
 def merge(
-    arrs: np.ndarray | Sequence[np.ndarray],
-    colors: Sequence[COLORMAPS] = (),
-    blending: Literal[BLENDING_OPTIONS] = 'max',
-    saturation_limits: tuple[float, float] = (0.2, 99.8),
+	arrs: Sequence[np.ndarray],
+	colors: Sequence[COLORMAPS],
+	blending: BLENDING_OPTIONS = 'max',
+	percentiles: tuple[float, float] | Sequence[tuple[float, float]] | None = None,
+	saturation_limits: tuple[float, float] | Sequence[tuple[float, float]] | None = None,
 ) -> np.ndarray:
     ...
 
