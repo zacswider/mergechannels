@@ -1,6 +1,6 @@
-use std::error::Error;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use std::error::Error;
 
 #[derive(Debug)]
 pub enum DispatchError {

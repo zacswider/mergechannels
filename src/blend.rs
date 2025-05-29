@@ -4,7 +4,6 @@ pub const MAX_N_CH: usize = 5;
 
 pub type BlendFn = fn(&SmallVec<[[u8; 3]; 5]>) -> [u8; 3];
 
-
 pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     let mut r: u8 = 0;
     let mut g: u8 = 0;
