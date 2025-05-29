@@ -47,13 +47,13 @@ def merge(
 	if saturation_limits is None:
 		if percentiles is None:
 			percentiles = [(1.1, 99.9)] * len(arrs)
-	saturation_limits = tuple(
-		np.percentile(arr, ch_percentiles)
-		for arr, ch_percentiles in zip(arrs, percentiles)  # type: ignore
-	)
+		saturation_limits = tuple(
+			np.percentile(arr, ch_percentiles)
+			for arr, ch_percentiles in zip(arrs, percentiles)  # type: ignore
+		)
 	return dispatch_multi_channel(
 		array_references=arrs,
 		cmap_names=colors,
 		blending=blending,
-		limits=saturation_limits,
+		limits=saturation_limits,  # type: ignore
 	)
