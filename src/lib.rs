@@ -1,6 +1,7 @@
 mod blend;
 mod cmaps;
 mod colorize;
+mod errors;
 mod interface;
 
 use interface::{dispatch_multi_channel_py, dispatch_single_channel_py};

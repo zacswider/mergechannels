@@ -1,31 +1,8 @@
 use smallvec::SmallVec;
-use std::error::Error;
-use std::fmt;
 
 pub const MAX_N_CH: usize = 5;
 
 pub type BlendFn = fn(&SmallVec<[[u8; 3]; 5]>) -> [u8; 3];
-
-#[derive(Debug)]
-pub enum MergeError {
-    InvalidBlendingMode(String),
-}
-
-impl fmt::Display for MergeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            MergeError::InvalidBlendingMode(mode) => {
-                write!(
-                    f,
-                    "Invalid blending mode: `{}`. Valid modes are 'max', 'sum', 'min', and 'mean'.",
-                    mode
-                )
-            }
-        }
-    }
-}
-
-impl Error for MergeError {}
 
 pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     let mut r: u8 = 0;
