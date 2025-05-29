@@ -28,6 +28,7 @@ pip install git+https://github.com/zacswider/mergechannels.git
 
 ```python
 from skimage import data
+import matplotlib.pyplot as plt
 import mergechannels as mc
 
 img = data.camera()
@@ -94,10 +95,10 @@ b.imshow(
         channels,
         colormaps,
         blending='min',
-        saturation_limits=(
-            0.01,  # bottom 1% of pixels set to black point
-            0.97,  # top 3% of pixels set to white point
-        ),
+        percentiles=[(
+            1,  # bottom 1% of pixels set to black point
+            97,  # top 3% of pixels set to white point
+        )]*len(channels),
     ),
 )
 fig.tight_layout()
