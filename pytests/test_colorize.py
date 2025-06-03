@@ -7,7 +7,7 @@ def test_apply_color_map():
     Test that the color map is applied correctly
     '''
     x = np.ones((1, 1), dtype=np.uint8)
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
     assert rgb.shape == (1,1,3)
     assert rgb.dtype == np.uint8
     assert np.allclose(
@@ -17,13 +17,15 @@ def test_apply_color_map():
         )
     )
     x = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
     assert np.allclose(
         rgb,
         np.array(
             [[[0, 188, 254]]]
         )
     )
+    rgb2 = mc.apply_color_map(x, 'betterBlue', saturation_limits=(0, 255))
+    assert np.allclose(rgb, rgb2)
 
 def test_apply_colors_and_merge_low_sum():
     '''
@@ -34,6 +36,7 @@ def test_apply_colors_and_merge_low_sum():
     rgb_sum = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'sum',
         [(0, 255), (0, 255)],
     )
@@ -45,6 +48,13 @@ def test_apply_colors_and_merge_low_sum():
             [[[1, 2, 2]]]
         )
     )
+    rgb_sum2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='sum',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_sum, rgb_sum2)
 
 def test_apply_colors_and_merge_high_sum():
     '''
@@ -55,6 +65,7 @@ def test_apply_colors_and_merge_high_sum():
     rgb_sum = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'sum',
         [(0, 255), (0, 255)],
     )
@@ -66,6 +77,13 @@ def test_apply_colors_and_merge_high_sum():
             [[[255, 255, 254]]]
         )
     )
+    rgb_sum2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='sum',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_sum, rgb_sum2)
 
 def test_apply_colors_and_merge_low_max():
     '''
@@ -76,6 +94,7 @@ def test_apply_colors_and_merge_low_max():
     rgb_max = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'max',
         [(0, 255), (0, 255)],
     )
@@ -87,6 +106,13 @@ def test_apply_colors_and_merge_low_max():
             [[[1, 1, 2]]]
         )
     )
+    rgb_max2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='max',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_max, rgb_max2)
 
 def test_apply_colors_and_merge_high_max():
     '''
@@ -97,6 +123,7 @@ def test_apply_colors_and_merge_high_max():
     rgb_max = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'max',
         [(0, 255), (0, 255)],
     )
@@ -108,6 +135,13 @@ def test_apply_colors_and_merge_high_max():
             [[[255, 188, 254]]]
         )
     )
+    rgb_max2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='max',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_max, rgb_max2)
 
 def test_apply_colors_and_merge_low_min():
     '''
@@ -118,6 +152,7 @@ def test_apply_colors_and_merge_low_min():
     rgb_min = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'min',
         [(0, 255), (0, 255)],
     )
@@ -129,6 +164,13 @@ def test_apply_colors_and_merge_low_min():
             [[[0, 1, 0]]]
         )
     )
+    rgb_min2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='min',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_min, rgb_min2)
 
 def test_apply_colors_and_merge_high_min():
     '''
@@ -139,6 +181,7 @@ def test_apply_colors_and_merge_high_min():
     rgb_min = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'min',
         [(0, 255), (0, 255)],
     )
@@ -150,6 +193,13 @@ def test_apply_colors_and_merge_high_min():
             [[[0, 149, 0]]]
         )
     )
+    rgb_min2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='min',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_min, rgb_min2)
 
 def test_apply_colors_and_merge_low_mean():
     '''
@@ -160,6 +210,7 @@ def test_apply_colors_and_merge_low_mean():
     rgb_mean = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'mean',
         [(0, 255), (0, 255)],
     )
@@ -173,6 +224,13 @@ def test_apply_colors_and_merge_low_mean():
             [[[0, 1, 1]]]
         )
     )
+    rgb_mean2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='mean',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_mean, rgb_mean2)
 
 def test_apply_colors_and_merge_high_mean():
     '''
@@ -183,6 +241,7 @@ def test_apply_colors_and_merge_high_mean():
     rgb_mean = mc.dispatch_multi_channel(
         [x, y],
         ['betterBlue', 'betterOrange'],
+        [None, None],
         'mean',
         [(0, 255), (0, 255)]
     )
@@ -196,3 +255,10 @@ def test_apply_colors_and_merge_high_mean():
             [[[127, 168, 127]]]
         )
     )
+    rgb_mean2 = mc.merge(
+        [x, y],
+        ['betterBlue', 'betterOrange'],
+        blending='mean',
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb_mean, rgb_mean2)
