@@ -16,7 +16,7 @@ fn parse_cmap_from_args<'a>(
     cmap_values: &'a Option<[[u8; 3]; 256]>,
 ) -> &'a [[u8; 3]; 256] {
     let cmap: &'a [[u8; 3]; 256] = match cmap_name {
-        Some(valid_name) => cmaps::load_cmap(&valid_name),
+        Some(valid_name) => cmaps::load_cmap(valid_name),
         None => match cmap_values {
             Some(valid_values) => valid_values,
             None => {
