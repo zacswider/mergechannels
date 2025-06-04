@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Literal, Sequence, Union
 from nptyping import NDArray, Shape, UInt8
 import numpy as np
 
-from python.mergechannels._blending import BLENDING_OPTIONS
-from python.mergechannels._luts import COLORMAPS
+from mergechannels._blending import BLENDING_OPTIONS
+from mergechannels._luts import COLORMAPS
 
 
 if TYPE_CHECKING:
