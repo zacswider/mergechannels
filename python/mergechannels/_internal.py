@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import (
 	TYPE_CHECKING,
+	List,
 	Sequence,
 	Union,
 	Tuple,
@@ -97,7 +98,7 @@ def apply_color_map(
 def merge(
 	arrs: Sequence[np.ndarray],
     colors: Union[
-        Sequence[COLORMAPS],
+        List[COLORMAPS],
         Sequence[NDArray[Shape['3, 255'], UInt8]],
         Sequence[MatplotlibColormap],
         Sequence[CmapColormap],
