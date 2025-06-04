@@ -1,76 +1,34 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal, Sequence, Union, overload
+from typing import TYPE_CHECKING, Literal, Sequence, Union
 from nptyping import NDArray, Shape, UInt8
 import numpy as np
 
 from mergechannels._blending import BLENDING_OPTIONS
 from mergechannels._luts import COLORMAPS
 
-
 if TYPE_CHECKING:
     from matplotlib.colors import Colormap as MatplotlibColormap
     from cmap import Colormap as CmapColormap
 
-Number = Union[int, float]
 
-ColorType = Union[
-    COLORMAPS,
-    NDArray[Shape['3, 255'], UInt8],
-    MatplotlibColormap,
-    CmapColormap,
-]
+Number = Union[int, float]
 
 def apply_color_map(
     arr: np.ndarray,
-    color: ColorType,
+    color: Union[
+        COLORMAPS,
+        NDArray[Shape['3, 255'], UInt8],
+        MatplotlibColormap,
+        CmapColormap,
+    ],
     percentiles: tuple[Number, Number] | None = None,
     saturation_limits: tuple[Number, Number] | None = None,
 ) -> np.ndarray:
     ...
 
-@overload
 def merge(
     arrs: Sequence[np.ndarray],
     colors: Sequence[COLORMAPS],
-    blending: BLENDING_OPTIONS = 'max',
-    percentiles: Sequence[tuple[float, float]] | None = None,
-    saturation_limits: Sequence[tuple[float, float]] | None = None,
-) -> np.ndarray:
-    ...
-
-@overload
-def merge(
-    arrs: Sequence[np.ndarray],
-    colors: Sequence[NDArray[Shape['3, 255'], UInt8]],
-    blending: BLENDING_OPTIONS = 'max',
-    percentiles: Sequence[tuple[float, float]] | None = None,
-    saturation_limits: Sequence[tuple[float, float]] | None = None,
-) -> np.ndarray:
-    ...
-
-@overload
-def merge(
-    arrs: Sequence[np.ndarray],
-    colors: Sequence[MatplotlibColormap],
-    blending: BLENDING_OPTIONS = 'max',
-    percentiles: Sequence[tuple[float, float]] | None = None,
-    saturation_limits: Sequence[tuple[float, float]] | None = None,
-) -> np.ndarray:
-    ...
-
-@overload
-def merge(
-    arrs: Sequence[np.ndarray],
-    colors: Sequence[CmapColormap],
-    blending: BLENDING_OPTIONS = 'max',
-    percentiles: Sequence[tuple[float, float]] | None = None,
-    saturation_limits: Sequence[tuple[float, float]] | None = None,
-) -> np.ndarray:
-    ...
-
-def merge(
-    arrs: Sequence[np.ndarray],
-    colors: Sequence[ColorType],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
