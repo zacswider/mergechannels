@@ -19,8 +19,10 @@ fn parse_cmap_from_args<'a>(
         Some(valid_name) => cmaps::load_cmap(&valid_name),
         None => match cmap_values {
             Some(valid_values) => valid_values,
-            None => panic!("Expected either a valid cmap name or a pre-defined colormap, got neither"),
-        }
+            None => {
+                panic!("Expected either a valid cmap name or a pre-defined colormap, got neither")
+            }
+        },
     };
     cmap
 }
@@ -158,7 +160,8 @@ pub fn dispatch_multi_channel_py<'py>(
     blending: &str,
     limits: Vec<Vec<f64>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
-    let mut cmaps: Vec<&[[u8; 3]; 256]> = Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
+    let mut cmaps: Vec<&[[u8; 3]; 256]> =
+        Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
     for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
         let cmap = parse_cmap_from_args(cmap_name, cmap_value);
         cmaps.push(cmap)
