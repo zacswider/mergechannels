@@ -13,14 +13,16 @@ if TYPE_CHECKING:
 
 Number = Union[int, float]
 
+ColormapValue = Union[
+    COLORMAPS,
+    NDArray[Shape['3, 255'], UInt8],
+    MatplotlibColormap,
+    CmapColormap,
+]
+
 def apply_color_map(
     arr: np.ndarray,
-    color: Union[
-        COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
-        MatplotlibColormap,
-        CmapColormap,
-    ],
+    color: ColormapValue,
     percentiles: tuple[Number, Number] | None = None,
     saturation_limits: tuple[Number, Number] | None = None,
 ) -> np.ndarray:
@@ -28,12 +30,7 @@ def apply_color_map(
 
 def merge(
     arrs: Sequence[np.ndarray],
-    colors: Union[
-        Sequence[COLORMAPS],
-        Sequence[NDArray[Shape['3, 255'], UInt8]],
-        Sequence[MatplotlibColormap],
-        Sequence[CmapColormap],
-    ],
+    colors: Sequence[ColormapValue],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[Number, Number]] | None = None,
     saturation_limits: Sequence[tuple[Number, Number]] | None = None,

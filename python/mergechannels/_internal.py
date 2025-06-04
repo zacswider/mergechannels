@@ -21,16 +21,18 @@ from ._luts import COLORMAPS
 from ._blending import BLENDING_OPTIONS
 
 if TYPE_CHECKING:
-    from matplotlib.colors import Colormap as MatplotlibColormap
-    from cmap import Colormap as CmapColormap
+	from matplotlib.colors import Colormap as MatplotlibColormap
+	from cmap import Colormap as CmapColormap
+
+	ColormapValue = Union[
+		COLORMAPS,
+		NDArray[Shape['3, 255'], UInt8],
+		MatplotlibColormap,
+		CmapColormap,
+	]
 
 def _parse_cmap_arguments(
-    color: Union[
-        COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
-        MatplotlibColormap,
-        CmapColormap,
-    ],
+    color: ColormapValue,
 ) ->  Tuple[Union[COLORMAPS, None], Union[NDArray[Shape['3, 256'], UInt8], None]]:
 	'''
 	Parse the color argument and return the corresponding cmap name and cmap values
@@ -66,12 +68,7 @@ def _parse_cmap_arguments(
 
 def apply_color_map(
 	arr: np.ndarray,
-    color: Union[
-        COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
-        MatplotlibColormap,
-        CmapColormap,
-    ],
+    color: ColormapValue,
 	percentiles: Union[tuple[float, float], None] = None,
 	saturation_limits: Union[tuple[float, float], None] = None,
 ) -> np.ndarray:
@@ -96,12 +93,7 @@ def apply_color_map(
 
 def merge(
 	arrs: Sequence[np.ndarray],
-    colors: Union[
-        Sequence[COLORMAPS],
-        Sequence[NDArray[Shape['3, 255'], UInt8]],
-        Sequence[MatplotlibColormap],
-        Sequence[CmapColormap],
-    ],
+    colors: Sequence[ColormapValue],
 	blending: BLENDING_OPTIONS = 'max',
 	percentiles: Union[Sequence[tuple[float, float]], None] = None,
 	saturation_limits: Union[Sequence[tuple[float, float]], None] = None,
