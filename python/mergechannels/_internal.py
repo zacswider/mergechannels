@@ -101,7 +101,7 @@ def apply_color_map(
 @overload
 def merge(
     arrs: Sequence[np.ndarray],
-    colors: Sequence[ColorLiteral],
+    colors: Sequence[COLORMAPS],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
@@ -111,11 +111,27 @@ def merge(
 @overload
 def merge(
     arrs: Sequence[np.ndarray],
-    colors: Sequence[
-        NDArray[Shape['3, 255'], UInt8]
-        | MatplotlibColormap
-        | CmapColormap
-    ],
+    colors: Sequence[NDArray[Shape['3, 255'], UInt8]],
+    blending: BLENDING_OPTIONS = 'max',
+    percentiles: Sequence[tuple[float, float]] | None = None,
+    saturation_limits: Sequence[tuple[float, float]] | None = None,
+) -> np.ndarray:
+    ...
+
+@overload
+def merge(
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[MatplotlibColormap],
+    blending: BLENDING_OPTIONS = 'max',
+    percentiles: Sequence[tuple[float, float]] | None = None,
+    saturation_limits: Sequence[tuple[float, float]] | None = None,
+) -> np.ndarray:
+    ...
+
+@overload
+def merge(
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[CmapColormap],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
