@@ -1,5 +1,70 @@
 import numpy as np
+import cmap
+from matplotlib.colors import Colormap
+import matplotlib.pyplot as plt
+import pytest
 import mergechannels as mc
+
+
+@pytest.fixture
+def matplotlib_viridis_cmap() -> Colormap:
+    '''
+    Get the viridis colormap from matplotlib
+    '''
+    return plt.get_cmap('viridis')
+
+@pytest.fixture
+def cmap_mako_colormap() -> cmap.Colormap:
+    '''
+    Get the seaborn mako colormap from cmap
+    '''
+    return cmap.Colormap('seaborn:mako')
+
+def test_apply_with_matplotlib_cmap(matplotlib_viridis_cmap: Colormap):
+    '''
+    Test that the color map is applied correctly with a matplotlib colormap
+    '''
+    x = np.ones((1, 1), dtype=np.uint8)
+    rgb = mc.apply_color_map(x, matplotlib_viridis_cmap, saturation_limits=(0, 255))
+    assert np.allclose(rgb, np.array([[[68, 2, 85]]]))
+    x = x * 255
+    rgb = mc.apply_color_map(x, matplotlib_viridis_cmap, saturation_limits=(0, 255))
+    assert np.allclose(rgb, np.array([[[253, 231,  36]]]))
+
+def test_apply_with_cmap_colormap(cmap_mako_colormap: cmap.Colormap):
+    '''
+    Test that the color map is applied correctly with a cmap colormap
+    '''
+    x = np.ones((1, 1), dtype=np.uint8)
+    rgb = mc.apply_color_map(x, cmap_mako_colormap, saturation_limits=(0, 255))
+    assert np.allclose(rgb, np.array([[[12, 4, 6]]]))
+    x = x * 255
+    rgb = mc.apply_color_map(x, cmap_mako_colormap, saturation_limits=(0, 255))
+    assert np.allclose(rgb, np.array([[[222, 244, 228]]]))
+
+def test_merge_with_both(
+    matplotlib_viridis_cmap: Colormap,
+    cmap_mako_colormap: cmap.Colormap,
+) -> None:
+    '''
+    Test that the colors are merged correctly with both matplotlib and cmap colormaps
+    '''
+    x = np.ones((1, 1), dtype=np.uint8)
+    y = np.ones((1, 1), dtype=np.uint8)
+    rgb = mc.merge(
+        [x, y],
+        [matplotlib_viridis_cmap, cmap_mako_colormap],
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb, np.array([[[68,  4, 85]]]))
+    x = x * 255
+    y = y * 255
+    rgb = mc.merge(
+        [x, y],
+        [matplotlib_viridis_cmap, cmap_mako_colormap],
+        saturation_limits=[(0, 255), (0, 255)],
+    )
+    assert np.allclose(rgb, np.array([[[253, 244,  228]]]))
 
 
 def test_apply_color_map():
