@@ -27,6 +27,11 @@ dependencies = ["nptyping==2.5.0", "numpy>1.25.0"]
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
+include = [
+    "python/mergechannels/*.py",
+    "python/mergechannels/*.pyi",
+    "python/mergechannels/py.typed",
+]
 
 [dependency-groups]
 dev = [
