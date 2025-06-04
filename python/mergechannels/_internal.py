@@ -4,6 +4,7 @@ from typing import (
 	Sequence,
 	Union,
 	Tuple,
+	overload,
 )
 
 import numpy as np
@@ -26,6 +27,13 @@ if TYPE_CHECKING:
 
 	ColormapValue = Union[
 		COLORMAPS,
+		NDArray[Shape['3, 255'], UInt8],
+		MatplotlibColormap,
+		CmapColormap,
+	]
+	ColorLiteral = COLORMAPS
+	ColorType = Union[
+		ColorLiteral,
 		NDArray[Shape['3, 255'], UInt8],
 		MatplotlibColormap,
 		CmapColormap,
@@ -90,13 +98,36 @@ def apply_color_map(
 		limits=saturation_limits,
 	)
 
+@overload
+def merge(
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[ColorLiteral],
+    blending: BLENDING_OPTIONS = 'max',
+    percentiles: Sequence[tuple[float, float]] | None = None,
+    saturation_limits: Sequence[tuple[float, float]] | None = None,
+) -> np.ndarray:
+    ...
+
+@overload
+def merge(
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[
+        NDArray[Shape['3, 255'], UInt8]
+        | MatplotlibColormap
+        | CmapColormap
+    ],
+    blending: BLENDING_OPTIONS = 'max',
+    percentiles: Sequence[tuple[float, float]] | None = None,
+    saturation_limits: Sequence[tuple[float, float]] | None = None,
+) -> np.ndarray:
+    ...
 
 def merge(
-	arrs: Sequence[np.ndarray],
-    colors: Sequence[ColormapValue],
-	blending: BLENDING_OPTIONS = 'max',
-	percentiles: Union[Sequence[tuple[float, float]], None] = None,
-	saturation_limits: Union[Sequence[tuple[float, float]], None] = None,
+    arrs: Sequence[np.ndarray],
+    colors: Sequence[ColorType],
+    blending: BLENDING_OPTIONS = 'max',
+    percentiles: Sequence[tuple[float, float]] | None = None,
+    saturation_limits: Sequence[tuple[float, float]] | None = None,
 ) -> np.ndarray:
 	'''
 	apply cmaps to arrays and blend the colors
