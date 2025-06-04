@@ -432,7 +432,6 @@ requires-dist = [
     { name = "nptyping", specifier = "==2.5.0" },
     { name = "numpy", specifier = ">1.25.0" },
 ]
-provides-extras = ["nvim"]
 
 [package.metadata.requires-dev]
 dev = [
