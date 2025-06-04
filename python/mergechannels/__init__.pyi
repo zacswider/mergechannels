@@ -28,13 +28,11 @@ def apply_color_map(
 
 def merge(
     arrs: Sequence[np.ndarray],
-    colors: Sequence[
-        Union[
-            COLORMAPS,
-            NDArray[Shape['3, 255'], UInt8],
-            MatplotlibColormap,
-            CmapColormap,
-        ]
+    colors: Union[
+        Sequence[COLORMAPS],
+        Sequence[NDArray[Shape['3, 255'], UInt8]],
+        Sequence[MatplotlibColormap],
+        Sequence[CmapColormap],
     ],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[Number, Number]] | None = None,
