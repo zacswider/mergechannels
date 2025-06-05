@@ -45,7 +45,7 @@ jobs:
           enable-cache: true
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: uv sync --dev
 
       - name: Run pre-commit
         shell: bash -l {0}
