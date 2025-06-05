@@ -46,7 +46,7 @@ c.imshow(mc.merge([cells, nuclei], ['Orange Hot', 'Cyan Hot']))
 ![simple channel blending](https://raw.githubusercontent.com/zacswider/README_Images/main/simple_channel_merge.png)
 
 #### What constitutes a colormap?
-Colormaps can be the literal name of one of the FIJI colormaps compiled into the mergechannels binary, a matplotlib colormap, or a [cmap](https://pypi.org/project/cmap/) colormap. The example below creates a similar blending as above, but by explicitly passing pre-generated colormaps (one from the matplotlib library, one from the cmap library). These can also be combined with string literals.
+Colormaps can be the literal name of one of the FIJI colormaps compiled into the mergechannels binary (see a list as the bottom of the page), a matplotlib colormap, or a [cmap](https://pypi.org/project/cmap/) colormap. The example below creates a similar blending as above, but by explicitly passing pre-generated colormaps (one from the matplotlib library, one from the cmap library). These can also be combined with string literals.
 
 ```python
 import cmap
