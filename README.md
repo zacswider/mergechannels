@@ -187,3 +187,187 @@ mergechannels is currently incredibly simple. It can apply one or more colormaps
 There are other great colormapping libraries available (e.g., [microfilm](https://github.com/guiwitz/microfilm), [cmap](https://github.com/pyapp-kit/cmap)) that are more feature-rich than this one, but which don't address my goals. My hope is that this project can fill an un-met niche and otherwise maintain full compatibility with these and similar libraries.
 
 This project incorporates a number of colormaps that were hand-crafted by Christophe Leterrier and James Manton which were originally distributed [here](https://github.com/cleterrier/ChrisLUTs) and [here](https://sites.imagej.net/JDM_LUTs/) respectively.
+
+## Colormaps
+### FIJI built-in LUTs
+
+<p>16_colors: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_16_colors.png" style="vertical-align: middle"></p>
+<p>3-3-2 RGB: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_3-3-2 RGB.png" style="vertical-align: middle"></p>
+<p>5_ramps: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_5_ramps.png" style="vertical-align: middle"></p>
+<p>6_shades: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_6_shades.png" style="vertical-align: middle"></p>
+<p>Blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Blue.png" style="vertical-align: middle"></p>
+<p>Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Cyan.png" style="vertical-align: middle"></p>
+<p>Cyan Hot: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Cyan Hot.png" style="vertical-align: middle"></p>
+<p>Fire: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Fire.png" style="vertical-align: middle"></p>
+<p>Grays: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Grays.png" style="vertical-align: middle"></p>
+<p>Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Green.png" style="vertical-align: middle"></p>
+<p>Green Fire Blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Green Fire Blue.png" style="vertical-align: middle"></p>
+<p>HiLo: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_HiLo.png" style="vertical-align: middle"></p>
+<p>ICA: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_ICA.png" style="vertical-align: middle"></p>
+<p>ICA2: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_ICA2.png" style="vertical-align: middle"></p>
+<p>ICA3: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_ICA3.png" style="vertical-align: middle"></p>
+<p>Ice: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Ice.png" style="vertical-align: middle"></p>
+<p>Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Magenta.png" style="vertical-align: middle"></p>
+<p>Magenta Hot: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Magenta Hot.png" style="vertical-align: middle"></p>
+<p>Orange Hot: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Orange Hot.png" style="vertical-align: middle"></p>
+<p>Rainbow RGB: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Rainbow RGB.png" style="vertical-align: middle"></p>
+<p>Red: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Red.png" style="vertical-align: middle"></p>
+<p>Red Hot: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Red Hot.png" style="vertical-align: middle"></p>
+<p>Red/Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Red%25Green.png" style="vertical-align: middle"></p>
+<p>Spectrum: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Spectrum.png" style="vertical-align: middle"></p>
+<p>Thermal: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Thermal.png" style="vertical-align: middle"></p>
+<p>Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Yellow.png" style="vertical-align: middle"></p>
+<p>Yellow Hot: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_Yellow Hot.png" style="vertical-align: middle"></p>
+<p>blue_orange_icb: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_blue_orange_icb.png" style="vertical-align: middle"></p>
+<p>brgbcmyw: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_brgbcmyw.png" style="vertical-align: middle"></p>
+<p>cool: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_cool.png" style="vertical-align: middle"></p>
+<p>edges: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_edges.png" style="vertical-align: middle"></p>
+<p>gem: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_gem.png" style="vertical-align: middle"></p>
+<p>glasbey: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_glasbey.png" style="vertical-align: middle"></p>
+<p>glasbey_inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_glasbey_inverted.png" style="vertical-align: middle"></p>
+<p>glasbey_on_dark: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_glasbey_on_dark.png" style="vertical-align: middle"></p>
+<p>glow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_glow.png" style="vertical-align: middle"></p>
+<p>mpl-inferno: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_mpl-inferno.png" style="vertical-align: middle"></p>
+<p>mpl-magma: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_mpl-magma.png" style="vertical-align: middle"></p>
+<p>mpl-plasma: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_mpl-plasma.png" style="vertical-align: middle"></p>
+<p>mpl-viridis: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_mpl-viridis.png" style="vertical-align: middle"></p>
+<p>phase: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_phase.png" style="vertical-align: middle"></p>
+<p>physics: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_physics.png" style="vertical-align: middle"></p>
+<p>royal: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_royal.png" style="vertical-align: middle"></p>
+<p>sepia: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_sepia.png" style="vertical-align: middle"></p>
+<p>smart: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_smart.png" style="vertical-align: middle"></p>
+<p>thal: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_thal.png" style="vertical-align: middle"></p>
+<p>thallium: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_thallium.png" style="vertical-align: middle"></p>
+<p>unionjack: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/builtin_luts_unionjack.png" style="vertical-align: middle"></p>
+
+### [My custom LUTs](https://github.com/zacswider/LUTs)
+
+<p>OIMB1: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_OIMB1.png" style="vertical-align: middle"></p>
+<p>OIMB2: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_OIMB2.png" style="vertical-align: middle"></p>
+<p>OIMB3: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_OIMB3.png" style="vertical-align: middle"></p>
+<p>betterBlue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterBlue.png" style="vertical-align: middle"></p>
+<p>betterCyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterCyan.png" style="vertical-align: middle"></p>
+<p>betterGreen: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterGreen.png" style="vertical-align: middle"></p>
+<p>betterOrange: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterOrange.png" style="vertical-align: middle"></p>
+<p>betterRed: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterRed.png" style="vertical-align: middle"></p>
+<p>betterYellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/zac_luts_betterYellow.png" style="vertical-align: middle"></p>
+
+### [Christophe Leterrier's LUTs](https://github.com/cleterrier/ChrisLUTs)
+
+<p>3color-BMR: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_3color-BMR.png" style="vertical-align: middle"></p>
+<p>3color-CGY: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_3color-CGY.png" style="vertical-align: middle"></p>
+<p>3color-RMB: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_3color-RMB.png" style="vertical-align: middle"></p>
+<p>3color-YGC: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_3color-YGC.png" style="vertical-align: middle"></p>
+<p>BOP blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_BOP blue.png" style="vertical-align: middle"></p>
+<p>BOP orange: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_BOP orange.png" style="vertical-align: middle"></p>
+<p>BOP purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_BOP purple.png" style="vertical-align: middle"></p>
+<p>I Blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Blue.png" style="vertical-align: middle"></p>
+<p>I Bordeaux: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Bordeaux.png" style="vertical-align: middle"></p>
+<p>I Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Cyan.png" style="vertical-align: middle"></p>
+<p>I Forest: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Forest.png" style="vertical-align: middle"></p>
+<p>I Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Green.png" style="vertical-align: middle"></p>
+<p>I Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Magenta.png" style="vertical-align: middle"></p>
+<p>I Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Purple.png" style="vertical-align: middle"></p>
+<p>I Red: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Red.png" style="vertical-align: middle"></p>
+<p>I Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_I Yellow.png" style="vertical-align: middle"></p>
+<p>OPF fresh: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_OPF fresh.png" style="vertical-align: middle"></p>
+<p>OPF orange: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_OPF orange.png" style="vertical-align: middle"></p>
+<p>OPF purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_OPF purple.png" style="vertical-align: middle"></p>
+<p>Turbo: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/christ_luts_Turbo.png" style="vertical-align: middle"></p>
+
+### [James Manton's LUTs](https://sites.imagej.net/JDM_LUTs/)
+
+<p>Circus Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Cherry.png" style="vertical-align: middle"></p>
+<p>Circus Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Cyan.png" style="vertical-align: middle"></p>
+<p>Circus Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Green.png" style="vertical-align: middle"></p>
+<p>Circus Ink Black: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Black.png" style="vertical-align: middle"></p>
+<p>Circus Ink Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Cherry.png" style="vertical-align: middle"></p>
+<p>Circus Ink Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Cyan.png" style="vertical-align: middle"></p>
+<p>Circus Ink Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Green.png" style="vertical-align: middle"></p>
+<p>Circus Ink Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Mint.png" style="vertical-align: middle"></p>
+<p>Circus Ink Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Purple.png" style="vertical-align: middle"></p>
+<p>Circus Ink Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Ink Yellow.png" style="vertical-align: middle"></p>
+<p>Circus Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Mint.png" style="vertical-align: middle"></p>
+<p>Circus Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Purple.png" style="vertical-align: middle"></p>
+<p>Circus Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Circus Yellow.png" style="vertical-align: middle"></p>
+<p>Duo Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Cherry.png" style="vertical-align: middle"></p>
+<p>Duo Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Cyan.png" style="vertical-align: middle"></p>
+<p>Duo Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Green.png" style="vertical-align: middle"></p>
+<p>Duo Intense Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Cherry.png" style="vertical-align: middle"></p>
+<p>Duo Intense Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Cyan.png" style="vertical-align: middle"></p>
+<p>Duo Intense Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Green.png" style="vertical-align: middle"></p>
+<p>Duo Intense Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Mint.png" style="vertical-align: middle"></p>
+<p>Duo Intense Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Purple.png" style="vertical-align: middle"></p>
+<p>Duo Intense Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Intense Yellow.png" style="vertical-align: middle"></p>
+<p>Duo Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Mint.png" style="vertical-align: middle"></p>
+<p>Duo Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Purple.png" style="vertical-align: middle"></p>
+<p>Duo Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Duo Yellow.png" style="vertical-align: middle"></p>
+<p>Grays g=0.25: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.25.png" style="vertical-align: middle"></p>
+<p>Grays g=0.25 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.25 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=0.50: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.50.png" style="vertical-align: middle"></p>
+<p>Grays g=0.50 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.50 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=0.75: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.75.png" style="vertical-align: middle"></p>
+<p>Grays g=0.75 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=0.75 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=1.00 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.00 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=1.25: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.25.png" style="vertical-align: middle"></p>
+<p>Grays g=1.25 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.25 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=1.50: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.50.png" style="vertical-align: middle"></p>
+<p>Grays g=1.50 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.50 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=1.75: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.75.png" style="vertical-align: middle"></p>
+<p>Grays g=1.75 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=1.75 inverted.png" style="vertical-align: middle"></p>
+<p>Grays g=2.00: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=2.00.png" style="vertical-align: middle"></p>
+<p>Grays g=2.00 inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Grays g=2.00 inverted.png" style="vertical-align: middle"></p>
+<p>Ink Black: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Black.png" style="vertical-align: middle"></p>
+<p>Ink Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Cherry.png" style="vertical-align: middle"></p>
+<p>Ink Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Cyan.png" style="vertical-align: middle"></p>
+<p>Ink Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Green.png" style="vertical-align: middle"></p>
+<p>Ink Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Mint.png" style="vertical-align: middle"></p>
+<p>Ink Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Purple.png" style="vertical-align: middle"></p>
+<p>Ink Wash Black: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Black.png" style="vertical-align: middle"></p>
+<p>Ink Wash Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Cherry.png" style="vertical-align: middle"></p>
+<p>Ink Wash Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Cyan.png" style="vertical-align: middle"></p>
+<p>Ink Wash Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Green.png" style="vertical-align: middle"></p>
+<p>Ink Wash Mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Mint.png" style="vertical-align: middle"></p>
+<p>Ink Wash Purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Purple.png" style="vertical-align: middle"></p>
+<p>Ink Wash Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Wash Yellow.png" style="vertical-align: middle"></p>
+<p>Ink Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Ink Yellow.png" style="vertical-align: middle"></p>
+<p>Parabolic RGB: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Parabolic RGB.png" style="vertical-align: middle"></p>
+<p>Phase Bold Green-Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Green-Magenta.png" style="vertical-align: middle"></p>
+<p>Phase Bold Ink Green-Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Ink Green-Magenta.png" style="vertical-align: middle"></p>
+<p>Phase Bold Ink Mint-Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Ink Mint-Cherry.png" style="vertical-align: middle"></p>
+<p>Phase Bold Ink Yellow-Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Ink Yellow-Cyan.png" style="vertical-align: middle"></p>
+<p>Phase Bold Mint-Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Mint-Cherry.png" style="vertical-align: middle"></p>
+<p>Phase Bold Yellow-Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Bold Yellow-Cyan.png" style="vertical-align: middle"></p>
+<p>Phase Green-Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Green-Magenta.png" style="vertical-align: middle"></p>
+<p>Phase Ink Green-Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Ink Green-Magenta.png" style="vertical-align: middle"></p>
+<p>Phase Ink Mint-Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Ink Mint-Cherry.png" style="vertical-align: middle"></p>
+<p>Phase Ink Yellow-Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Ink Yellow-Cyan.png" style="vertical-align: middle"></p>
+<p>Phase Mint-Cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Mint-Cherry.png" style="vertical-align: middle"></p>
+<p>Phase Yellow-Cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Phase Yellow-Cyan.png" style="vertical-align: middle"></p>
+<p>Pop blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop blue.png" style="vertical-align: middle"></p>
+<p>Pop blue inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop blue inverted.png" style="vertical-align: middle"></p>
+<p>Pop cherry: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop cherry.png" style="vertical-align: middle"></p>
+<p>Pop cherry inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop cherry inverted.png" style="vertical-align: middle"></p>
+<p>Pop cyan: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop cyan.png" style="vertical-align: middle"></p>
+<p>Pop cyan inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop cyan inverted.png" style="vertical-align: middle"></p>
+<p>Pop green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop green.png" style="vertical-align: middle"></p>
+<p>Pop green inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop green inverted.png" style="vertical-align: middle"></p>
+<p>Pop lavender inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop lavender inverted.png" style="vertical-align: middle"></p>
+<p>Pop magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop magenta.png" style="vertical-align: middle"></p>
+<p>Pop magenta inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop magenta inverted.png" style="vertical-align: middle"></p>
+<p>Pop mint: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop mint.png" style="vertical-align: middle"></p>
+<p>Pop mint inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop mint inverted.png" style="vertical-align: middle"></p>
+<p>Pop purple: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop purple.png" style="vertical-align: middle"></p>
+<p>Pop purple inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop purple inverted.png" style="vertical-align: middle"></p>
+<p>Pop red: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop red.png" style="vertical-align: middle"></p>
+<p>Pop red inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop red inverted.png" style="vertical-align: middle"></p>
+<p>Pop yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop yellow.png" style="vertical-align: middle"></p>
+<p>Pop yellow inverted: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Pop yellow inverted.png" style="vertical-align: middle"></p>
+<p>Quartetto MYGB Blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto MYGB Blue.png" style="vertical-align: middle"></p>
+<p>Quartetto MYGB Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto MYGB Green.png" style="vertical-align: middle"></p>
+<p>Quartetto MYGB Magenta: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto MYGB Magenta.png" style="vertical-align: middle"></p>
+<p>Quartetto MYGB Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto MYGB Yellow.png" style="vertical-align: middle"></p>
+<p>Quartetto RYGB Blue: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto RYGB Blue.png" style="vertical-align: middle"></p>
+<p>Quartetto RYGB Green: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto RYGB Green.png" style="vertical-align: middle"></p>
+<p>Quartetto RYGB Red: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto RYGB Red.png" style="vertical-align: middle"></p>
+<p>Quartetto RYGB Yellow: <img src="https://raw.githubusercontent.com/zacswider/README_Images/main/jdm_luts_Quartetto RYGB Yellow.png" style="vertical-align: middle"></p>
