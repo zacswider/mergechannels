@@ -11,30 +11,46 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
 
+fn parse_cmap_from_args<'a>(
+    cmap_name: &'a Option<String>,
+    cmap_values: &'a Option<[[u8; 3]; 256]>,
+) -> &'a [[u8; 3]; 256] {
+    let cmap: &'a [[u8; 3]; 256] = match cmap_name {
+        Some(valid_name) => cmaps::load_cmap(valid_name),
+        None => match cmap_values {
+            Some(valid_values) => valid_values,
+            None => {
+                panic!("Expected either a valid cmap name or a pre-defined colormap, got neither")
+            }
+        },
+    };
+    cmap
+}
+
 #[pyfunction]
 #[pyo3(name = "dispatch_single_channel")]
 pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
-    cmap_name: &str,
+    cmap_name: Option<String>,
+    cmap_values: Option<[[u8; 3]; 256]>,
     limits: [f64; 2],
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let untyped_array = array_reference.downcast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
+    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values);
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                 let arr = py_arr.as_array();
-                let cmap = cmaps::load_cmap(cmap_name);
                 let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                 let arr = py_arr.as_array();
-                let cmap = cmaps::load_cmap(cmap_name);
                 let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
@@ -44,14 +60,12 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                 let arr = py_arr.as_array();
-                let cmap = cmaps::load_cmap(cmap_name);
                 let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
                 let arr = py_arr.as_array();
-                let cmap = cmaps::load_cmap(cmap_name);
                 let rgb = colorize::colorize_stack_16bit(arr, cmap, limits);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
@@ -141,15 +155,17 @@ fn extract_3d_u16_arrays<'py>(
 pub fn dispatch_multi_channel_py<'py>(
     py: Python<'py>,
     array_references: &Bound<'py, PyAny>,
-    cmap_names: Vec<String>,
+    cmap_names: Vec<Option<String>>,
+    cmap_values: Vec<Option<[[u8; 3]; 256]>>,
     blending: &str,
     limits: Vec<Vec<f64>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
-    let cmaps: Vec<&[[u8; 3]; 256]> = cmap_names
-        .iter()
-        .map(|name| cmaps::load_cmap(name))
-        .collect(); // TODO don't panic inside load_cmap
-
+    let mut cmaps: Vec<&[[u8; 3]; 256]> =
+        Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
+    for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
+        let cmap = parse_cmap_from_args(cmap_name, cmap_value);
+        cmaps.push(cmap)
+    }
     let limits = limits
         .into_iter()
         .map(|v| {

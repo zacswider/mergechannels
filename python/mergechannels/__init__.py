@@ -4,6 +4,10 @@ from .mergechannels import (  # type: ignore
 	dispatch_multi_channel,
 )
 from ._internal import merge, apply_color_map
+from ._luts import COLORMAPS as _COLORMAPS
+from typing import Literal  # noqa: F401
+
+COLORMAPS = _COLORMAPS
 
 
 __all__ = [
@@ -11,4 +15,5 @@ __all__ = [
 	'dispatch_multi_channel',
 	'merge',
 	'apply_color_map',
+	'COLORMAPS',
 ]

@@ -22,17 +22,22 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dynamic = ["version"]
-dependencies = ["numpy>1.25.0"]
+dependencies = ["nptyping==2.5.0", "numpy>1.25.0"]
 
-[project.optional-dependencies]
-nvim = []
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
+include = [
+    "python/mergechannels/*.py",
+    "python/mergechannels/*.pyi",
+    "python/mergechannels/py.typed",
+]
 
 [dependency-groups]
 dev = [
+    "cmap>=0.6.1",
     "matplotlib>=3.7.5",
+    "pooch>=1.8.2",
     "pre-commit>=3.5.0",
     "pynvim>=0.5.2",
     "pytest-benchmark>=4.0.0",
