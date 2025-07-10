@@ -58,6 +58,23 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         numpy-version: ["1.25.0", "1.26.0", "2.0.0", "2.1.0", "2.2.0", "2.3.0"]
+        exclude:
+          # These combinations of python and numpy versions are incompatible
+          - python-version: "3.9"
+            numpy-version: "2.1.0"
+          - python-version: "3.9"
+            numpy-version: "2.2.0"
+          - python-version: "3.9"
+            numpy-version: "2.3.0"
+          - python-version: "3.10"
+            numpy-version: "2.3.0"
+          - python-version: "3.12"
+            numpy-version: "1.25.0"
+          - python-version: "3.13"
+            numpy-version: "1.25.0"
+          - python-version: "3.13"
+            numpy-version: "1.26.0"
+
       fail-fast: false # Changed to false so you can see all failures
     steps:
       - uses: actions/checkout@v4
