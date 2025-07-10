@@ -56,7 +56,11 @@ def _parse_cmap_arguments(
 			except AttributeError:  # must be a list of lists or an array castable to u8 (256, 3)
 				cmap_values = np.asarray(color).astype('uint8')  # type: ignore
 
-	if not isinstance(cmap_values, NDArray[Shape['256, 3'], UInt8]):  # type: ignore
+	if not (
+		isinstance(cmap_values, np.ndarray)
+		and cmap_values.shape == (256, 3)
+		and cmap_values.dtype == np.uint8
+	):
 		raise ValueError(
 			'Expected a matplotlib colormap, a cmaps colormap, or an object directly castable to '
 				f'an 8-bit array of shape (256, 3), got {type(cmap_values)}: {color}'
