@@ -52,12 +52,13 @@ jobs:
         run: uv run pre-commit run --all-files
 
   tox_tests:
-    name: Tox Tests (${{ matrix.python-version }}) # Add python version to name for clarity
+    name: Tox Tests (Python ${{ matrix.python-version }}, NumPy ${{ matrix.numpy-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-      fail-fast: true # Optional: prevent other matrix jobs from cancelling if one fails
+        numpy-version: ["1.25.0", "1.26.0", "2.0.0", "2.1.0", "2.2.0", "2.3.0"]
+      fail-fast: false # Changed to false so you can see all failures
     steps:
       - uses: actions/checkout@v4
 
@@ -79,13 +80,13 @@ jobs:
       - name: Install Tox with tox-uv plugin using UV
         run: uv tool install tox --with tox-uv
 
-      # Run Tox using uvx
-      # uvx ensures that the 'tox' command installed via 'uv tool install' is used
+      # Run Tox using uvx with numpy version as environment variable
       - name: Run Tox tests via uvx
         run: |
           PY_VERSION=$(echo ${{ matrix.python-version }} | tr -d '.')
           uvx tox -e py$PY_VERSION
-
+        env:
+          NUMPY_VERSION: ${{ matrix.numpy-version }}
 
   build:
     needs: [rust_checks_and_python_tests, tox_tests]
