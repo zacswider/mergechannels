@@ -12,10 +12,10 @@ impl std::fmt::Display for DispatchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DispatchError::UnsupportedDataType(dtype) => {
-                write!(f, "Received unsupported dtype: {}", dtype)
+                write!(f, "Received unsupported dtype: {dtype}")
             }
             DispatchError::UnsupportedNumberOfDimensions(ndim) => {
-                write!(f, "Received unsupported number of dimensions: {}", ndim)
+                write!(f, "Received unsupported number of dimensions: {ndim}")
             }
         }
     }
@@ -40,8 +40,7 @@ impl std::fmt::Display for MergeError {
             MergeError::InvalidBlendingMode(mode) => {
                 write!(
                     f,
-                    "Invalid blending mode: `{}`. Valid modes are 'max', 'sum', 'min', and 'mean'.",
-                    mode
+                    "Invalid blending mode: `{mode}`. Valid modes are 'max', 'sum', 'min', and 'mean'."
                 )
             }
         }
