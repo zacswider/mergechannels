@@ -7,11 +7,6 @@ from typing import (
 )
 
 import numpy as np
-from nptyping import (
-	NDArray,
-	Shape,
-	UInt8,
-)
 
 from mergechannels import (
 	dispatch_single_channel,
@@ -23,6 +18,11 @@ from ._blending import BLENDING_OPTIONS
 if TYPE_CHECKING:
 	from matplotlib.colors import Colormap as MatplotlibColormap
 	from cmap import Colormap as CmapColormap
+	from nptyping import (
+		NDArray,
+		Shape,
+		UInt8,
+	)
 
 def _parse_cmap_arguments(
     color: Union[
