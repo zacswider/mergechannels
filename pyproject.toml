@@ -22,7 +22,14 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dynamic = ["version"]
-dependencies = ["nptyping==2.5.0", "numpy>1.25.0"]
+dependencies = [
+ "numpy>1.25.0",
+]
+
+[project.optional-dependencies]
+types = [
+    "nptyping==2.5.0",
+]
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
