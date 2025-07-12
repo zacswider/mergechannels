@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, Sequence, Union
-from nptyping import NDArray, Shape, UInt8
 import numpy as np
 
 from mergechannels._blending import BLENDING_OPTIONS
@@ -9,6 +8,11 @@ from mergechannels._luts import COLORMAPS
 if TYPE_CHECKING:
     from matplotlib.colors import Colormap as MatplotlibColormap
     from cmap import Colormap as CmapColormap
+    from nptyping import (
+        NDArray,
+        Shape,
+        UInt8,
+    )
 
 
 Number = Union[int, float]

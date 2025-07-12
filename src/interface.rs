@@ -82,8 +82,7 @@ where
     let (first, rest) = dtypes.split_first().ok_or("No dtypes found".to_string())?;
     if !rest.iter().all(|dtype| dtype == first) {
         return Err(format!(
-            "Expected all arrays to have the same dtype, got {:?}",
-            dtypes
+            "Expected all arrays to have the same dtype, got {dtypes:?}"
         ));
     }
     Ok(first)
