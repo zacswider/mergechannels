@@ -20,6 +20,178 @@ def cmap_mako_colormap() -> cmap.Colormap:
     '''
     return cmap.Colormap('seaborn:mako')
 
+@pytest.fixture
+def small_array_u8() -> np.ndarray:
+    '''Create a small u8 array for benchmarking'''
+    return np.random.randn(256, 256).astype('uint8')
+
+@pytest.fixture
+def small_array_u16() -> np.ndarray:
+    '''Create a small u16 array for benchmarking'''
+    return np.random.randn(256, 256).astype('uint16')
+
+@pytest.mark.benchmark(group='single channel u8 small')
+def test_bench_small_u8_no_autoscale(benchmark, small_array_u8) -> None:
+    '''Benchmark options for a small u8 array'''
+    colorized_no_autoscale = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=(0,255),
+    )
+    assert colorized_no_autoscale.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='single channel u8 small')
+def test_bench_small_u8_yes_autoscale(benchmark, small_array_u8) -> None:
+    '''Benchmark options for a small u8 array'''
+    colorized_no_autoscale = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=None,
+    )
+    assert colorized_no_autoscale.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='single channel u16 small')
+def test_bench_small_u16_no_autoscale(benchmark, small_array_u16) -> None:
+    '''Benchmark options for a small u8 array'''
+    colorized_no_autoscale = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u16,
+        color='Grays',
+        saturation_limits=(0,2**16),
+    )
+    assert colorized_no_autoscale.shape[:-1] == small_array_u16.shape
+
+@pytest.mark.benchmark(group='single channel u16 small')
+def test_bench_small_u16_yes_autoscale(benchmark, small_array_u16) -> None:
+    '''Benchmark options for a small u8 array'''
+    colorized_no_autoscale = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u16,
+        color='Grays',
+        saturation_limits=None,
+    )
+    assert colorized_no_autoscale.shape[:-1] == small_array_u16.shape
+
+@pytest.mark.benchmark(group='blending approach')
+def test_bench_small_u8_max_blending(benchmark, small_array_u8) -> None:
+    '''benchmark max blending for 2 small u8 arrays'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', 'Green'],
+        saturation_limits=None,
+        blending='max',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='blending approach')
+def test_bench_small_u8_sum_blending(benchmark, small_array_u8) -> None:
+    '''benchmark sum blending for 2 small u8 arrays'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', 'Green'],
+        saturation_limits=None,
+        blending='sum',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='blending approach')
+def test_bench_small_u8_mean_blending(benchmark, small_array_u8) -> None:
+    '''benchmark mean blending for 2 small u8 arrays'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', 'Green'],
+        saturation_limits=None,
+        blending='mean',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='blending approach')
+def test_bench_small_u8_min_blending(benchmark, small_array_u8) -> None:
+    '''benchmark min blending for 2 small u8 arrays'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', 'Green'],
+        saturation_limits=None,
+        blending='min',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+
+@pytest.mark.benchmark(group='external colormaps')
+def test_bench_small_u8_internal_cmaps(benchmark, small_array_u8) -> None:
+    '''benchmark merging two u8 arrays with internal cmaps'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', 'Green'],
+        saturation_limits=[(0, 255), (0, 255)],
+        blending='max',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='external colormaps')
+def test_bench_small_u8_internal_and_matplotlib_cmaps(
+    benchmark,
+    small_array_u8,
+    matplotlib_viridis_cmap,
+) -> None:
+    '''benchmark merging two u8 arrays with an internal cmap and a matplotlib cmap'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', matplotlib_viridis_cmap],
+        saturation_limits=[(0, 255), (0, 255)],
+        blending='max',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='external colormaps')
+def test_bench_small_u8_internal_and_cmap_cmaps(
+    benchmark,
+    small_array_u8,
+    cmap_mako_colormap,
+) -> None:
+    '''benchmark merging two u8 arrays with an internal cmap and a cmap cmap'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=['Red', cmap_mako_colormap],
+        saturation_limits=[(0, 255), (0, 255)],
+        blending='max',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
+@pytest.mark.benchmark(group='external colormaps')
+def test_bench_small_u8_matplotlib_and_cmap_cmaps(
+    benchmark,
+    small_array_u8,
+    matplotlib_viridis_cmap,
+    cmap_mako_colormap,
+) -> None:
+    '''benchmark merging two u8 arrays with a matplotlib cmap and a cmap cmap'''
+    small_array_u8_copy = np.copy(small_array_u8)
+    colorized = benchmark(
+        mc.merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        colors=[matplotlib_viridis_cmap, cmap_mako_colormap],
+        saturation_limits=[(0, 255), (0, 255)],
+        blending='max',
+    )
+    assert colorized.shape[:-1] == small_array_u8.shape
+
 def test_apply_with_matplotlib_cmap(matplotlib_viridis_cmap: Colormap):
     '''
     Test that the color map is applied correctly with a matplotlib colormap
