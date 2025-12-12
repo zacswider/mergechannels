@@ -50,3 +50,7 @@ dev = [
     "pytest-benchmark>=4.0.0",
     "pytest>=8.3.5",
 ]
+
+[tool.pytest.ini_options]
+# Configure pytest-benchmark for cleaner output
+addopts = "--benchmark-columns=min,max,mean,stddev,median,ops,outliers,rounds"
