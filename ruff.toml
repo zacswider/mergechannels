@@ -50,6 +50,7 @@ lint.select = [
     'E501', # line-too-long
     'F621', # too many args in star unpacking
     'Q',    # flake8 quotes
+    "I",    # import sorting
 ]
 
 lint.ignore = [
@@ -75,12 +76,11 @@ lint.unfixable = []
 [format]
 quote-style = "single"
 indent-style = "space"
-skip-magic-trailing-comma = true
+skip-magic-trailing-comma = false
 line-ending = "auto"
 docstring-code-format = false
-
 docstring-code-line-length = "dynamic"
 
 [lint.flake8-quotes]
 inline-quotes = 'single'
-docstring-quotes = 'single'
+docstring-quotes = 'double'
