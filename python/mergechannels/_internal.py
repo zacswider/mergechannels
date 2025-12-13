@@ -9,13 +9,12 @@ from typing import (
 
 import numpy as np
 
-from mergechannels import (
+from ._blending import BLENDING_OPTIONS
+from ._luts import COLORMAPS
+from .mergechannels import (  # type: ignore
     dispatch_multi_channel,
     dispatch_single_channel,
 )
-
-from ._blending import BLENDING_OPTIONS
-from ._luts import COLORMAPS
 
 if TYPE_CHECKING:
     from cmap import Colormap as CmapColormap
