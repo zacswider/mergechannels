@@ -43,10 +43,16 @@ include = [
 [dependency-groups]
 dev = [
     "cmap>=0.6.1",
+    "jupytext>=1.18.1",
     "matplotlib>=3.7.5",
+    "pandas-stubs>=2.2.2.240807",
     "pooch>=1.8.2",
     "pre-commit>=3.5.0",
     "pynvim>=0.5.2",
     "pytest-benchmark>=4.0.0",
     "pytest>=8.3.5",
 ]
+
+[tool.pytest.ini_options]
+# Configure pytest-benchmark for cleaner output
+addopts = "--benchmark-columns=min,max,mean,stddev,median,ops,outliers,rounds"

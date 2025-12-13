@@ -235,6 +235,9 @@ pub fn merge_2d_u8(
                     let ch_color = cmap[idx];
                     px_vals.push(ch_color);
                     let px_color = blend_fn(&px_vals);
+                    // NOTE: the write operations *should* go outside this loop but benchmarks show
+                    // that it is faster to keep them in and the result is identical because only the
+                    // last write matters
                     rgb[[i, j, 0]] = px_color[0];
                     rgb[[i, j, 1]] = px_color[1];
                     rgb[[i, j, 2]] = px_color[2];
@@ -299,11 +302,14 @@ pub fn merge_3d_u8(
                         let idx = as_idx(val, *offset, *scale);
                         let ch_color = cmap[idx];
                         px_vals.push(ch_color);
+                        let px_color = blend_fn(&px_vals);
+                        // NOTE: the write operations *should* go outside this loop but benchmarks show
+                        // that it is faster to keep them in and the result is identical because only the
+                        // last write matters
+                        rgb[[n, i, j, 0]] = px_color[0];
+                        rgb[[n, i, j, 1]] = px_color[1];
+                        rgb[[n, i, j, 2]] = px_color[2];
                     }
-                    let px_color = blend_fn(&px_vals);
-                    rgb[[n, i, j, 0]] = px_color[0];
-                    rgb[[n, i, j, 1]] = px_color[1];
-                    rgb[[n, i, j, 2]] = px_color[2];
                 }
             }
         }
@@ -343,6 +349,9 @@ pub fn merge_2d_u16(
                 let ch_color = cmap[idx];
                 px_vals.push(ch_color);
                 let px_color = blend_fn(&px_vals);
+                // NOTE: the write operations *should* go outside this loop but benchmarks show
+                // that it is faster to keep them in and the result is identical because only the
+                // last write matters
                 rgb[[i, j, 0]] = px_color[0];
                 rgb[[i, j, 1]] = px_color[1];
                 rgb[[i, j, 2]] = px_color[2];
@@ -386,11 +395,14 @@ pub fn merge_3d_u16(
                     let idx = as_idx(val, *offset, *scale);
                     let ch_color = cmap[idx];
                     px_vals.push(ch_color);
+                    let px_color = blend_fn(&px_vals);
+                    // NOTE: the write operations *should* go outside this loop but benchmarks show
+                    // that it is faster to keep them in and the result is identical because only the
+                    // last write matters
+                    rgb[[n, i, j, 0]] = px_color[0];
+                    rgb[[n, i, j, 1]] = px_color[1];
+                    rgb[[n, i, j, 2]] = px_color[2];
                 }
-                let px_color = blend_fn(&px_vals);
-                rgb[[n, i, j, 0]] = px_color[0];
-                rgb[[n, i, j, 1]] = px_color[1];
-                rgb[[n, i, j, 2]] = px_color[2];
             }
         }
     }
