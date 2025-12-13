@@ -1,19 +1,20 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Literal, Sequence, Union
+
 import numpy as np
 
 from mergechannels._blending import BLENDING_OPTIONS
 from mergechannels._luts import COLORMAPS
 
 if TYPE_CHECKING:
-    from matplotlib.colors import Colormap as MatplotlibColormap
     from cmap import Colormap as CmapColormap
+    from matplotlib.colors import Colormap as MatplotlibColormap
     from nptyping import (
         NDArray,
         Shape,
         UInt8,
     )
-
 
 Number = Union[int, float]
 
@@ -27,18 +28,14 @@ def apply_color_map(
     ],
     percentiles: tuple[Number, Number] | None = None,
     saturation_limits: tuple[Number, Number] | None = None,
-) -> np.ndarray:
-    ...
-
+) -> np.ndarray: ...
 def merge(
     arrs: Sequence[np.ndarray],
     colors: Sequence[COLORMAPS],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
-) -> np.ndarray:
-    ...
-
+) -> np.ndarray: ...
 def dispatch_single_channel(
     array_reference: np.ndarray,
     cmap_name: Union[COLORMAPS, None],
@@ -49,9 +46,7 @@ def dispatch_single_channel(
         None,
     ],
     limits: tuple[Number, Number] | None = None,
-) -> np.ndarray:
-    ...
-
+) -> np.ndarray: ...
 def dispatch_multi_channel(
     array_references: Sequence[np.ndarray],
     cmap_names: Sequence[Union[COLORMAPS, None]],
@@ -65,5 +60,4 @@ def dispatch_multi_channel(
     ],
     blending: Literal[BLENDING_OPTIONS],
     limits: Sequence[tuple[Number, Number]] | None = None,
-) -> np.ndarray:
-    ...
+) -> np.ndarray: ...

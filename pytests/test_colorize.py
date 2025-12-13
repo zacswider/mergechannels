@@ -1,65 +1,66 @@
-import numpy as np
 import cmap
-from matplotlib.colors import Colormap
 import matplotlib.pyplot as plt
-import pytest
 import mergechannels as mc
+import numpy as np
+import pytest
+from matplotlib.colors import Colormap
 
 
 @pytest.fixture
 def matplotlib_viridis_cmap() -> Colormap:
-    '''
+    """
     Get the viridis colormap from matplotlib
-    '''
+    """
     return plt.get_cmap('viridis')
 
 
 @pytest.fixture
 def cmap_mako_colormap() -> cmap.Colormap:
-    '''
+    """
     Get the seaborn mako colormap from cmap
-    '''
+    """
     return cmap.Colormap('seaborn:mako')
 
 
 @pytest.fixture
 def small_array_u8() -> np.ndarray:
-    '''Create a small u8 array for benchmarking'''
+    """Create a small u8 array for benchmarking"""
     return np.random.randn(256, 256).astype('uint8')
 
 
 @pytest.fixture
 def small_array_u16() -> np.ndarray:
-    '''Create a small u16 array for benchmarking'''
+    """Create a small u16 array for benchmarking"""
     return np.random.randn(256, 256).astype('uint16')
 
 
 @pytest.fixture
 def large_array_u8() -> np.ndarray:
-    '''Create a large u8 array for benchmarking'''
+    """Create a large u8 array for benchmarking"""
     return np.random.randn(1024, 1024).astype('uint8')
 
 
 @pytest.fixture
 def large_array_u16() -> np.ndarray:
-    '''Create a large u16 array for benchmarking'''
+    """Create a large u16 array for benchmarking"""
     return np.random.randn(1024, 1024).astype('uint16')
+
 
 @pytest.fixture
 def xlarge_array_u8() -> np.ndarray:
-    '''Create a large u8 array for benchmarking'''
+    """Create a large u8 array for benchmarking"""
     return np.random.randn(2048, 2048).astype('uint8')
 
 
 @pytest.fixture
 def xlarge_array_u16() -> np.ndarray:
-    '''Create a large u16 array for benchmarking'''
+    """Create a large u16 array for benchmarking"""
     return np.random.randn(2048, 2048).astype('uint16')
 
 
 @pytest.mark.benchmark(group='single channel u8 small')
 def test_bench_small_u8_no_autoscale(benchmark, small_array_u8) -> None:
-    '''Benchmark options for a small u8 array'''
+    """Benchmark options for a small u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=small_array_u8, color='Grays', saturation_limits=(0, 255)
     )
@@ -68,7 +69,7 @@ def test_bench_small_u8_no_autoscale(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='single channel u8 small')
 def test_bench_small_u8_yes_autoscale(benchmark, small_array_u8) -> None:
-    '''Benchmark options for a small u8 array'''
+    """Benchmark options for a small u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=small_array_u8, color='Grays', saturation_limits=None
     )
@@ -77,7 +78,7 @@ def test_bench_small_u8_yes_autoscale(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='single channel u8 large')
 def test_bench_large_u8_no_autoscale(benchmark, large_array_u8) -> None:
-    '''Benchmark options for a large u8 array'''
+    """Benchmark options for a large u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=large_array_u8, color='Grays', saturation_limits=(0, 255)
     )
@@ -86,7 +87,7 @@ def test_bench_large_u8_no_autoscale(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='single channel u8 large')
 def test_bench_large_u8_yes_autoscale(benchmark, large_array_u8) -> None:
-    '''Benchmark options for a large u8 array'''
+    """Benchmark options for a large u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=large_array_u8, color='Grays', saturation_limits=None
     )
@@ -95,7 +96,7 @@ def test_bench_large_u8_yes_autoscale(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='single channel u16 small')
 def test_bench_small_u16_no_autoscale(benchmark, small_array_u16) -> None:
-    '''Benchmark options for a small u8 array'''
+    """Benchmark options for a small u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=small_array_u16, color='Grays', saturation_limits=(0, 2**16)
     )
@@ -104,7 +105,7 @@ def test_bench_small_u16_no_autoscale(benchmark, small_array_u16) -> None:
 
 @pytest.mark.benchmark(group='single channel u16 small')
 def test_bench_small_u16_yes_autoscale(benchmark, small_array_u16) -> None:
-    '''Benchmark options for a small u8 array'''
+    """Benchmark options for a small u8 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=small_array_u16, color='Grays', saturation_limits=None
     )
@@ -113,7 +114,7 @@ def test_bench_small_u16_yes_autoscale(benchmark, small_array_u16) -> None:
 
 @pytest.mark.benchmark(group='single channel u16 large')
 def test_bench_large_u16_no_autoscale(benchmark, large_array_u16) -> None:
-    '''Benchmark options for a large u16 array'''
+    """Benchmark options for a large u16 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=large_array_u16, color='Grays', saturation_limits=(0, 2**16)
     )
@@ -122,7 +123,7 @@ def test_bench_large_u16_no_autoscale(benchmark, large_array_u16) -> None:
 
 @pytest.mark.benchmark(group='single channel u16 large')
 def test_bench_large_u16_yes_autoscale(benchmark, large_array_u16) -> None:
-    '''Benchmark options for a large u16 array'''
+    """Benchmark options for a large u16 array"""
     colorized_no_autoscale = benchmark(
         mc.apply_color_map, arr=large_array_u16, color='Grays', saturation_limits=None
     )
@@ -131,7 +132,7 @@ def test_bench_large_u16_yes_autoscale(benchmark, large_array_u16) -> None:
 
 @pytest.mark.benchmark(group='blending approach')
 def test_bench_small_u8_max_blending(benchmark, small_array_u8) -> None:
-    '''benchmark max blending for 2 small u8 arrays'''
+    """benchmark max blending for 2 small u8 arrays"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -145,7 +146,7 @@ def test_bench_small_u8_max_blending(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach')
 def test_bench_small_u8_sum_blending(benchmark, small_array_u8) -> None:
-    '''benchmark sum blending for 2 small u8 arrays'''
+    """benchmark sum blending for 2 small u8 arrays"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -159,7 +160,7 @@ def test_bench_small_u8_sum_blending(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach')
 def test_bench_small_u8_mean_blending(benchmark, small_array_u8) -> None:
-    '''benchmark mean blending for 2 small u8 arrays'''
+    """benchmark mean blending for 2 small u8 arrays"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -173,7 +174,7 @@ def test_bench_small_u8_mean_blending(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach')
 def test_bench_small_u8_min_blending(benchmark, small_array_u8) -> None:
-    '''benchmark min blending for 2 small u8 arrays'''
+    """benchmark min blending for 2 small u8 arrays"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -187,7 +188,7 @@ def test_bench_small_u8_min_blending(benchmark, small_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach large')
 def test_bench_large_u8_max_blending(benchmark, large_array_u8) -> None:
-    '''benchmark max blending for 2 large u8 arrays'''
+    """benchmark max blending for 2 large u8 arrays"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -201,7 +202,7 @@ def test_bench_large_u8_max_blending(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach large')
 def test_bench_large_u8_sum_blending(benchmark, large_array_u8) -> None:
-    '''benchmark sum blending for 2 large u8 arrays'''
+    """benchmark sum blending for 2 large u8 arrays"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -215,7 +216,7 @@ def test_bench_large_u8_sum_blending(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach large')
 def test_bench_large_u8_mean_blending(benchmark, large_array_u8) -> None:
-    '''benchmark mean blending for 2 large u8 arrays'''
+    """benchmark mean blending for 2 large u8 arrays"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -229,7 +230,7 @@ def test_bench_large_u8_mean_blending(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='blending approach large')
 def test_bench_large_u8_min_blending(benchmark, large_array_u8) -> None:
-    '''benchmark min blending for 2 large u8 arrays'''
+    """benchmark min blending for 2 large u8 arrays"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -243,7 +244,7 @@ def test_bench_large_u8_min_blending(benchmark, large_array_u8) -> None:
 
 @pytest.mark.benchmark(group='external colormaps')
 def test_bench_small_u8_internal_cmaps(benchmark, small_array_u8) -> None:
-    '''benchmark merging two u8 arrays with internal cmaps'''
+    """benchmark merging two u8 arrays with internal cmaps"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -259,7 +260,7 @@ def test_bench_small_u8_internal_cmaps(benchmark, small_array_u8) -> None:
 def test_bench_small_u8_internal_and_matplotlib_cmaps(
     benchmark, small_array_u8, matplotlib_viridis_cmap
 ) -> None:
-    '''benchmark merging two u8 arrays with an internal cmap and a matplotlib cmap'''
+    """benchmark merging two u8 arrays with an internal cmap and a matplotlib cmap"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -275,7 +276,7 @@ def test_bench_small_u8_internal_and_matplotlib_cmaps(
 def test_bench_small_u8_internal_and_cmap_cmaps(
     benchmark, small_array_u8, cmap_mako_colormap
 ) -> None:
-    '''benchmark merging two u8 arrays with an internal cmap and a cmap cmap'''
+    """benchmark merging two u8 arrays with an internal cmap and a cmap cmap"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -291,7 +292,7 @@ def test_bench_small_u8_internal_and_cmap_cmaps(
 def test_bench_small_u8_matplotlib_and_cmap_cmaps(
     benchmark, small_array_u8, matplotlib_viridis_cmap, cmap_mako_colormap
 ) -> None:
-    '''benchmark merging two u8 arrays with a matplotlib cmap and a cmap cmap'''
+    """benchmark merging two u8 arrays with a matplotlib cmap and a cmap cmap"""
     small_array_u8_copy = np.copy(small_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -305,7 +306,7 @@ def test_bench_small_u8_matplotlib_and_cmap_cmaps(
 
 @pytest.mark.benchmark(group='external colormaps large')
 def test_bench_large_u8_internal_cmaps(benchmark, large_array_u8) -> None:
-    '''benchmark merging two large u8 arrays with internal cmaps'''
+    """benchmark merging two large u8 arrays with internal cmaps"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -321,7 +322,7 @@ def test_bench_large_u8_internal_cmaps(benchmark, large_array_u8) -> None:
 def test_bench_large_u8_internal_and_matplotlib_cmaps(
     benchmark, large_array_u8, matplotlib_viridis_cmap
 ) -> None:
-    '''benchmark merging two large u8 arrays with an internal cmap and a matplotlib cmap'''
+    """benchmark merging two large u8 arrays with an internal cmap and a matplotlib cmap"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -337,7 +338,7 @@ def test_bench_large_u8_internal_and_matplotlib_cmaps(
 def test_bench_large_u8_internal_and_cmap_cmaps(
     benchmark, large_array_u8, cmap_mako_colormap
 ) -> None:
-    '''benchmark merging two large u8 arrays with an internal cmap and a cmap cmap'''
+    """benchmark merging two large u8 arrays with an internal cmap and a cmap cmap"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -353,7 +354,7 @@ def test_bench_large_u8_internal_and_cmap_cmaps(
 def test_bench_large_u8_matplotlib_and_cmap_cmaps(
     benchmark, large_array_u8, matplotlib_viridis_cmap, cmap_mako_colormap
 ) -> None:
-    '''benchmark merging two large u8 arrays with a matplotlib cmap and a cmap cmap'''
+    """benchmark merging two large u8 arrays with a matplotlib cmap and a cmap cmap"""
     large_array_u8_copy = np.copy(large_array_u8)
     colorized = benchmark(
         mc.merge,
@@ -366,9 +367,9 @@ def test_bench_large_u8_matplotlib_and_cmap_cmaps(
 
 
 def test_apply_with_matplotlib_cmap(matplotlib_viridis_cmap: Colormap):
-    '''
+    """
     Test that the color map is applied correctly with a matplotlib colormap
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     rgb = mc.apply_color_map(x, matplotlib_viridis_cmap, saturation_limits=(0, 255))
     assert np.allclose(rgb, np.array([[[68, 2, 85]]]))
@@ -378,9 +379,9 @@ def test_apply_with_matplotlib_cmap(matplotlib_viridis_cmap: Colormap):
 
 
 def test_apply_with_cmap_colormap(cmap_mako_colormap: cmap.Colormap):
-    '''
+    """
     Test that the color map is applied correctly with a cmap colormap
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     rgb = mc.apply_color_map(x, cmap_mako_colormap, saturation_limits=(0, 255))
     assert np.allclose(rgb, np.array([[[12, 4, 6]]]))
@@ -392,9 +393,9 @@ def test_apply_with_cmap_colormap(cmap_mako_colormap: cmap.Colormap):
 def test_merge_with_both(
     matplotlib_viridis_cmap: Colormap, cmap_mako_colormap: cmap.Colormap
 ) -> None:
-    '''
+    """
     Test that the colors are merged correctly with both matplotlib and cmap colormaps
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb = mc.merge(
@@ -414,9 +415,9 @@ def test_merge_with_both(
 
 
 def test_apply_color_map():
-    '''
+    """
     Test that the color map is applied correctly
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
     assert rgb.shape == (1, 1, 3)
@@ -430,9 +431,9 @@ def test_apply_color_map():
 
 
 def test_apply_colors_and_merge_low_sum():
-    '''
+    """
     Test that the colors are merged correctly with sum blending and low values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_sum = mc.dispatch_multi_channel(
@@ -451,9 +452,9 @@ def test_apply_colors_and_merge_low_sum():
 
 
 def test_apply_colors_and_merge_high_sum():
-    '''
+    """
     Test that the colors are merged correctly with sum blending and high values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_sum = mc.dispatch_multi_channel(
@@ -472,9 +473,9 @@ def test_apply_colors_and_merge_high_sum():
 
 
 def test_apply_colors_and_merge_low_max():
-    '''
+    """
     Test that the colors are merged correctly with max blending and low values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_max = mc.dispatch_multi_channel(
@@ -493,9 +494,9 @@ def test_apply_colors_and_merge_low_max():
 
 
 def test_apply_colors_and_merge_high_max():
-    '''
+    """
     Test that the colors are merged correctly with max blending and high values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_max = mc.dispatch_multi_channel(
@@ -514,9 +515,9 @@ def test_apply_colors_and_merge_high_max():
 
 
 def test_apply_colors_and_merge_low_min():
-    '''
+    """
     Test that the colors are merged correctly with min blending and low values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_min = mc.dispatch_multi_channel(
@@ -535,9 +536,9 @@ def test_apply_colors_and_merge_low_min():
 
 
 def test_apply_colors_and_merge_high_min():
-    '''
+    """
     Test that the colors are merged correctly with min blending and high values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_min = mc.dispatch_multi_channel(
@@ -556,9 +557,9 @@ def test_apply_colors_and_merge_high_min():
 
 
 def test_apply_colors_and_merge_low_mean():
-    '''
+    """
     Test that the colors are merged correctly with mean blending and low values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_mean = mc.dispatch_multi_channel(
@@ -582,9 +583,9 @@ def test_apply_colors_and_merge_low_mean():
 
 
 def test_apply_colors_and_merge_high_mean():
-    '''
+    """
     Test that the colors are merged correctly with mean blending and high values
-    '''
+    """
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_mean = mc.dispatch_multi_channel(
@@ -606,13 +607,14 @@ def test_apply_colors_and_merge_high_mean():
     )
     assert np.allclose(rgb_mean, rgb_mean2)
 
+
 @pytest.mark.benchmark(group='mergechannels vs numpy')
 def test_apply_cmap_u8_matplotlib_small(benchmark, small_array_u8, matplotlib_viridis_cmap) -> None:
-    '''
+    """
     benchmark time to apply a single colormap to a large u8 array with matplotlib
     NOTE: this uses the underlying mechanism np.take to avoid some of the other matplotlib
     overhead in an attempt to be more fair
-    '''
+    """
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = benchmark(
         np.take,
@@ -623,13 +625,14 @@ def test_apply_cmap_u8_matplotlib_small(benchmark, small_array_u8, matplotlib_vi
     rgb_mc = mc.apply_color_map(small_array_u8, matplotlib_viridis_cmap)
     np.testing.assert_array_equal(rgb_mpl, rgb_mc)
 
+
 @pytest.mark.benchmark(group='mergechannels vs numpy')
 def test_apply_cmap_u8_mergechannels_small(
     benchmark,
     small_array_u8,
     matplotlib_viridis_cmap,
 ) -> None:
-    '''benchmark time to apply a single colormap to a large u8 array with mergechannels'''
+    """benchmark time to apply a single colormap to a large u8 array with mergechannels"""
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = np.take(lut, small_array_u8, axis=0)
     rgb_mc = benchmark(
@@ -646,11 +649,11 @@ def test_apply_cmap_u8_matplotlib_moderate(
     large_array_u8,
     matplotlib_viridis_cmap,
 ) -> None:
-    '''
+    """
     benchmark time to apply a single colormap to a large u8 array with matplotlib
     NOTE: this uses the underlying mechanism np.take to avoid some of the other matplotlib
     overhead in an attempt to be more fair
-    '''
+    """
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = benchmark(
         np.take,
@@ -661,13 +664,14 @@ def test_apply_cmap_u8_matplotlib_moderate(
     rgb_mc = mc.apply_color_map(large_array_u8, matplotlib_viridis_cmap)
     np.testing.assert_array_equal(rgb_mpl, rgb_mc)
 
+
 @pytest.mark.benchmark(group='mergechannels vs numpy')
 def test_apply_cmap_u8_mergechannels_moderate(
     benchmark,
     large_array_u8,
     matplotlib_viridis_cmap,
 ) -> None:
-    '''benchmark time to apply a single colormap to a large u8 array with mergechannels'''
+    """benchmark time to apply a single colormap to a large u8 array with mergechannels"""
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = np.take(lut, large_array_u8, axis=0)
     rgb_mc = benchmark(
@@ -677,17 +681,18 @@ def test_apply_cmap_u8_mergechannels_moderate(
     )
     np.testing.assert_array_equal(rgb_mpl, rgb_mc)
 
+
 @pytest.mark.benchmark(group='mergechannels vs numpy')
 def test_apply_cmap_u8_matplotlib_large(
     benchmark,
     xlarge_array_u8,
     matplotlib_viridis_cmap,
 ) -> None:
-    '''
+    """
     benchmark time to apply a single colormap to a large u8 array with matplotlib
     NOTE: this uses the underlying mechanism np.take to avoid some of the other matplotlib
     overhead in an attempt to be more fair
-    '''
+    """
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = benchmark(
         np.take,
@@ -698,13 +703,14 @@ def test_apply_cmap_u8_matplotlib_large(
     rgb_mc = mc.apply_color_map(xlarge_array_u8, matplotlib_viridis_cmap)
     np.testing.assert_array_equal(rgb_mpl, rgb_mc)
 
+
 @pytest.mark.benchmark(group='mergechannels vs numpy')
 def test_apply_cmap_u8_mergechannels_large(
     benchmark,
     xlarge_array_u8,
     matplotlib_viridis_cmap,
 ) -> None:
-    '''benchmark time to apply a single colormap to a large u8 array with mergechannels'''
+    """benchmark time to apply a single colormap to a large u8 array with mergechannels"""
     lut = (matplotlib_viridis_cmap(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = np.take(lut, xlarge_array_u8, axis=0)
     rgb_mc = benchmark(
