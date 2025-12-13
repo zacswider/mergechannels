@@ -28,13 +28,14 @@ fn parse_cmap_from_args<'a>(
 }
 
 #[pyfunction]
-#[pyo3(name = "dispatch_single_channel")]
+#[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false))]
 pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
     cmap_name: Option<String>,
     cmap_values: Option<[[u8; 3]; 256]>,
     limits: [f64; 2],
+    parallel: bool,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
@@ -45,7 +46,7 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits);
+                let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {

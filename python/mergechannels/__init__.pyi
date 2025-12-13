@@ -28,6 +28,7 @@ def apply_color_map(
     ],
     percentiles: tuple[Number, Number] | None = None,
     saturation_limits: tuple[Number, Number] | None = None,
+    parallel: bool = False,
 ) -> np.ndarray: ...
 def merge(
     arrs: Sequence[np.ndarray],
@@ -46,6 +47,7 @@ def dispatch_single_channel(
         None,
     ],
     limits: tuple[Number, Number] | None = None,
+    parallel: bool = False,
 ) -> np.ndarray: ...
 def dispatch_multi_channel(
     array_references: Sequence[np.ndarray],

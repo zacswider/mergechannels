@@ -80,6 +80,7 @@ def apply_color_map(
     ],
     percentiles: Union[tuple[float, float], None] = None,
     saturation_limits: Union[tuple[float, float], None] = None,
+    parallel: bool = False,
 ) -> np.ndarray:
     """
     apply a color map to an array
@@ -97,6 +98,7 @@ def apply_color_map(
         cmap_name=cmap_name,
         cmap_values=cmap_values,
         limits=saturation_limits,
+        parallel=parallel,
     )
 
 
