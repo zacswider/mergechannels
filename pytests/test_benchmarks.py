@@ -56,11 +56,12 @@ def np_merge(
 def mc_merge(
     arrs: list[np.ndarray],
     cmaps: list[np.ndarray],
+    parallel: bool = False,
 ) -> np.ndarray:
     """
     merge some number of arrays using mergechannels operations
     """
-    return mc.merge(arrs=arrs, colors=cmaps)  # type: ignore
+    return mc.merge(arrs=arrs, colors=cmaps, parallel=parallel)  # type: ignore
 
 
 @pytest.fixture
@@ -712,5 +713,375 @@ def test_merge_u8_mergechannels_xlarge(
         mc_merge,
         arrs=[xlarge_array_u8, xlarge_array_u8_copy],
         cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='serial vs parallel small fast path')
+def test_bench_small_u8_serial_fast(benchmark, small_array_u8) -> None:
+    """Benchmark serial colorization with fast path"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == small_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel small fast path')
+def test_bench_small_u8_parallel_fast(benchmark, small_array_u8) -> None:
+    """Benchmark parallel colorization with fast path"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == small_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel large fast path')
+def test_bench_large_u8_serial_fast(benchmark, large_array_u8) -> None:
+    """Benchmark serial colorization with fast path on large array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=large_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == large_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel large fast path')
+def test_bench_large_u8_parallel_fast(benchmark, large_array_u8) -> None:
+    """Benchmark parallel colorization with fast path on large array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=large_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == large_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel xlarge fast path')
+def test_bench_xlarge_u8_serial_fast(benchmark, xlarge_array_u8) -> None:
+    """Benchmark serial colorization with fast path on xlarge array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=xlarge_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == xlarge_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel xlarge fast path')
+def test_bench_xlarge_u8_parallel_fast(benchmark, xlarge_array_u8) -> None:
+    """Benchmark parallel colorization with fast path on xlarge array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=xlarge_array_u8,
+        color='Grays',
+        saturation_limits=(0, 255),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == xlarge_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel small slow path')
+def test_bench_small_u8_serial_slow(benchmark, small_array_u8) -> None:
+    """Benchmark serial colorization with slow path (normalization)"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == small_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel small slow path')
+def test_bench_small_u8_parallel_slow(benchmark, small_array_u8) -> None:
+    """Benchmark parallel colorization with slow path (normalization)"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=small_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == small_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel large slow path')
+def test_bench_large_u8_serial_slow(benchmark, large_array_u8) -> None:
+    """Benchmark serial colorization with slow path on large array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=large_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == large_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel large slow path')
+def test_bench_large_u8_parallel_slow(benchmark, large_array_u8) -> None:
+    """Benchmark parallel colorization with slow path on large array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=large_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == large_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel xlarge slow path')
+def test_bench_xlarge_u8_serial_slow(benchmark, xlarge_array_u8) -> None:
+    """Benchmark serial colorization with slow path on xlarge array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=xlarge_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=False,
+    )
+    assert rgb.shape[:-1] == xlarge_array_u8.shape
+
+
+@pytest.mark.benchmark(group='serial vs parallel xlarge slow path')
+def test_bench_xlarge_u8_parallel_slow(benchmark, xlarge_array_u8) -> None:
+    """Benchmark parallel colorization with slow path on xlarge array"""
+    rgb = benchmark(
+        mc.apply_color_map,
+        arr=xlarge_array_u8,
+        color='Grays',
+        saturation_limits=(10, 200),
+        parallel=True,
+    )
+    assert rgb.shape[:-1] == xlarge_array_u8.shape
+
+
+def test_parallel_correctness_fast_path(small_array_u8) -> None:
+    """Test that parallel and serial produce identical results for fast path"""
+    rgb_serial = mc.apply_color_map(
+        arr=small_array_u8, color='Grays', saturation_limits=(0, 255), parallel=False
+    )
+    rgb_parallel = mc.apply_color_map(
+        arr=small_array_u8, color='Grays', saturation_limits=(0, 255), parallel=True
+    )
+    np.testing.assert_array_equal(rgb_serial, rgb_parallel)
+
+
+def test_parallel_correctness_slow_path(small_array_u8) -> None:
+    """Test that parallel and serial produce identical results for slow path"""
+    rgb_serial = mc.apply_color_map(
+        arr=small_array_u8, color='Grays', saturation_limits=(10, 200), parallel=False
+    )
+    rgb_parallel = mc.apply_color_map(
+        arr=small_array_u8, color='Grays', saturation_limits=(10, 200), parallel=True
+    )
+    np.testing.assert_array_equal(rgb_serial, rgb_parallel)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_matplotlib_small_parallel(
+    benchmark,
+    small_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    small_array_u8_copy = np.copy(small_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[small_array_u8, small_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_mergechannels_small_parallel(
+    benchmark,
+    small_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    small_array_u8_copy = np.copy(small_array_u8)
+    np_merged = np_merge(
+        arrs=[small_array_u8, small_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[small_array_u8, small_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_matplotlib_medium_parallel(
+    benchmark,
+    medium_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    medium_array_u8_copy = np.copy(medium_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_mergechannels_medium_parallel(
+    benchmark,
+    medium_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    medium_array_u8_copy = np.copy(medium_array_u8)
+    np_merged = np_merge(
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_matplotlib_large_parallel(
+    benchmark,
+    large_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    large_array_u8_copy = np.copy(large_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_mergechannels_large_parallel(
+    benchmark,
+    large_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    large_array_u8_copy = np.copy(large_array_u8)
+    np_merged = np_merge(
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_matplotlib_xlarge_parallel(
+    benchmark,
+    xlarge_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    xlarge_array_u8_copy = np.copy(xlarge_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays parallel')
+def test_merge_u8_mergechannels_xlarge_parallel(
+    benchmark,
+    xlarge_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    xlarge_array_u8_copy = np.copy(xlarge_array_u8)
+    np_merged = np_merge(
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+        parallel=True,
     )
     np.testing.assert_allclose(np_merged, mc_merged)
