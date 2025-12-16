@@ -76,6 +76,18 @@ def small_array_u16() -> np.ndarray:
 
 
 @pytest.fixture
+def medium_array_u8() -> np.ndarray:
+    """Create a medium u8 array for benchmarking"""
+    return np.random.randn(512, 512).astype('uint8')
+
+
+@pytest.fixture
+def medium_array_u16() -> np.ndarray:
+    """Create a medium u16 array for benchmarking"""
+    return np.random.randn(512, 512).astype('uint16')
+
+
+@pytest.fixture
 def large_array_u8() -> np.ndarray:
     """Create a large u8 array for benchmarking"""
     return np.random.randn(1024, 1024).astype('uint8')
@@ -561,6 +573,144 @@ def test_merge_u8_mergechannels_small(
     mc_merged = benchmark(
         mc_merge,
         arrs=[small_array_u8, small_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_matplotlib_medium(
+    benchmark,
+    medium_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    medium_array_u8_copy = np.copy(medium_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_mergechannels_medium(
+    benchmark,
+    medium_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    medium_array_u8_copy = np.copy(medium_array_u8)
+    np_merged = np_merge(
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[medium_array_u8, medium_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_matplotlib_large(
+    benchmark,
+    large_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    large_array_u8_copy = np.copy(large_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_mergechannels_large(
+    benchmark,
+    large_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    large_array_u8_copy = np.copy(large_array_u8)
+    np_merged = np_merge(
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[large_array_u8, large_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_matplotlib_xlarge(
+    benchmark,
+    xlarge_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with numpy operations
+    """
+    xlarge_array_u8_copy = np.copy(xlarge_array_u8)
+    np_merged = benchmark(
+        np_merge,
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = mc_merge(
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    np.testing.assert_allclose(np_merged, mc_merged)
+
+
+@pytest.mark.benchmark(group='mergechannels vs numpy merge arrays')
+def test_merge_u8_mergechannels_xlarge(
+    benchmark,
+    xlarge_array_u8,
+    mpl_greens_array_lut,
+    mpl_reds_array_lut,
+) -> None:
+    """
+    benchmark time to merge two images with mergechannels operations
+    """
+    xlarge_array_u8_copy = np.copy(xlarge_array_u8)
+    np_merged = np_merge(
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
+        cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
+    )
+    mc_merged = benchmark(
+        mc_merge,
+        arrs=[xlarge_array_u8, xlarge_array_u8_copy],
         cmaps=[mpl_greens_array_lut, mpl_reds_array_lut],
     )
     np.testing.assert_allclose(np_merged, mc_merged)
