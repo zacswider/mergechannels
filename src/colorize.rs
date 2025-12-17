@@ -1,6 +1,7 @@
 use crate::blend::{self};
 use crate::errors::MergeError;
 use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
+use rayon::prelude::*;
 use smallvec::SmallVec;
 
 /// Create a (y, x, 3) array with ones
@@ -61,7 +62,6 @@ pub fn colorize_single_channel_8bit(
     if limits[0] == 0.0 && limits[1] == 255.0 {
         // fast path - direct lookup
         if parallel {
-            use rayon::prelude::*;
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
@@ -89,7 +89,6 @@ pub fn colorize_single_channel_8bit(
         // normalize on the fly
         let [offset, scale] = offset_and_scale(limits);
         if parallel {
-            use rayon::prelude::*;
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
@@ -124,6 +123,7 @@ pub fn colorize_stack_8bit(
     arr: ArrayView3<u8>,
     cmap: &[[u8; 3]; 256],
     limits: [f64; 2],
+    parallel: bool,
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
@@ -132,29 +132,64 @@ pub fn colorize_stack_8bit(
 
     if limits[0] == 0.0 && limits[1] == 255.0 {
         // fast path - direct lookup
-        for n in 0..shape_n {
-            for y in 0..shape_y {
-                for x in 0..shape_x {
-                    let idx = arr[[n, y, x]] as usize;
-                    let color = cmap[idx];
-                    rgb[[n, y, x, 0]] = color[0];
-                    rgb[[n, y, x, 1]] = color[1];
-                    rgb[[n, y, x, 2]] = color[2];
+        if parallel {
+            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
+                .into_par_iter()
+                .enumerate()
+                .for_each(|(n, mut plane)| {
+                    for y in 0..shape_y {
+                        for x in 0..shape_x {
+                            let idx = arr[[n, y, x]] as usize;
+                            let color = cmap[idx];
+                            plane[[y, x, 0]] = color[0];
+                            plane[[y, x, 1]] = color[1];
+                            plane[[y, x, 2]] = color[2];
+                        }
+                    }
+                });
+        } else {
+            for n in 0..shape_n {
+                for y in 0..shape_y {
+                    for x in 0..shape_x {
+                        let idx = arr[[n, y, x]] as usize;
+                        let color = cmap[idx];
+                        rgb[[n, y, x, 0]] = color[0];
+                        rgb[[n, y, x, 1]] = color[1];
+                        rgb[[n, y, x, 2]] = color[2];
+                    }
                 }
             }
         }
     } else {
         // normalize on the fly
         let [offset, scale] = offset_and_scale(limits);
-        for n in 0..shape_n {
-            for y in 0..shape_y {
-                for x in 0..shape_x {
-                    let val = arr[[n, y, x]];
-                    let idx = as_idx(val, offset, scale);
-                    let color = cmap[idx];
-                    rgb[[n, y, x, 0]] = color[0];
-                    rgb[[n, y, x, 1]] = color[1];
-                    rgb[[n, y, x, 2]] = color[2];
+        if parallel {
+            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
+                .into_par_iter()
+                .enumerate()
+                .for_each(|(n, mut plane)| {
+                    for y in 0..shape_y {
+                        for x in 0..shape_x {
+                            let val = arr[[n, y, x]];
+                            let idx = as_idx(val, offset, scale);
+                            let color = cmap[idx];
+                            plane[[y, x, 0]] = color[0];
+                            plane[[y, x, 1]] = color[1];
+                            plane[[y, x, 2]] = color[2];
+                        }
+                    }
+                });
+        } else {
+            for n in 0..shape_n {
+                for y in 0..shape_y {
+                    for x in 0..shape_x {
+                        let val = arr[[n, y, x]];
+                        let idx = as_idx(val, offset, scale);
+                        let color = cmap[idx];
+                        rgb[[n, y, x, 0]] = color[0];
+                        rgb[[n, y, x, 1]] = color[1];
+                        rgb[[n, y, x, 2]] = color[2];
+                    }
                 }
             }
         }
