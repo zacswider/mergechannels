@@ -45,7 +45,7 @@ def mc_merge_u8_with_cmaps_autoscale(
     )
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps small with autoscale')
 def test_merge_u8_matplotlib_small_autoscale(
     benchmark,
     small_array_u8,
@@ -68,7 +68,7 @@ def test_merge_u8_matplotlib_small_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps small with autoscale')
 def test_merge_u8_mergechannels_small_autoscale(
     benchmark,
     small_array_u8,
@@ -91,7 +91,7 @@ def test_merge_u8_mergechannels_small_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps medium with autoscale')
 def test_merge_u8_matplotlib_medium_autoscale(
     benchmark,
     medium_array_u8,
@@ -114,7 +114,7 @@ def test_merge_u8_matplotlib_medium_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps medium with autoscale')
 def test_merge_u8_mergechannels_medium_autoscale(
     benchmark,
     medium_array_u8,
@@ -137,7 +137,7 @@ def test_merge_u8_mergechannels_medium_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps large with autoscale')
 def test_merge_u8_matplotlib_large_autoscale(
     benchmark,
     large_array_u8,
@@ -160,7 +160,7 @@ def test_merge_u8_matplotlib_large_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps large with autoscale')
 def test_merge_u8_mergechannels_large_autoscale(
     benchmark,
     large_array_u8,
@@ -183,7 +183,7 @@ def test_merge_u8_mergechannels_large_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps xlarge with autoscale')
 def test_merge_u8_matplotlib_xlarge_autoscale(
     benchmark,
     xlarge_array_u8,
@@ -206,7 +206,7 @@ def test_merge_u8_matplotlib_xlarge_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge with autoscaling')
+@pytest.mark.benchmark(group='merge colormaps xlarge with autoscale')
 def test_merge_u8_mergechannels_xlarge_autoscale(
     benchmark,
     xlarge_array_u8,
@@ -229,7 +229,7 @@ def test_merge_u8_mergechannels_xlarge_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps small no autoscale')
 def test_merge_u8_matplotlib_small_no_autoscale(
     benchmark,
     small_array_u8,
@@ -252,7 +252,7 @@ def test_merge_u8_matplotlib_small_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps small no autoscale')
 def test_merge_u8_mergechannels_small_no_autoscale(
     benchmark,
     small_array_u8,
@@ -275,7 +275,7 @@ def test_merge_u8_mergechannels_small_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps medium no autoscale')
 def test_merge_u8_matplotlib_medium_no_autoscale(
     benchmark,
     medium_array_u8,
@@ -298,7 +298,7 @@ def test_merge_u8_matplotlib_medium_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps medium no autoscale')
 def test_merge_u8_mergechannels_medium_no_autoscale(
     benchmark,
     medium_array_u8,
@@ -321,7 +321,7 @@ def test_merge_u8_mergechannels_medium_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps large no autoscale')
 def test_merge_u8_matplotlib_large_no_autoscale(
     benchmark,
     large_array_u8,
@@ -344,7 +344,7 @@ def test_merge_u8_matplotlib_large_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps large no autoscale')
 def test_merge_u8_mergechannels_large_no_autoscale(
     benchmark,
     large_array_u8,
@@ -367,7 +367,7 @@ def test_merge_u8_mergechannels_large_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps xlarge no autoscale')
 def test_merge_u8_matplotlib_xlarge_no_autoscale(
     benchmark,
     xlarge_array_u8,
@@ -390,7 +390,7 @@ def test_merge_u8_matplotlib_xlarge_no_autoscale(
     np.testing.assert_allclose(np_merged, mc_merged)
 
 
-@pytest.mark.benchmark(group='numpy merge no autoscale vs mc merge no autoscale')
+@pytest.mark.benchmark(group='merge colormaps xlarge no autoscale')
 def test_merge_u8_mergechannels_xlarge_no_autoscale(
     benchmark,
     xlarge_array_u8,
