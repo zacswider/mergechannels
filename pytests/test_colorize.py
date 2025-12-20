@@ -75,12 +75,12 @@ def test_apply_color_map():
     Test that the color map is applied correctly
     """
     x = np.ones((1, 1), dtype=np.uint8)
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255), parallel=False)
     assert rgb.shape == (1, 1, 3)
     assert rgb.dtype == np.uint8
     assert np.allclose(rgb, np.array([[[0, 1, 2]]]))
     x = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255), parallel=False)
     assert np.allclose(rgb, np.array([[[0, 188, 254]]]))
     rgb2 = mc.apply_color_map(x, 'betterBlue', saturation_limits=(0, 255))
     assert np.allclose(rgb, rgb2)
