@@ -28,7 +28,7 @@ fn parse_cmap_from_args<'a>(
 }
 
 #[pyfunction]
-#[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false))]
+#[pyo3(name = "dispatch_single_channel")]
 pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
@@ -52,7 +52,7 @@ pub fn dispatch_single_channel_py<'py>(
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_stack_8bit(arr, cmap, limits);
+                let rgb = colorize::colorize_stack_8bit(arr, cmap, limits, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
