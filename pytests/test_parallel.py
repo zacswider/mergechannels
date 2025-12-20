@@ -79,12 +79,7 @@ def test_bench_small_u8_parallel_autoscale(benchmark, small_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-# ============================================================================
-# Medium Arrays (512x512)
-# ============================================================================
-
-
-@pytest.mark.benchmark(group='medium no_autoscale')
+@pytest.mark.benchmark(group='medium linear vs parallel no autoscale')
 def test_bench_medium_u8_serial_no_autoscale(benchmark, medium_array_u8) -> None:
     """Benchmark serial colorization for medium u8 array without autoscaling"""
     serial_result = benchmark(
@@ -94,7 +89,6 @@ def test_bench_medium_u8_serial_no_autoscale(benchmark, medium_array_u8) -> None
         saturation_limits=(0, 255),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=medium_array_u8,
         color='Grays',
@@ -104,7 +98,7 @@ def test_bench_medium_u8_serial_no_autoscale(benchmark, medium_array_u8) -> None
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='medium no_autoscale')
+@pytest.mark.benchmark(group='medium linear vs parallel no autoscale')
 def test_bench_medium_u8_parallel_no_autoscale(benchmark, medium_array_u8) -> None:
     """Benchmark parallel colorization for medium u8 array without autoscaling"""
     parallel_result = benchmark(
@@ -114,7 +108,6 @@ def test_bench_medium_u8_parallel_no_autoscale(benchmark, medium_array_u8) -> No
         saturation_limits=(0, 255),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=medium_array_u8,
         color='Grays',
@@ -124,7 +117,7 @@ def test_bench_medium_u8_parallel_no_autoscale(benchmark, medium_array_u8) -> No
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='medium autoscale')
+@pytest.mark.benchmark(group='medium linear vs parallel with autoscale')
 def test_bench_medium_u8_serial_autoscale(benchmark, medium_array_u8) -> None:
     """Benchmark serial colorization for medium u8 array with autoscaling"""
     serial_result = benchmark(
@@ -134,7 +127,6 @@ def test_bench_medium_u8_serial_autoscale(benchmark, medium_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=medium_array_u8,
         color='Grays',
@@ -144,7 +136,7 @@ def test_bench_medium_u8_serial_autoscale(benchmark, medium_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='medium autoscale')
+@pytest.mark.benchmark(group='medium linear vs parallel with autoscale')
 def test_bench_medium_u8_parallel_autoscale(benchmark, medium_array_u8) -> None:
     """Benchmark parallel colorization for medium u8 array with autoscaling"""
     parallel_result = benchmark(
@@ -154,7 +146,6 @@ def test_bench_medium_u8_parallel_autoscale(benchmark, medium_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=medium_array_u8,
         color='Grays',
@@ -164,12 +155,7 @@ def test_bench_medium_u8_parallel_autoscale(benchmark, medium_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-# ============================================================================
-# Large Arrays (1024x1024)
-# ============================================================================
-
-
-@pytest.mark.benchmark(group='large no_autoscale')
+@pytest.mark.benchmark(group='large linear vs parallel no autoscale')
 def test_bench_large_u8_serial_no_autoscale(benchmark, large_array_u8) -> None:
     """Benchmark serial colorization for large u8 array without autoscaling"""
     serial_result = benchmark(
@@ -179,7 +165,6 @@ def test_bench_large_u8_serial_no_autoscale(benchmark, large_array_u8) -> None:
         saturation_limits=(0, 255),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=large_array_u8,
         color='Grays',
@@ -189,7 +174,7 @@ def test_bench_large_u8_serial_no_autoscale(benchmark, large_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='large no_autoscale')
+@pytest.mark.benchmark(group='large linear vs parallel no autoscale')
 def test_bench_large_u8_parallel_no_autoscale(benchmark, large_array_u8) -> None:
     """Benchmark parallel colorization for large u8 array without autoscaling"""
     parallel_result = benchmark(
@@ -199,7 +184,6 @@ def test_bench_large_u8_parallel_no_autoscale(benchmark, large_array_u8) -> None
         saturation_limits=(0, 255),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=large_array_u8,
         color='Grays',
@@ -209,7 +193,7 @@ def test_bench_large_u8_parallel_no_autoscale(benchmark, large_array_u8) -> None
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='large autoscale')
+@pytest.mark.benchmark(group='large linear vs parallel with autoscale')
 def test_bench_large_u8_serial_autoscale(benchmark, large_array_u8) -> None:
     """Benchmark serial colorization for large u8 array with autoscaling"""
     serial_result = benchmark(
@@ -219,7 +203,6 @@ def test_bench_large_u8_serial_autoscale(benchmark, large_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=large_array_u8,
         color='Grays',
@@ -229,7 +212,7 @@ def test_bench_large_u8_serial_autoscale(benchmark, large_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='large autoscale')
+@pytest.mark.benchmark(group='large linear vs parallel with autoscale')
 def test_bench_large_u8_parallel_autoscale(benchmark, large_array_u8) -> None:
     """Benchmark parallel colorization for large u8 array with autoscaling"""
     parallel_result = benchmark(
@@ -239,7 +222,6 @@ def test_bench_large_u8_parallel_autoscale(benchmark, large_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=large_array_u8,
         color='Grays',
@@ -249,12 +231,7 @@ def test_bench_large_u8_parallel_autoscale(benchmark, large_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-# ============================================================================
-# Extra Large Arrays (2048x2048)
-# ============================================================================
-
-
-@pytest.mark.benchmark(group='xlarge no_autoscale')
+@pytest.mark.benchmark(group='xlarge linear vs parallel no autoscale')
 def test_bench_xlarge_u8_serial_no_autoscale(benchmark, xlarge_array_u8) -> None:
     """Benchmark serial colorization for xlarge u8 array without autoscaling"""
     serial_result = benchmark(
@@ -264,7 +241,6 @@ def test_bench_xlarge_u8_serial_no_autoscale(benchmark, xlarge_array_u8) -> None
         saturation_limits=(0, 255),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=xlarge_array_u8,
         color='Grays',
@@ -274,7 +250,7 @@ def test_bench_xlarge_u8_serial_no_autoscale(benchmark, xlarge_array_u8) -> None
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='xlarge no_autoscale')
+@pytest.mark.benchmark(group='xlarge linear vs parallel no autoscale')
 def test_bench_xlarge_u8_parallel_no_autoscale(benchmark, xlarge_array_u8) -> None:
     """Benchmark parallel colorization for xlarge u8 array without autoscaling"""
     parallel_result = benchmark(
@@ -284,7 +260,6 @@ def test_bench_xlarge_u8_parallel_no_autoscale(benchmark, xlarge_array_u8) -> No
         saturation_limits=(0, 255),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=xlarge_array_u8,
         color='Grays',
@@ -294,7 +269,7 @@ def test_bench_xlarge_u8_parallel_no_autoscale(benchmark, xlarge_array_u8) -> No
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='xlarge autoscale')
+@pytest.mark.benchmark(group='xlarge linear vs parallel with autoscale')
 def test_bench_xlarge_u8_serial_autoscale(benchmark, xlarge_array_u8) -> None:
     """Benchmark serial colorization for xlarge u8 array with autoscaling"""
     serial_result = benchmark(
@@ -304,7 +279,6 @@ def test_bench_xlarge_u8_serial_autoscale(benchmark, xlarge_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=False,
     )
-    # Compare with parallel execution
     parallel_result = mc.apply_color_map(
         arr=xlarge_array_u8,
         color='Grays',
@@ -314,7 +288,7 @@ def test_bench_xlarge_u8_serial_autoscale(benchmark, xlarge_array_u8) -> None:
     assert np.array_equal(serial_result, parallel_result)
 
 
-@pytest.mark.benchmark(group='xlarge autoscale')
+@pytest.mark.benchmark(group='xlarge linear vs parallel with autoscale')
 def test_bench_xlarge_u8_parallel_autoscale(benchmark, xlarge_array_u8) -> None:
     """Benchmark parallel colorization for xlarge u8 array with autoscaling"""
     parallel_result = benchmark(
@@ -324,7 +298,6 @@ def test_bench_xlarge_u8_parallel_autoscale(benchmark, xlarge_array_u8) -> None:
         saturation_limits=(10, 200),
         parallel=True,
     )
-    # Compare with serial execution
     serial_result = mc.apply_color_map(
         arr=xlarge_array_u8,
         color='Grays',
