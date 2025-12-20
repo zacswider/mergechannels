@@ -171,7 +171,11 @@ print(colorized.shape, colorized.dtype)
 ```
 ![colorize a single image](https://raw.githubusercontent.com/zacswider/README_Images/main/camera_red-green.png)
 
-Similar to `mergechannels.merge`, `apply_color_map` will also accept colormaps directly from `matplotlib` and `cmap`, explicit saturation limits, or perctile values for autoscaling.
+Similar to `mergechannels.merge`, `apply_color_map` will also accept colormaps directly from `matplotlib` and `cmap`, explicit saturation limits, or percentile values for autoscaling.
+
+## Performance
+
+Benchmarks show that with appropriately scalled images, (i.e., if pre-determined saturation limits are passed to `mc.merge` or `mc.apply_color_map`) mergechannel is either on par or significantly faster than the underlying numpy operations used by Matplotlib. Note: you can run the benchmarks on your own machine by creating a virtual environment with the dev dependencies `uv sync --dev && source .venv/bin/activate` and running the benchmark code `py.test --benchmark-only`
 
 ## Roadmap
 mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2/3D 8/16-bit images and that's it.
