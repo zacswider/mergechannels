@@ -5,37 +5,39 @@
 # ]
 # ///
 
-'''
+"""
 This script converts the luts in the `assets/converted` directory into
 1) a lazy static hashmap that with the rgb values for each lut
 2) a type hint file for the lut names so that the names are autocompleted in IDEs
 
 This script can be invoked with `uv run scripts/populate_luts.py`
-'''
+"""
 
 from pathlib import Path
+
 import numpy as np
 
+
 def open_lut(txt_path: Path) -> np.ndarray:
-    '''
+    """
     Open the converted lut file
-    '''
+    """
     assert txt_path.exists(), f'{txt_path} does not exist'
     with open(txt_path, 'r') as f:
         lut = np.loadtxt(f)
     return lut.astype('uint8')
 
+
 def main():
-    '''
+    """
     Build the lazy static hashmap and the type hint file for the lut names
-    '''
+    """
     curr_file = Path(__file__).absolute()
     assets_dir = curr_file.parent.parent / 'assets'
     subdirs = [
-        d for d in assets_dir.iterdir()
-        if d.is_dir()
-        and d.name not in ['converted', 'samples']
-        and d.name != 'builtin_luts'
+        d
+        for d in assets_dir.iterdir()
+        if d.is_dir() and d.name not in ['converted', 'samples'] and d.name != 'builtin_luts'
     ]
 
     lut_data: dict[str, np.ndarray] = {}
@@ -106,17 +108,14 @@ def main():
     for idx, line in enumerate(readme_lines):
         if line.startswith('## Colormaps'):
             break
-    readme_lines = readme_lines[:idx+1]
+    readme_lines = readme_lines[: idx + 1]
 
     lut_mapping = {
         'FIJI built-in LUTs': {
             'source': 'builtin_luts',
             'link': None,
         },
-        'My custom LUTs': {
-            'source': 'zac_luts',
-            'link': 'https://github.com/zacswider/LUTs'
-        },
+        'My custom LUTs': {'source': 'zac_luts', 'link': 'https://github.com/zacswider/LUTs'},
         "Christophe Leterrier's LUTs": {
             'source': 'christ_luts',
             'link': 'https://github.com/cleterrier/ChrisLUTs',
