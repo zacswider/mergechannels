@@ -40,7 +40,7 @@ jobs:
         run: cargo test
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -91,7 +91,7 @@ jobs:
 
       # Install UV using the official action, enabling caching
       - name: Install UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           # Enable uv's cache for faster subsequent runs
           enable-cache: true
