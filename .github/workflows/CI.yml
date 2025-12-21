@@ -82,6 +82,14 @@ jobs:
             numpy-version: "1.25.0"
           - python-version: "3.14"
             numpy-version: "1.26.0"
+          - python-version: "3.14"
+            numpy-version: "2.0.0"
+          - python-version: "3.14"
+            numpy-version: "2.1.0"
+          - python-version: "3.14"
+            numpy-version: "2.2.0"
+          - python-version: "3.14"
+            numpy-version: "2.3.0"
 
       fail-fast: false # Changed to false so you can see all failures
     steps:
