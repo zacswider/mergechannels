@@ -25,3 +25,9 @@ def test_matplotlib_viridis_cmap() -> None:
     assert mc_colored.shape == (256, 256, 3)
     assert np_colored.shape == (256, 256, 3)
     assert mc_colored.shape == np_colored.shape
+
+    mpl_colored = color(arr)
+    assert mpl_colored.shape == (256, 256, 4)
+
+    lut = (color(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
+    assert lut.shape == (256, 3)
