@@ -18,7 +18,7 @@ def test_matplotlib_viridis_cmap() -> None:
         except AttributeError:  # must be a list of lists or an array castable to u8 (256, 3)
             cmap_values = np.asarray(color).astype('uint8')  # type: ignore
     assert cmap_values.shape == (256, 3)
-    arr = np.random.randn(256, 256).astype('uint8')
+    arr = np.random.randint(0, 256, (256, 256), dtype='uint8')
     mc_colored = mc.apply_color_map(arr, cmap_values)
     np_colored = np.take(cmap_values, arr, axis=0)
 
@@ -32,7 +32,7 @@ def test_matplotlib_viridis_cmap() -> None:
     lut = (color(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     assert lut.shape == (256, 3)
 
-    xlarge_array_u8 = np.random.randn(2048, 2048).astype('uint8')
+    xlarge_array_u8 = np.random.randint(0, 256, (2048, 2048), dtype='uint8')
 
     lut = (color(np.linspace(0, 1, 256))[:, :3] * 255).astype(np.uint8)
     rgb_mpl = np.take(lut, xlarge_array_u8, axis=0)
