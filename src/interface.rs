@@ -36,7 +36,7 @@ pub fn dispatch_single_channel_py<'py>(
     cmap_values: Option<[[u8; 3]; 256]>,
     limits: [f64; 2],
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
-    let untyped_array = array_reference.downcast::<PyUntypedArray>()?;
+    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
     let cmap = parse_cmap_from_args(&cmap_name, &cmap_values);
@@ -180,7 +180,7 @@ pub fn dispatch_multi_channel_py<'py>(
     if let Ok(array_iterator) = array_references.try_iter() {
         for array_reference in array_iterator {
             let arr_ref = array_reference?;
-            let untyped_array = arr_ref.downcast::<PyUntypedArray>()?;
+            let untyped_array = arr_ref.cast::<PyUntypedArray>()?;
             dtypes.push(untyped_array.dtype().to_string());
             ndims.push(untyped_array.ndim());
         }
