@@ -38,7 +38,9 @@ def test_matplotlib_viridis_cmap() -> None:
     rgb_mpl = np.take(lut, xlarge_array_u8, axis=0)
     rgb_mc = mc.apply_color_map(
         xlarge_array_u8,
-        color,
+        # color,
+        lut,
+        saturation_limits=(0, 255),
     )
     np.testing.assert_array_equal(rgb_mpl, rgb_mc)
 
