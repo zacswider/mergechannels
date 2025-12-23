@@ -40,7 +40,7 @@ jobs:
         run: cargo test
 
       - name: Install UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -56,8 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-        numpy-version: ["1.25.0", "1.26.0", "2.0.0", "2.1.0", "2.2.0", "2.3.0"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        numpy-version: ["1.25.0", "1.26.0", "2.0.0", "2.1.0", "2.2.0", "2.3.0", "2.4.0"]
         exclude:
           # These combinations of python and numpy versions are incompatible
           - python-version: "3.9"
@@ -66,14 +66,30 @@ jobs:
             numpy-version: "2.2.0"
           - python-version: "3.9"
             numpy-version: "2.3.0"
+          - python-version: "3.9"
+            numpy-version: "2.4.0"
           - python-version: "3.10"
             numpy-version: "2.3.0"
+          - python-version: "3.10"
+            numpy-version: "2.4.0"
           - python-version: "3.12"
             numpy-version: "1.25.0"
           - python-version: "3.13"
             numpy-version: "1.25.0"
           - python-version: "3.13"
             numpy-version: "1.26.0"
+          - python-version: "3.14"
+            numpy-version: "1.25.0"
+          - python-version: "3.14"
+            numpy-version: "1.26.0"
+          - python-version: "3.14"
+            numpy-version: "2.0.0"
+          - python-version: "3.14"
+            numpy-version: "2.1.0"
+          - python-version: "3.14"
+            numpy-version: "2.2.0"
+          - python-version: "3.14"
+            numpy-version: "2.3.0"
 
       fail-fast: false # Changed to false so you can see all failures
     steps:
@@ -87,7 +103,7 @@ jobs:
 
       # Install UV using the official action, enabling caching
       - name: Install UV
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           # Enable uv's cache for faster subsequent runs
           enable-cache: true
