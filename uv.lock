@@ -1,6 +1,6 @@
 version = 1
-revision = 2
-requires-python = ">=3.9, <=3.14"
+revision = 3
+requires-python = ">=3.9, <3.15"
 resolution-markers = [
     "python_full_version >= '3.14'",
     "python_full_version == '3.13.*'",
@@ -1375,7 +1375,6 @@ requires-dist = [
     { name = "numpy", marker = "python_full_version == '3.13.*'", specifier = ">=2.0,<3" },
     { name = "numpy", marker = "python_full_version == '3.14.*'", specifier = ">=2.4,<3" },
 ]
-provides-extras = ["types"]
 
 [package.metadata.requires-dev]
 dev = [
