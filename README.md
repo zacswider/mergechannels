@@ -22,6 +22,18 @@ Build from source on your own machine:
 pip install git+https://github.com/zacswider/mergechannels.git
 ```
 
+## Dependencies
+Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality. Mergechannels is compatible with Python 3.9-3.14, but compatiblity with free-threaded python is still a work in progress.
+
+| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
+|--------|--------|--------|-------|-------|-------|-------|-------|
+| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
+| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
+| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+
 ## Usage
 *NOTE*: `skimage`, `matplotlib`, and `cmap` are not dependencies of this project, but are used in the examples below to fetch data/colormaps, and display images.
 
@@ -185,6 +197,7 @@ mergechannels is currently incredibly simple. It can apply one or more colormaps
 - ~~Add option to pass external colormaps to mergechannels~~
 - Parallelize colormap application on large images (if it's helpful)
 - Add option to overlay binary or instance masks onto colorized images
+- Add support for free-threaded python
 
 ## Acknowledgements
 
