@@ -9,13 +9,18 @@ Expected to fail until free-threading support is implemented.
 """
 
 import sys
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Thread, Barrier
+from concurrent.futures import (
+    ThreadPoolExecutor,
+    as_completed,
+)
+from threading import (
+    Barrier,
+    Thread,
+)
 
 import mergechannels as mc
 import numpy as np
 import pytest
-
 
 # Skip entire module if not in free-threaded environment
 pytestmark = pytest.mark.skipif(
