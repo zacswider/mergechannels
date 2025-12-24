@@ -1,17 +1,14 @@
-use lazy_static::lazy_static;
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 type Colormap = [[u8; 3]; 256];
 
-pub fn load_cmap(cmap_name: &str) -> &[[u8; 3]; 256] {
-    CMAPS
-        .get(cmap_name)
-        .unwrap_or_else(|| panic!("Invalid colormap name: {cmap_name}"))
-}
+/// Global colormap storage, initialized once on first access
+static CMAPS: OnceLock<HashMap<&'static str, Colormap>> = OnceLock::new();
 
-lazy_static! {
-    pub static ref CMAPS: HashMap<&'static str, Colormap> = {
-        let mut m = HashMap::new();
+/// Initialize all colormaps - called once by OnceLock
+fn initialize_cmaps() -> HashMap<&'static str, Colormap> {
+    let mut m = HashMap::new();
         m.insert(
             "16_colors",
             [
@@ -44814,6 +44811,15 @@ lazy_static! {
             ],
         );
 
-        m
-    };
+    m
+}
+
+/// Load a colormap by name
+///
+/// Thread-safe: Uses OnceLock for single initialization, then read-only access
+pub fn load_cmap(cmap_name: &str) -> &'static [[u8; 3]; 256] {
+    CMAPS
+        .get_or_init(initialize_cmaps)
+        .get(cmap_name)
+        .unwrap_or_else(|| panic!("Invalid colormap name: {cmap_name}"))
 }
