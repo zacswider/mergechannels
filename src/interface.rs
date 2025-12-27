@@ -61,7 +61,7 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits);
+                let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {

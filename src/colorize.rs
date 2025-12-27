@@ -202,19 +202,36 @@ pub fn colorize_single_channel_16bit(
     arr: ArrayView2<u16>,
     cmap: &[[u8; 3]; 256],
     limits: [f64; 2],
+    parallel: bool,
 ) -> Array3<u8> {
     let shape_y = arr.shape()[0];
     let shape_x = arr.shape()[1];
     let mut rgb = img_to_rgb(arr);
     let [offset, scale] = offset_and_scale(limits);
-    for y in 0..shape_y {
-        for x in 0..shape_x {
-            let val = arr[[y, x]];
-            let idx = as_idx(val, offset, scale);
-            let color = cmap[idx];
-            rgb[[y, x, 0]] = color[0];
-            rgb[[y, x, 1]] = color[1];
-            rgb[[y, x, 2]] = color[2];
+    if parallel {
+        rgb.axis_iter_mut(numpy::ndarray::Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(y, mut row)| {
+                for x in 0..shape_x {
+                    let val = arr[[y, x]];
+                    let idx = as_idx(val, offset, scale);
+                    let color = cmap[idx];
+                    row[[x, 0]] = color[0];
+                    row[[x, 1]] = color[1];
+                    row[[x, 2]] = color[2];
+                }
+            });
+    } else {
+        for y in 0..shape_y {
+            for x in 0..shape_x {
+                let val = arr[[y, x]];
+                let idx = as_idx(val, offset, scale);
+                let color = cmap[idx];
+                rgb[[y, x, 0]] = color[0];
+                rgb[[y, x, 1]] = color[1];
+                rgb[[y, x, 2]] = color[2];
+            }
         }
     }
     rgb
