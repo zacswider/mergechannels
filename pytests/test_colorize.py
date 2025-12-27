@@ -303,3 +303,44 @@ def test_u16_2d_serial_vs_parallel_custom_limits():
         parallel=True,
     )
     assert np.array_equal(serial_result, parallel_result)
+
+
+def test_u16_3d_serial_vs_parallel():
+    """
+    Test that serial and parallel colorization produce identical results for u16 3D arrays
+    """
+    arr = np.random.randint(0, 2**16, size=(10, 256, 256), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_u16_3d_serial_vs_parallel_custom_limits():
+    """
+    Test that serial and parallel colorization produce identical results for u16 3D arrays with
+    custom limits
+    """
+    arr = np.random.randint(0, 2**16, size=(10, 256, 256), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)

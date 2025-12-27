@@ -242,21 +242,40 @@ pub fn colorize_stack_16bit(
     arr: ArrayView3<u16>,
     cmap: &[[u8; 3]; 256],
     limits: [f64; 2],
+    parallel: bool,
 ) -> Array4<u8> {
     let shape_n = arr.shape()[0];
     let shape_y = arr.shape()[1];
     let shape_x = arr.shape()[2];
     let mut rgb = stack_to_rgb(arr);
     let [offset, scale] = offset_and_scale(limits);
-    for n in 0..shape_n {
-        for y in 0..shape_y {
-            for x in 0..shape_x {
-                let val = arr[[n, y, x]];
-                let idx = as_idx(val, offset, scale);
-                let color = cmap[idx];
-                rgb[[n, y, x, 0]] = color[0];
-                rgb[[n, y, x, 1]] = color[1];
-                rgb[[n, y, x, 2]] = color[2];
+    if parallel {
+        rgb.axis_iter_mut(numpy::ndarray::Axis(0))
+            .into_par_iter()
+            .enumerate()
+            .for_each(|(n, mut plane)| {
+                for y in 0..shape_y {
+                    for x in 0..shape_x {
+                        let val = arr[[n, y, x]];
+                        let idx = as_idx(val, offset, scale);
+                        let color = cmap[idx];
+                        plane[[y, x, 0]] = color[0];
+                        plane[[y, x, 1]] = color[1];
+                        plane[[y, x, 2]] = color[2];
+                    }
+                }
+            });
+    } else {
+        for n in 0..shape_n {
+            for y in 0..shape_y {
+                for x in 0..shape_x {
+                    let val = arr[[n, y, x]];
+                    let idx = as_idx(val, offset, scale);
+                    let color = cmap[idx];
+                    rgb[[n, y, x, 0]] = color[0];
+                    rgb[[n, y, x, 1]] = color[1];
+                    rgb[[n, y, x, 2]] = color[2];
+                }
             }
         }
     }
