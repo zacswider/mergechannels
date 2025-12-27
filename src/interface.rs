@@ -159,6 +159,7 @@ pub fn dispatch_multi_channel_py<'py>(
     cmap_values: Vec<Option<[[u8; 3]; 256]>>,
     blending: &str,
     limits: Vec<Vec<f64>>,
+    parallel: bool,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let mut cmaps: Vec<&[[u8; 3]; 256]> =
         Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
@@ -194,7 +195,7 @@ pub fn dispatch_multi_channel_py<'py>(
                 let py_arrs = extract_2d_u8_arrays(array_references);
                 let arrs: Vec<ArrayView2<u8>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits).unwrap();
+                let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {

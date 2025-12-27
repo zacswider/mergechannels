@@ -36,6 +36,7 @@ def merge(
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
+    parallel: bool = False,
 ) -> np.ndarray: ...
 def dispatch_single_channel(
     array_reference: np.ndarray,
@@ -62,4 +63,5 @@ def dispatch_multi_channel(
     ],
     blending: Literal[BLENDING_OPTIONS],
     limits: Sequence[tuple[Number, Number]] | None = None,
+    parallel: bool = False,
 ) -> np.ndarray: ...

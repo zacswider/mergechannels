@@ -108,6 +108,7 @@ def merge(
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
+    parallel: bool = False,
 ) -> np.ndarray:
     """
     apply cmaps to arrays and blend the colors
@@ -126,4 +127,5 @@ def merge(
         cmap_values=cmap_values,
         blending=blending,
         limits=saturation_limits,  # type: ignore
+        parallel=parallel,
     )
