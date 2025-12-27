@@ -410,3 +410,69 @@ def test_merge_2d_u8_serial_vs_parallel_three_channels():
         parallel=True,
     )
     assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_no_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays without
+    autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_with_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays with autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_three_channels():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays with three
+    channels
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr3 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)

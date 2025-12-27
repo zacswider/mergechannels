@@ -202,7 +202,7 @@ pub fn dispatch_multi_channel_py<'py>(
                 let py_arrs = extract_3d_u8_arrays(array_references);
                 let arrs: Vec<ArrayView3<u8>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits).unwrap();
+                let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
