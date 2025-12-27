@@ -212,7 +212,7 @@ pub fn dispatch_multi_channel_py<'py>(
                 let py_arrs = extract_2d_u16_arrays(array_references);
                 let arrs: Vec<ArrayView2<u16>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits).unwrap();
+                let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
