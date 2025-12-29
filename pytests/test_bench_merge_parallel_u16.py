@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.benchmark(group='small 2d u16 merge linear vs parallel')
 def test_bench_small_merge_u16_serial(benchmark, small_array_u16) -> None:
     """
-    compare merging two small u16 arrays using serial approach
+    benchmark merging two small u16 arrays using serial approach
     """
     arr1 = small_array_u16
     arr2 = np.random.randn(256, 256).astype('uint16')
@@ -29,7 +29,7 @@ def test_bench_small_merge_u16_serial(benchmark, small_array_u16) -> None:
 @pytest.mark.benchmark(group='small 2d u16 merge linear vs parallel')
 def test_bench_small_merge_u16_parallel(benchmark, small_array_u16) -> None:
     """
-    compare merging two small u16 arrays using parallel approach
+    benchmark merging two small u16 arrays using parallel approach
     """
     arr1 = small_array_u16
     arr2 = np.random.randn(256, 256).astype('uint16')
@@ -52,7 +52,7 @@ def test_bench_small_merge_u16_parallel(benchmark, small_array_u16) -> None:
 @pytest.mark.benchmark(group='medium 2d u16 merge linear vs parallel')
 def test_bench_medium_merge_u16_serial(benchmark, medium_array_u16) -> None:
     """
-    compare merging two medium u16 arrays using serial approach
+    benchmark merging two medium u16 arrays using serial approach
     """
     arr1 = medium_array_u16
     arr2 = np.random.randn(512, 512).astype('uint16')
@@ -75,7 +75,7 @@ def test_bench_medium_merge_u16_serial(benchmark, medium_array_u16) -> None:
 @pytest.mark.benchmark(group='medium 2d u16 merge linear vs parallel')
 def test_bench_medium_merge_u16_parallel(benchmark, medium_array_u16) -> None:
     """
-    compare merging two medium u16 arrays using parallel approach
+    benchmark merging two medium u16 arrays using parallel approach
     """
     arr1 = medium_array_u16
     arr2 = np.random.randn(512, 512).astype('uint16')
@@ -98,7 +98,7 @@ def test_bench_medium_merge_u16_parallel(benchmark, medium_array_u16) -> None:
 @pytest.mark.benchmark(group='large 2d u16 merge linear vs parallel')
 def test_bench_large_merge_u16_serial(benchmark, large_array_u16) -> None:
     """
-    compare merging two large u16 arrays using serial approach
+    benchmark merging two large u16 arrays using serial approach
     """
     arr1 = large_array_u16
     arr2 = np.random.randn(1024, 1024).astype('uint16')
@@ -121,7 +121,7 @@ def test_bench_large_merge_u16_serial(benchmark, large_array_u16) -> None:
 @pytest.mark.benchmark(group='large 2d u16 merge linear vs parallel')
 def test_bench_large_merge_u16_parallel(benchmark, large_array_u16) -> None:
     """
-    compare merging two large u16 arrays using parallel approach
+    benchmark merging two large u16 arrays using parallel approach
     """
     arr1 = large_array_u16
     arr2 = np.random.randn(1024, 1024).astype('uint16')
