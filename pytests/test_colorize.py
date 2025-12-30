@@ -75,12 +75,12 @@ def test_apply_color_map():
     Test that the color map is applied correctly
     """
     x = np.ones((1, 1), dtype=np.uint8)
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255), parallel=False)
     assert rgb.shape == (1, 1, 3)
     assert rgb.dtype == np.uint8
     assert np.allclose(rgb, np.array([[[0, 1, 2]]]))
     x = np.ones((1, 1), dtype=np.uint8) * 255
-    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255))
+    rgb = mc.dispatch_single_channel(x, 'betterBlue', None, (0, 255), parallel=False)
     assert np.allclose(rgb, np.array([[[0, 188, 254]]]))
     rgb2 = mc.apply_color_map(x, 'betterBlue', saturation_limits=(0, 255))
     assert np.allclose(rgb, rgb2)
@@ -93,7 +93,7 @@ def test_apply_colors_and_merge_low_sum():
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_sum = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'sum', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'sum', [(0, 255), (0, 255)], False
     )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
@@ -114,7 +114,7 @@ def test_apply_colors_and_merge_high_sum():
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_sum = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'sum', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'sum', [(0, 255), (0, 255)], False
     )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
@@ -135,7 +135,7 @@ def test_apply_colors_and_merge_low_max():
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_max = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'max', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'max', [(0, 255), (0, 255)], False
     )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
@@ -156,7 +156,7 @@ def test_apply_colors_and_merge_high_max():
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_max = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'max', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'max', [(0, 255), (0, 255)], False
     )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
@@ -177,7 +177,7 @@ def test_apply_colors_and_merge_low_min():
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_min = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'min', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'min', [(0, 255), (0, 255)], False
     )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
@@ -198,7 +198,7 @@ def test_apply_colors_and_merge_high_min():
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_min = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'min', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'min', [(0, 255), (0, 255)], False
     )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
@@ -219,7 +219,7 @@ def test_apply_colors_and_merge_low_mean():
     x = np.ones((1, 1), dtype=np.uint8)
     y = np.ones((1, 1), dtype=np.uint8)
     rgb_mean = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'mean', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'mean', [(0, 255), (0, 255)], False
     )
     # blue = [0, 1, 2,]
     # orange = [1, 1, 0]
@@ -245,7 +245,7 @@ def test_apply_colors_and_merge_high_mean():
     x = np.ones((1, 1), dtype=np.uint8) * 255
     y = np.ones((1, 1), dtype=np.uint8) * 255
     rgb_mean = mc.dispatch_multi_channel(
-        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'mean', [(0, 255), (0, 255)]
+        [x, y], ['betterBlue', 'betterOrange'], [None, None], 'mean', [(0, 255), (0, 255)], False
     )
     # blue = [0, 188, 254]
     # orange = [255, 149, 0]
@@ -262,3 +262,305 @@ def test_apply_colors_and_merge_high_mean():
         saturation_limits=[(0, 255), (0, 255)],
     )
     assert np.allclose(rgb_mean, rgb_mean2)
+
+
+def test_u16_2d_serial_vs_parallel():
+    """
+    Test that serial and parallel colorization produce identical results for u16 2D arrays
+    """
+    arr = np.random.randint(0, 2**16, size=(512, 512), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_u16_2d_serial_vs_parallel_custom_limits():
+    """
+    Test that serial and parallel colorization produce identical results for u16 2D arrays with
+    custom limits
+    """
+    arr = np.random.randint(0, 2**16, size=(512, 512), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_u16_3d_serial_vs_parallel():
+    """
+    Test that serial and parallel colorization produce identical results for u16 3D arrays
+    """
+    arr = np.random.randint(0, 2**16, size=(10, 256, 256), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='Grays',
+        saturation_limits=(0, 2**16),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_u16_3d_serial_vs_parallel_custom_limits():
+    """
+    Test that serial and parallel colorization produce identical results for u16 3D arrays with
+    custom limits
+    """
+    arr = np.random.randint(0, 2**16, size=(10, 256, 256), dtype=np.uint16)
+    serial_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=False,
+    )
+    parallel_result = mc.apply_color_map(
+        arr=arr,
+        color='betterBlue',
+        saturation_limits=(1000, 50000),
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_2d_u8_serial_vs_parallel_no_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 2D u8 arrays without
+    autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_2d_u8_serial_vs_parallel_with_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 2D u8 arrays with autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_2d_u8_serial_vs_parallel_three_channels():
+    """
+    Test that serial and parallel merge produce identical results for 2D u8 arrays with three
+    channels
+    """
+    arr1 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    arr3 = np.random.randint(0, 256, size=(512, 512), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_no_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays without
+    autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_with_autoscale():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays with autoscaling
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(10, 200), (10, 200)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u8_serial_vs_parallel_three_channels():
+    """
+    Test that serial and parallel merge produce identical results for 3D u8 arrays with three
+    channels
+    """
+    arr1 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr2 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    arr3 = np.random.randint(0, 256, size=(50, 256, 256), dtype=np.uint8)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(0, 255), (0, 255), (0, 255)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_2d_u16_serial_vs_parallel():
+    """
+    Test that serial and parallel merge produce identical results for 2D u16 arrays
+    """
+    arr1 = np.random.randint(0, 65536, size=(512, 512), dtype=np.uint16)
+    arr2 = np.random.randint(0, 65536, size=(512, 512), dtype=np.uint16)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(100, 40000), (100, 40000)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(100, 40000), (100, 40000)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_2d_u16_serial_vs_parallel_three_channels():
+    """
+    Test that serial and parallel merge produce identical results for 2D u16 arrays with three
+    channels
+    """
+    arr1 = np.random.randint(0, 65536, size=(512, 512), dtype=np.uint16)
+    arr2 = np.random.randint(0, 65536, size=(512, 512), dtype=np.uint16)
+    arr3 = np.random.randint(0, 65536, size=(512, 512), dtype=np.uint16)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(100, 40000), (100, 40000), (100, 40000)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(100, 40000), (100, 40000), (100, 40000)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u16_serial_vs_parallel():
+    """
+    Test that serial and parallel merge produce identical results for 3D u16 arrays
+    """
+    arr1 = np.random.randint(0, 65536, size=(50, 256, 256), dtype=np.uint16)
+    arr2 = np.random.randint(0, 65536, size=(50, 256, 256), dtype=np.uint16)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(100, 40000), (100, 40000)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2],
+        colors=['betterBlue', 'betterOrange'],
+        saturation_limits=[(100, 40000), (100, 40000)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)
+
+
+def test_merge_3d_u16_serial_vs_parallel_three_channels():
+    """
+    Test that serial and parallel merge produce identical results for 3D u16 arrays with three
+    channels
+    """
+    arr1 = np.random.randint(0, 65536, size=(50, 256, 256), dtype=np.uint16)
+    arr2 = np.random.randint(0, 65536, size=(50, 256, 256), dtype=np.uint16)
+    arr3 = np.random.randint(0, 65536, size=(50, 256, 256), dtype=np.uint16)
+    serial_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(100, 40000), (100, 40000), (100, 40000)],
+        parallel=False,
+    )
+    parallel_result = mc.merge(
+        arrs=[arr1, arr2, arr3],
+        colors=['betterBlue', 'betterOrange', 'betterGreen'],
+        saturation_limits=[(100, 40000), (100, 40000), (100, 40000)],
+        parallel=True,
+    )
+    assert np.array_equal(serial_result, parallel_result)

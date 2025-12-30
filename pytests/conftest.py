@@ -75,6 +75,12 @@ def small_array_u8() -> np.ndarray:
 
 
 @pytest.fixture
+def small_3d_array_u8() -> np.ndarray:
+    """Create a small 3d u8 array for benchmarking"""
+    return np.random.randn(50, 256, 256).astype('uint8')
+
+
+@pytest.fixture
 def small_array_u16() -> np.ndarray:
     """Create a small u16 array for benchmarking"""
     return np.random.randn(256, 256).astype('uint16')
@@ -87,6 +93,12 @@ def medium_array_u8() -> np.ndarray:
 
 
 @pytest.fixture
+def medium_3d_array_u8() -> np.ndarray:
+    """Create a medium 3d u8 array for benchmarking"""
+    return np.random.randn(50, 512, 512).astype('uint8')
+
+
+@pytest.fixture
 def medium_array_u16() -> np.ndarray:
     """Create a medium u16 array for benchmarking"""
     return np.random.randn(512, 512).astype('uint16')
@@ -96,6 +108,12 @@ def medium_array_u16() -> np.ndarray:
 def large_array_u8() -> np.ndarray:
     """Create a large u8 array for benchmarking"""
     return np.random.randn(1024, 1024).astype('uint8')
+
+
+@pytest.fixture
+def large_3d_array_u8() -> np.ndarray:
+    """Create a large 3d u8 array for benchmarking"""
+    return np.random.randn(50, 1024, 1024).astype('uint8')
 
 
 @pytest.fixture
@@ -114,3 +132,21 @@ def xlarge_array_u8() -> np.ndarray:
 def xlarge_array_u16() -> np.ndarray:
     """Create a large u16 array for benchmarking"""
     return np.random.randn(2048, 2048).astype('uint16')
+
+
+@pytest.fixture
+def small_3d_array_u16() -> np.ndarray:
+    """Create a small 3d u16 array for benchmarking"""
+    return np.random.randn(50, 256, 256).astype('uint16')
+
+
+@pytest.fixture
+def medium_3d_array_u16() -> np.ndarray:
+    """Create a medium 3d u16 array for benchmarking"""
+    return np.random.randn(50, 512, 512).astype('uint16')
+
+
+@pytest.fixture
+def large_3d_array_u16() -> np.ndarray:
+    """Create a large 3d u16 array for benchmarking"""
+    return np.random.randn(50, 1024, 1024).astype('uint16')

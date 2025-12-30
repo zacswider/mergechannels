@@ -23,7 +23,19 @@ pip install git+https://github.com/zacswider/mergechannels.git
 ```
 
 ## Dependencies
-Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality. Mergechannels is compatible with Python 3.9-3.14, but compatiblity with free-threaded python is still a work in progress.
+Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
+
+## Threading and Parallelism
+Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The Rust backend releases the GIL during computation, enabling true parallelism with Python's `ThreadPoolExecutor`.
+
+By default, `parallel=True` uses [Rayon](https://github.com/rayon-rs/rayon) for internal parallelization across image rows/planes. This also works well alongside Python threading.
+
+To configure Rayon's thread count, set the `RAYON_NUM_THREADS` environment variable **before** importing mergechannels:
+```python
+import os
+os.environ['RAYON_NUM_THREADS'] = '4'  # Must be set before import
+import mergechannels as mc
+```
 
 | Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
 |--------|--------|--------|-------|-------|-------|-------|-------|
@@ -196,9 +208,9 @@ mergechannels is currently incredibly simple. It can apply one or more colormaps
 - Add support for any numerical dtype
 - Add option to return any colormap as a matplotlib colormap
 - ~~Add option to pass external colormaps to mergechannels~~
-- Parallelize colormap application on large images (if it's helpful)
+- ~~Parallelize colormap application on large images (it is helpful!)~~
 - Add option to overlay binary or instance masks onto colorized images
-- ~~Add support for free-threaded python~~
+- ~~Add support for free-threaded Python~~
 
 ## Acknowledgements
 
