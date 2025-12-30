@@ -1,12 +1,12 @@
 use crate::cmaps;
 use crate::colorize;
 use crate::errors;
-use ndarray::ArrayView2;
-use ndarray::ArrayView3;
+use ndarray::{Array2, ArrayView2, ArrayView3};
 use numpy::{
-    IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
+    IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
 };
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
@@ -14,17 +14,18 @@ use pyo3::{Bound, Python};
 fn parse_cmap_from_args<'a>(
     cmap_name: &'a Option<String>,
     cmap_values: &'a Option<[[u8; 3]; 256]>,
-) -> &'a [[u8; 3]; 256] {
-    let cmap: &'a [[u8; 3]; 256] = match cmap_name {
-        Some(valid_name) => cmaps::load_cmap(valid_name),
+) -> Result<&'a [[u8; 3]; 256], String> {
+    match cmap_name {
+        Some(valid_name) => cmaps::try_load_cmap(valid_name),
         None => match cmap_values {
-            Some(valid_values) => valid_values,
-            None => {
-                panic!("Expected either a valid cmap name or a pre-defined colormap, got neither")
-            }
+            Some(valid_values) => Ok(valid_values),
+            None => Err(
+                "Expected either a valid cmap name or a pre-defined colormap, got neither"
+                    .to_string(),
+            ),
         },
-    };
-    cmap
+    }
+}
 }
 
 #[pyfunction]
