@@ -80,7 +80,7 @@ def apply_color_map(
     ],
     percentiles: Union[tuple[float, float], None] = None,
     saturation_limits: Union[tuple[float, float], None] = None,
-    parallel: bool = False,
+    parallel: bool = True,
 ) -> np.ndarray:
     """
     apply a color map to an array
@@ -108,7 +108,7 @@ def merge(
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
-    parallel: bool = False,
+    parallel: bool = True,
 ) -> np.ndarray:
     """
     apply cmaps to arrays and blend the colors
