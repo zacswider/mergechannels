@@ -29,11 +29,11 @@ if TYPE_CHECKING:
 def _parse_cmap_arguments(
     color: Union[
         COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
+        NDArray[Shape['256, 3'], UInt8],
         MatplotlibColormap,
         CmapColormap,
     ],
-) -> Tuple[Union[COLORMAPS, None], Union[NDArray[Shape['3, 256'], UInt8], None]]:
+) -> Tuple[Union[COLORMAPS, None], Union[NDArray[Shape['256, 3'], UInt8], None]]:
     """
     Parse the color argument and return the corresponding cmap name and cmap values
 
@@ -74,7 +74,7 @@ def apply_color_map(
     arr: np.ndarray,
     color: Union[
         COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
+        NDArray[Shape['256, 3'], UInt8],
         MatplotlibColormap,
         CmapColormap,
     ],
