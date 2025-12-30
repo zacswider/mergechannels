@@ -63,7 +63,8 @@ pub fn dispatch_single_channel_py<'py>(
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
-    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values);
+    let cmap =
+        parse_cmap_from_args(&cmap_name, &cmap_values).map_err(|e| PyValueError::new_err(e))?;
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
@@ -187,7 +188,8 @@ pub fn dispatch_multi_channel_py<'py>(
     let mut cmaps: Vec<&[[u8; 3]; 256]> =
         Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
     for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
-        let cmap = parse_cmap_from_args(cmap_name, cmap_value);
+        let cmap =
+            parse_cmap_from_args(cmap_name, cmap_value).map_err(|e| PyValueError::new_err(e))?;
         cmaps.push(cmap)
     }
     let limits = limits
