@@ -26,6 +26,28 @@ fn parse_cmap_from_args<'a>(
         },
     }
 }
+
+/// Get a colormap array by name
+///
+/// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
+/// Raises ValueError if the colormap name is not found.
+#[pyfunction]
+#[pyo3(name = "get_cmap_array")]
+pub fn get_cmap_array_py<'py>(
+    py: Python<'py>,
+    cmap_name: String,
+) -> PyResult<Bound<'py, PyArray2<u8>>> {
+    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(|e| PyValueError::new_err(e))?;
+
+    // Convert [[u8; 3]; 256] to Array2<u8> with shape (256, 3)
+    let mut arr = Array2::<u8>::zeros((256, 3));
+    for (i, rgb) in cmap.iter().enumerate() {
+        for (j, &val) in rgb.iter().enumerate() {
+            arr[[i, j]] = val;
+        }
+    }
+
+    Ok(arr.into_pyarray(py))
 }
 
 #[pyfunction]
