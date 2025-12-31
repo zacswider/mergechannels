@@ -38,12 +38,12 @@ def _parse_cmap_arguments(
     Parse the color argument and return the corresponding cmap name and cmap values
 
     Args:
-            color: a user-specified argument which may be the name of mergechannels colormap,
-            a ndarray lookup table, and matplotlib colormap, or a cmap colormap.
+        color: a user-specified argument which may be the name of mergechannels colormap,
+        a ndarray lookup table, and matplotlib colormap, or a cmap colormap.
 
     Returns:
-            A tuple specifying the corresponding mergechannels colormap name (or None if N/A),
-            and an array of the lookup table (or None if N/A)
+        A tuple specifying the corresponding mergechannels colormap name (or None if N/A),
+        and an array of the lookup table (or None if N/A)
     """
     if isinstance(color, str):
         return color, None
