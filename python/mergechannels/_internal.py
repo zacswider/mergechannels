@@ -273,9 +273,8 @@ def get_mpl_cmap(name: COLORMAPS) -> ListedColormap:
     ------
     ImportError
         If matplotlib is not installed. Install it with:
-        ``pip install matplotlib``
-        or
-        ``pip install mergechannels[matplotlib]``
+        ``uv pip install matplotlib`` or
+        ``uv pip install "mergechannels[matplotlib]>=0.5.5"``
     ValueError
         If the colormap name is not found.
 
@@ -293,10 +292,8 @@ def get_mpl_cmap(name: COLORMAPS) -> ListedColormap:
     except ImportError as e:
         raise ImportError(
             'matplotlib is required for get_mpl_cmap(). '
-            'Install it with: '
-            'uv pip install matplotlib '
-            'or '
-            'uv pip install mergechannels[matplotlib] '
+            'Install it with: uv pip install matplotlib '
+            'or uv pip install "mergechannels[matplotlib]>=0.5.5"'
         ) from e
 
     cmap_array = get_cmap_array(name)
