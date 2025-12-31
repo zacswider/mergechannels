@@ -33,6 +33,9 @@ dependencies = [
     "numpy>=2.4,<3; python_version == '3.14'",
 ]
 
+[project.optional-dependencies]
+matplotlib = ["matplotlib>=3.5"]
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
