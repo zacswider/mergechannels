@@ -15,6 +15,9 @@ from .mergechannels import (  # type: ignore
     dispatch_multi_channel,
     dispatch_single_channel,
 )
+from .mergechannels import (
+    get_cmap_array as _get_cmap_array,  # just aliasing this to inject a docstring
+)
 
 if TYPE_CHECKING:
     from cmap import Colormap as CmapColormap
@@ -129,3 +132,36 @@ def merge(
         limits=saturation_limits,  # type: ignore
         parallel=parallel,
     )
+
+
+def get_cmap_array(name: COLORMAPS) -> np.ndarray:
+    """
+    Get the RGB values for a built-in colormap.
+
+    Parameters
+    ----------
+    name : COLORMAPS
+        The name of the colormap to retrieve. Use mergechannels.COLORMAPS
+        to see available colormap names.
+
+    Returns
+    -------
+    np.ndarray
+        A (256, 3) uint8 array of RGB values, where each row represents
+        the RGB color for that intensity level (0-255).
+
+    Raises
+    ------
+    ValueError
+        If the colormap name is not found.
+
+    Examples
+    --------
+    >>> import mergechannels as mc
+    >>> cmap = mc.get_cmap_array('betterBlue')
+    >>> cmap.shape
+    (256, 3)
+    >>> cmap.dtype
+    dtype('uint8')
+    """
+    return _get_cmap_array(name)
