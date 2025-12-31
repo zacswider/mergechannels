@@ -25,6 +25,17 @@ pip install git+https://github.com/zacswider/mergechannels.git
 ## Dependencies
 Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
 
+| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
+|--------|--------|--------|-------|-------|-------|-------|-------|
+| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
+| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
+| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+
+
 ## Threading and Parallelism
 Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The Rust backend releases the GIL during computation, enabling true parallelism with Python's `ThreadPoolExecutor`.
 
@@ -36,16 +47,6 @@ import os
 os.environ['RAYON_NUM_THREADS'] = '4'  # Must be set before import
 import mergechannels as mc
 ```
-
-| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
-|--------|--------|--------|-------|-------|-------|-------|-------|
-| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
-| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
-| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
-| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
 
 ## Usage
 *NOTE*: `skimage`, `matplotlib`, and `cmap` are not dependencies of this project, but are used in the examples below to fetch data/colormaps, and display images.
