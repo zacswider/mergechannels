@@ -667,10 +667,12 @@ def test_colormapping_matches():
     """
     mpl_cmap = mc.get_mpl_cmap('betterBlue')
     data = np.arange(256).reshape(16, 16).astype(np.uint8)
-    mpl_res = mpl_cmap(data)
+    # matplotlib expects normalized (0-1) input, so we divide by 255
+    mpl_res = mpl_cmap(data / 255.0)
     assert mpl_res.shape == (16, 16, 4)  # RGBA output
     assert mpl_res.max() == 1.0
     # matplotlib creates floating point arrays, we create uint8 arrays
     mpl_res_rgb = (mpl_res[:, :, :3] * 255).astype('uint8')
-    mc_res_rgb = mc.apply_color_map(data, 'betterBlue')
+    # use explicit saturation limits to avoid autoscaling differences
+    mc_res_rgb = mc.apply_color_map(data, 'betterBlue', saturation_limits=(0, 255))
     np.testing.assert_array_equal(mc_res_rgb, mpl_res_rgb)
