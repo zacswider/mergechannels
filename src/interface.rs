@@ -37,7 +37,7 @@ pub fn get_cmap_array_py<'py>(
     py: Python<'py>,
     cmap_name: String,
 ) -> PyResult<Bound<'py, PyArray2<u8>>> {
-    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(|e| PyValueError::new_err(e))?;
+    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(PyValueError::new_err)?;
 
     // Convert [[u8; 3]; 256] to Array2<u8> with shape (256, 3)
     let mut arr = Array2::<u8>::zeros((256, 3));
@@ -63,8 +63,7 @@ pub fn dispatch_single_channel_py<'py>(
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
-    let cmap =
-        parse_cmap_from_args(&cmap_name, &cmap_values).map_err(|e| PyValueError::new_err(e))?;
+    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
@@ -188,8 +187,7 @@ pub fn dispatch_multi_channel_py<'py>(
     let mut cmaps: Vec<&[[u8; 3]; 256]> =
         Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
     for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
-        let cmap =
-            parse_cmap_from_args(cmap_name, cmap_value).map_err(|e| PyValueError::new_err(e))?;
+        let cmap = parse_cmap_from_args(cmap_name, cmap_value).map_err(PyValueError::new_err)?;
         cmaps.push(cmap)
     }
     let limits = limits
