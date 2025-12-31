@@ -22,6 +22,7 @@ from .mergechannels import (
 if TYPE_CHECKING:
     from cmap import Colormap as CmapColormap
     from matplotlib.colors import Colormap as MatplotlibColormap
+    from matplotlib.colors import ListedColormap
     from nptyping import (
         NDArray,
         Shape,
@@ -250,3 +251,54 @@ def get_cmap_array(name: COLORMAPS) -> np.ndarray:
     dtype('uint8')
     """
     return _get_cmap_array(name)
+
+
+def get_mpl_cmap(name: COLORMAPS) -> ListedColormap:
+    """
+    Get a built-in colormap as a matplotlib ListedColormap.
+
+    Parameters
+    ----------
+    name : COLORMAPS
+        The name of the colormap to retrieve. Use mergechannels.COLORMAPS
+        to see available colormap names.
+
+    Returns
+    -------
+    matplotlib.colors.ListedColormap
+        A matplotlib ListedColormap object that can be used with matplotlib
+        plotting functions.
+
+    Raises
+    ------
+    ImportError
+        If matplotlib is not installed. Install it with:
+        ``pip install matplotlib``
+        or
+        ``pip install mergechannels[matplotlib]``
+    ValueError
+        If the colormap name is not found.
+
+    Examples
+    --------
+    >>> import mergechannels as mc
+    >>> cmap = mc.get_mpl_cmap('betterBlue')
+    >>> cmap.name
+    'betterBlue'
+    >>> import matplotlib.pyplot as plt
+    >>> plt.imshow(data, cmap=cmap)  # doctest: +SKIP
+    """
+    try:
+        from matplotlib.colors import ListedColormap
+    except ImportError as e:
+        raise ImportError(
+            'matplotlib is required for get_mpl_cmap(). '
+            'Install it with: '
+            'uv pip install matplotlib '
+            'or '
+            'uv pip install mergechannels[matplotlib] '
+        ) from e
+
+    cmap_array = get_cmap_array(name)
+    colors = cmap_array / 255.0  # Convert from uint8 (0-255) to float (0-1) for matplotlib
+    return ListedColormap(colors, name=name)
