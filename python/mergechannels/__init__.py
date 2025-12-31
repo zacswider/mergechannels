@@ -1,6 +1,7 @@
 from ._internal import (
     apply_color_map,
     get_cmap_array,
+    get_mpl_cmap,
     merge,
 )
 from ._luts import COLORMAPS
@@ -15,5 +16,6 @@ __all__ = [
     'merge',
     'apply_color_map',
     'get_cmap_array',
+    'get_mpl_cmap',
     'COLORMAPS',
 ]
