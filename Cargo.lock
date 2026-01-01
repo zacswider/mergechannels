@@ -78,7 +78,7 @@ dependencies = [
 
 [[package]]
 name = "mergechannels"
-version = "0.5.3"
+version = "0.5.5"
 dependencies = [
  "ndarray",
  "numpy",
