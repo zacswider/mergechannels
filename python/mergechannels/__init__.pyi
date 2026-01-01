@@ -22,7 +22,7 @@ def apply_color_map(
     arr: np.ndarray,
     color: Union[
         COLORMAPS,
-        NDArray[Shape['3, 255'], UInt8],
+        NDArray[Shape['256, 3'], UInt8],
         MatplotlibColormap,
         CmapColormap,
     ],
@@ -42,7 +42,7 @@ def dispatch_single_channel(
     array_reference: np.ndarray,
     cmap_name: Union[COLORMAPS, None],
     cmap_values: Union[
-        NDArray[Shape['3, 255'], UInt8],
+        NDArray[Shape['256, 3'], UInt8],
         MatplotlibColormap,
         CmapColormap,
         None,
@@ -55,7 +55,7 @@ def dispatch_multi_channel(
     cmap_names: Sequence[Union[COLORMAPS, None]],
     cmap_values: Sequence[
         Union[
-            NDArray[Shape['3, 255'], UInt8],
+            NDArray[Shape['256, 3'], UInt8],
             MatplotlibColormap,
             CmapColormap,
             None,
@@ -65,3 +65,4 @@ def dispatch_multi_channel(
     limits: Sequence[tuple[Number, Number]] | None = None,
     parallel: bool = False,
 ) -> np.ndarray: ...
+def get_cmap_array(name: COLORMAPS) -> NDArray[Shape['256, 3'], UInt8]: ...

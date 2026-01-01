@@ -1,12 +1,12 @@
 use crate::cmaps;
 use crate::colorize;
 use crate::errors;
-use ndarray::ArrayView2;
-use ndarray::ArrayView3;
+use ndarray::{Array2, ArrayView2, ArrayView3};
 use numpy::{
-    IntoPyArray, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
+    IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
 };
+use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
@@ -14,17 +14,40 @@ use pyo3::{Bound, Python};
 fn parse_cmap_from_args<'a>(
     cmap_name: &'a Option<String>,
     cmap_values: &'a Option<[[u8; 3]; 256]>,
-) -> &'a [[u8; 3]; 256] {
-    let cmap: &'a [[u8; 3]; 256] = match cmap_name {
-        Some(valid_name) => cmaps::load_cmap(valid_name),
+) -> Result<&'a [[u8; 3]; 256], String> {
+    match cmap_name {
+        Some(valid_name) => cmaps::try_load_cmap(valid_name),
         None => match cmap_values {
-            Some(valid_values) => valid_values,
-            None => {
-                panic!("Expected either a valid cmap name or a pre-defined colormap, got neither")
-            }
+            Some(valid_values) => Ok(valid_values),
+            None => Err(
+                "Expected either a valid cmap name or a pre-defined colormap, got neither"
+                    .to_string(),
+            ),
         },
-    };
-    cmap
+    }
+}
+
+/// Get a colormap array by name
+///
+/// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
+/// Raises ValueError if the colormap name is not found.
+#[pyfunction]
+#[pyo3(name = "get_cmap_array")]
+pub fn get_cmap_array_py<'py>(
+    py: Python<'py>,
+    cmap_name: String,
+) -> PyResult<Bound<'py, PyArray2<u8>>> {
+    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(PyValueError::new_err)?;
+
+    // Convert [[u8; 3]; 256] to Array2<u8> with shape (256, 3)
+    let mut arr = Array2::<u8>::zeros((256, 3));
+    for (i, rgb) in cmap.iter().enumerate() {
+        for (j, &val) in rgb.iter().enumerate() {
+            arr[[i, j]] = val;
+        }
+    }
+
+    Ok(arr.into_pyarray(py))
 }
 
 #[pyfunction]
@@ -40,7 +63,7 @@ pub fn dispatch_single_channel_py<'py>(
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
-    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values);
+    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
@@ -164,7 +187,7 @@ pub fn dispatch_multi_channel_py<'py>(
     let mut cmaps: Vec<&[[u8; 3]; 256]> =
         Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
     for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
-        let cmap = parse_cmap_from_args(cmap_name, cmap_value);
+        let cmap = parse_cmap_from_args(cmap_name, cmap_value).map_err(PyValueError::new_err)?;
         cmaps.push(cmap)
     }
     let limits = limits

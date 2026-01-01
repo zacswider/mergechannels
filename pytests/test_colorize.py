@@ -564,3 +564,115 @@ def test_merge_3d_u16_serial_vs_parallel_three_channels():
         parallel=True,
     )
     assert np.array_equal(serial_result, parallel_result)
+
+
+def test_get_cmap_array_shape_and_dtype():
+    """
+    Test that get_cmap_array returns correct shape and dtype
+    """
+    cmap_arr = mc.get_cmap_array('betterBlue')
+    assert cmap_arr.shape == (256, 3)
+    assert cmap_arr.dtype == np.uint8
+
+
+def test_get_cmap_array_values():
+    """
+    Test that get_cmap_array returns expected values for a known colormap
+    """
+    cmap_arr = mc.get_cmap_array('betterBlue')
+    # First value should be black/near-black
+    assert np.allclose(cmap_arr[0], [0, 0, 0])
+    # Last value should match known betterBlue end color
+    assert np.allclose(cmap_arr[255], [0, 188, 254])
+
+
+def test_get_cmap_array_invalid_name():
+    """
+    Test that get_cmap_array raises ValueError for invalid colormap name
+    """
+    with pytest.raises(ValueError) as exc_info:
+        mc.get_cmap_array('invalid_colormap_name')
+    assert 'invalid_colormap_name' in str(exc_info.value)
+    assert 'COLORMAPS' in str(exc_info.value)
+
+
+def test_get_cmap_array_all_colormaps():
+    """
+    Test that get_cmap_array works for all available colormaps
+    """
+    from typing import get_args
+
+    from mergechannels._luts import COLORMAPS as COLORMAPS_TYPE
+
+    all_cmap_names = get_args(COLORMAPS_TYPE)
+    for name in all_cmap_names:
+        cmap_arr = mc.get_cmap_array(name)
+        assert cmap_arr.shape == (256, 3), f'Failed for colormap: {name}'
+        assert cmap_arr.dtype == np.uint8, f'Failed for colormap: {name}'
+
+
+def test_get_cmap_array_consistency_with_apply():
+    """
+    Test that get_cmap_array returns values consistent with apply_color_map
+    """
+    # Create a simple test array with values 0-255
+    test_arr = np.arange(256, dtype=np.uint8).reshape(1, 256)
+
+    # Get the colormap array
+    cmap_arr = mc.get_cmap_array('betterOrange')
+
+    # Apply colormap to the test array
+    result = mc.apply_color_map(test_arr, 'betterOrange', saturation_limits=(0, 255))
+
+    # The result should match the colormap array (accounting for shape)
+    assert np.array_equal(result[0], cmap_arr)
+
+
+def test_get_mpl_cmap_returns_listed_colormap():
+    """
+    Test that get_mpl_cmap returns a matplotlib ListedColormap
+    """
+    from matplotlib.colors import ListedColormap
+
+    cmap = mc.get_mpl_cmap('betterBlue')
+    assert isinstance(cmap, ListedColormap)
+    assert cmap.name == 'betterBlue'
+    assert cmap.N == 256
+
+
+def test_get_mpl_cmap_colors_match_array():
+    """
+    Test that get_mpl_cmap returns colors matching get_cmap_array
+    """
+    cmap = mc.get_mpl_cmap('betterOrange')
+    arr = mc.get_cmap_array('betterOrange')
+
+    # Convert matplotlib colors (0-1 float) to uint8 (0-255)
+    mpl_colors = (cmap.colors * 255).astype(np.uint8)
+    assert np.array_equal(arr, mpl_colors)
+
+
+def test_get_mpl_cmap_invalid_name():
+    """
+    Test that get_mpl_cmap raises ValueError for invalid colormap name
+    """
+    with pytest.raises(ValueError) as exc_info:
+        mc.get_mpl_cmap('invalid_colormap_name')
+    assert 'invalid_colormap_name' in str(exc_info.value)
+
+
+def test_colormapping_matches():
+    """
+    Test that the cmap returned by get_mpl_cmap colormaps an image identically to mergechannels
+    """
+    mpl_cmap = mc.get_mpl_cmap('betterBlue')
+    data = np.arange(256).reshape(16, 16).astype(np.uint8)
+    # matplotlib expects normalized (0-1) input, so we divide by 255
+    mpl_res = mpl_cmap(data / 255.0)
+    assert mpl_res.shape == (16, 16, 4)  # RGBA output
+    assert mpl_res.max() == 1.0
+    # matplotlib creates floating point arrays, we create uint8 arrays
+    mpl_res_rgb = (mpl_res[:, :, :3] * 255).astype('uint8')
+    # use explicit saturation limits to avoid autoscaling differences
+    mc_res_rgb = mc.apply_color_map(data, 'betterBlue', saturation_limits=(0, 255))
+    np.testing.assert_array_equal(mc_res_rgb, mpl_res_rgb)

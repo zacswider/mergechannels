@@ -5,7 +5,7 @@
 
 # mergechannels
 
-This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things likes speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust.
+This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things likes speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust (success! mergechannels is typically several times faster than matplotlib).
 
 The current goal of this library is to be a simple, fast, and memory-efficient way to apply and blend colormaps to images. The api should be intuitive, flexible, and simple. If this is not the case in your hands, please open an issue.
 
@@ -25,6 +25,17 @@ pip install git+https://github.com/zacswider/mergechannels.git
 ## Dependencies
 Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
 
+| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
+|--------|--------|--------|-------|-------|-------|-------|-------|
+| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
+| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
+| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+
+
 ## Threading and Parallelism
 Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The Rust backend releases the GIL during computation, enabling true parallelism with Python's `ThreadPoolExecutor`.
 
@@ -36,16 +47,6 @@ import os
 os.environ['RAYON_NUM_THREADS'] = '4'  # Must be set before import
 import mergechannels as mc
 ```
-
-| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
-|--------|--------|--------|-------|-------|-------|-------|-------|
-| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
-| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
-| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
-| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
 
 ## Usage
 *NOTE*: `skimage`, `matplotlib`, and `cmap` are not dependencies of this project, but are used in the examples below to fetch data/colormaps, and display images.
@@ -198,6 +199,49 @@ print(colorized.shape, colorized.dtype)
 
 Similar to `mergechannels.merge`, `apply_color_map` will also accept colormaps directly from `matplotlib` and `cmap`, explicit saturation limits, or percentile values for autoscaling.
 
+### export colormaps to matplotlib
+If you want to use mergechannels' built-in colormaps with matplotlib directly, you can export them as `matplotlib.colors.ListedColormap` objects using `get_mpl_cmap`. This requires matplotlib to be installed, which can be done with the optional dependency:
+
+```bash
+uv pip install matplotlib
+```
+or:
+```bash
+uv pip install "mergechannels[matplotlib]>=0.5.5"
+```
+
+```python
+from skimage import data
+import matplotlib.pyplot as plt
+import mergechannels as mc
+
+img = data.camera()
+
+# Get a mergechannels colormap as a matplotlib ListedColormap
+cmap = mc.get_mpl_cmap('Red/Green')
+
+# Use it directly with matplotlib
+fig, axes = plt.subplots(1, 2)
+for ax in axes: ax.axis('off')
+(a, b) = axes
+a.imshow(img, cmap='gray')
+b.imshow(img, cmap=cmap)
+plt.show()
+```
+![colorize a single image](https://raw.githubusercontent.com/zacswider/README_Images/main/camera_red-green.png)
+
+
+You can also retrieve the raw colormap data as a numpy array using `get_cmap_array`:
+
+```python
+import mergechannels as mc
+
+# Get the raw (256, 3) uint8 array of RGB values
+cmap_array = mc.get_cmap_array('betterBlue')
+print(cmap_array.shape, cmap_array.dtype)
+>> (256, 3) uint8
+```
+
 ## Performance
 
 Benchmarks show that with appropriately scalled images, (i.e., if pre-determined saturation limits are passed to `mc.merge` or `mc.apply_color_map`) mergechannel is either on par or significantly faster than the underlying numpy operations used by Matplotlib. Note: you can run the benchmarks on your own machine by creating a virtual environment with the dev dependencies `uv sync --dev && source .venv/bin/activate` and running the benchmark code `py.test --benchmark-only`
@@ -206,7 +250,7 @@ Benchmarks show that with appropriately scalled images, (i.e., if pre-determined
 mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2/3D 8/16-bit images and that's it.
 - ~~Add support to u8 and u16 images~~
 - Add support for any numerical dtype
-- Add option to return any colormap as a matplotlib colormap
+- ~~Add option to return any colormap as a matplotlib colormap~~
 - ~~Add option to pass external colormaps to mergechannels~~
 - ~~Parallelize colormap application on large images (it is helpful!)~~
 - Add option to overlay binary or instance masks onto colorized images

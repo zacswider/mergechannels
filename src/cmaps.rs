@@ -44814,12 +44814,12 @@ fn initialize_cmaps() -> HashMap<&'static str, Colormap> {
     m
 }
 
-/// Load a colormap by name
+/// Try to load a colormap by name, returning an error if not found
 ///
 /// Thread-safe: Uses OnceLock for single initialization, then read-only access
-pub fn load_cmap(cmap_name: &str) -> &'static [[u8; 3]; 256] {
+pub fn try_load_cmap(cmap_name: &str) -> Result<&'static [[u8; 3]; 256], String> {
     CMAPS
         .get_or_init(initialize_cmaps)
         .get(cmap_name)
-        .unwrap_or_else(|| panic!("Invalid colormap name: {cmap_name}"))
+        .ok_or_else(|| format!("Invalid colormap name: '{}'. Use mergechannels.COLORMAPS to see available colormaps.", cmap_name))
 }
