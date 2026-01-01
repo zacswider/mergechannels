@@ -1,5 +1,6 @@
 use crate::cmaps;
 use crate::colorize;
+use crate::colorize_v2;
 use crate::errors;
 use ndarray::{Array2, ArrayView2, ArrayView3};
 use numpy::{
@@ -243,6 +244,141 @@ pub fn dispatch_multi_channel_py<'py>(
                 let arrs: Vec<ArrayView3<u16>> =
                     py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
                 let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
+        },
+        _ => Err(errors::DispatchError::UnsupportedDataType(dtype.clone()).into()),
+    }
+}
+
+// ============================================================================
+// V2 Dispatch Functions - For benchmarking the refactored implementation
+// ============================================================================
+
+#[pyfunction]
+#[pyo3(name = "dispatch_single_channel_v2")]
+pub fn dispatch_single_channel_v2_py<'py>(
+    py: Python<'py>,
+    array_reference: &Bound<'py, PyAny>,
+    cmap_name: Option<String>,
+    cmap_values: Option<[[u8; 3]; 256]>,
+    limits: [f64; 2],
+    parallel: bool,
+) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
+    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
+    let dtype = untyped_array.dtype().to_string();
+    let ndim = untyped_array.ndim();
+    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
+    match dtype.as_str() {
+        "uint8" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
+                let arr = py_arr.as_array();
+                let rgb = colorize_v2::colorize_single_channel_8bit(arr, cmap, limits, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
+                let arr = py_arr.as_array();
+                let rgb = colorize_v2::colorize_stack_8bit(arr, cmap, limits, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
+        "uint16" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
+                let arr = py_arr.as_array();
+                let rgb = colorize_v2::colorize_single_channel_16bit(arr, cmap, limits, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
+                let arr = py_arr.as_array();
+                let rgb = colorize_v2::colorize_stack_16bit(arr, cmap, limits, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
+        _ => Err(errors::DispatchError::UnsupportedDataType(dtype).into()),
+    }
+}
+
+#[pyfunction]
+#[pyo3(name = "dispatch_multi_channel_v2")]
+pub fn dispatch_multi_channel_v2_py<'py>(
+    py: Python<'py>,
+    array_references: &Bound<'py, PyAny>,
+    cmap_names: Vec<Option<String>>,
+    cmap_values: Vec<Option<[[u8; 3]; 256]>>,
+    blending: &str,
+    limits: Vec<Vec<f64>>,
+    parallel: bool,
+) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
+    let mut cmaps: Vec<&[[u8; 3]; 256]> =
+        Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
+    for (cmap_name, cmap_value) in cmap_names.iter().zip(cmap_values.iter()) {
+        let cmap = parse_cmap_from_args(cmap_name, cmap_value).map_err(PyValueError::new_err)?;
+        cmaps.push(cmap)
+    }
+    let limits = limits
+        .into_iter()
+        .map(|v| {
+            v.as_slice()
+                .try_into()
+                .map_err(|_| format!("Expected a vector of length 2, got {}", v.len()))
+        })
+        .collect::<Result<Vec<[f64; 2]>, _>>()
+        .unwrap();
+
+    let mut dtypes: Vec<String> = Vec::new();
+    let mut ndims: Vec<usize> = Vec::new();
+    if let Ok(array_iterator) = array_references.try_iter() {
+        for array_reference in array_iterator {
+            let arr_ref = array_reference?;
+            let untyped_array = arr_ref.cast::<PyUntypedArray>()?;
+            dtypes.push(untyped_array.dtype().to_string());
+            ndims.push(untyped_array.ndim());
+        }
+    }
+    let dtype = consensus_value(&dtypes).unwrap();
+    let ndim = consensus_value(&ndims).unwrap();
+    match dtype.as_str() {
+        "uint8" => match ndim {
+            2 => {
+                let py_arrs = extract_2d_u8_arrays(array_references);
+                let arrs: Vec<ArrayView2<u8>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb =
+                    colorize_v2::merge_2d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arrs = extract_3d_u8_arrays(array_references);
+                let arrs: Vec<ArrayView3<u8>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb =
+                    colorize_v2::merge_3d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
+        },
+        "uint16" => match ndim {
+            2 => {
+                let py_arrs = extract_2d_u16_arrays(array_references);
+                let arrs: Vec<ArrayView2<u16>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb =
+                    colorize_v2::merge_2d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arrs = extract_3d_u16_arrays(array_references);
+                let arrs: Vec<ArrayView3<u16>> =
+                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
+                let rgb =
+                    colorize_v2::merge_3d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
