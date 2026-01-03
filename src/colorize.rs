@@ -70,7 +70,7 @@ pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -
     let shape_x = config.arr.shape()[1];
     let mut rgb = img_to_rgb(config.arr);
 
-    if config.limits[0] == 0.0 && config.limits[1] == 255.0 {
+    if config.is_normalized() {
         // fast path - direct lookup
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
@@ -136,7 +136,7 @@ pub fn colorize_stack_8bit(config: ChannelConfigU83D, parallel: bool) -> Array4<
     let shape_x = config.arr.shape()[2];
     let mut rgb = stack_to_rgb(config.arr);
 
-    if config.limits[0] == 0.0 && config.limits[1] == 255.0 {
+    if config.is_normalized() {
         // fast path - direct lookup
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
