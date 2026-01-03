@@ -11,6 +11,10 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
 
+/// Parse and load a colormap from name or values
+///
+/// Attempts to load a colormap by name if provided, otherwise uses pre-defined values.
+/// Returns an error if neither a valid name nor values are provided.
 fn parse_cmap_from_args<'a>(
     cmap_name: &'a Option<String>,
     cmap_values: &'a Option<[[u8; 3]; 256]>,
@@ -27,6 +31,10 @@ fn parse_cmap_from_args<'a>(
     }
 }
 
+/// Verify that all values in a slice are identical
+///
+/// Checks that all elements equal the first element. Returns the first element
+/// if all are equal, or an error if any differ.
 fn consensus_value<T>(dtypes: &[T]) -> Result<&T, String>
 where
     T: PartialEq + std::fmt::Debug,
@@ -40,6 +48,9 @@ where
     Ok(first)
 }
 
+/// Extract 2D uint8 arrays from a Python iterable
+///
+/// Iterates over Python array references and extracts each as a readonly 2D uint8 numpy array.
 fn extract_2d_u8_arrays<'py>(
     array_references: &Bound<'py, PyAny>,
 ) -> Vec<PyReadonlyArray2<'py, u8>> {
@@ -55,6 +66,9 @@ fn extract_2d_u8_arrays<'py>(
     }
     arrs
 }
+/// Extract 3D uint8 arrays from a Python iterable
+///
+/// Iterates over Python array references and extracts each as a readonly 3D uint8 numpy array.
 fn extract_3d_u8_arrays<'py>(
     array_references: &Bound<'py, PyAny>,
 ) -> Vec<PyReadonlyArray3<'py, u8>> {
@@ -70,6 +84,9 @@ fn extract_3d_u8_arrays<'py>(
     }
     arrs
 }
+/// Extract 2D uint16 arrays from a Python iterable
+///
+/// Iterates over Python array references and extracts each as a readonly 2D uint16 numpy array.
 fn extract_2d_u16_arrays<'py>(
     array_references: &Bound<'py, PyAny>,
 ) -> Vec<PyReadonlyArray2<'py, u16>> {
@@ -85,6 +102,9 @@ fn extract_2d_u16_arrays<'py>(
     }
     arrs
 }
+/// Extract 3D uint16 arrays from a Python iterable
+///
+/// Iterates over Python array references and extracts each as a readonly 3D uint16 numpy array.
 fn extract_3d_u16_arrays<'py>(
     array_references: &Bound<'py, PyAny>,
 ) -> Vec<PyReadonlyArray3<'py, u16>> {
@@ -101,6 +121,9 @@ fn extract_3d_u16_arrays<'py>(
     arrs
 }
 
+/// Build channel configurations from arrays, colormaps, and limits
+///
+/// Zips together arrays, colormaps, and limit ranges to create ChannelConfig objects.
 fn build_configs<'a, A>(
     arrays: impl Iterator<Item = A>,
     cmaps: &[&'a [[u8; 3]; 256]],
@@ -136,6 +159,11 @@ pub fn get_cmap_array_py<'py>(
     Ok(arr.into_pyarray(py))
 }
 
+/// Colorize a single channel image
+///
+/// Applies a colormap to a single-channel 2D or 3D array and returns an RGB image.
+/// Supports uint8 and uint16 data types with optional parallel processing.
+/// Raises ValueError if the colormap name is invalid or array type is unsupported.
 #[pyfunction]
 #[pyo3(name = "dispatch_single_channel")]
 pub fn dispatch_single_channel_py<'py>(
@@ -189,6 +217,12 @@ pub fn dispatch_single_channel_py<'py>(
     }
 }
 
+/// Merge and blend multiple single-channel images into an RGB composite
+///
+/// Colorizes multiple channels using specified colormaps and blends them together.
+/// Supports uint8 and uint16 data types with various blending modes.
+/// All arrays must have the same dimensionality (2D or 3D) and data type.
+/// Raises ValueError if colormaps are invalid or array properties are inconsistent.
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel")]
 pub fn dispatch_multi_channel_py<'py>(
