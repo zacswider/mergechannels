@@ -10,6 +10,12 @@ pub struct ChannelConfigU82D<'a> {
     pub limits: [f64; 2],
 }
 
+pub struct ChannelConfigU83D<'a> {
+    pub arr: ArrayView3<'a, u8>,
+    pub cmap: &'a [[u8; 3]; 256],
+    pub limits: [f64; 2],
+}
+
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
     Array::ones((a.shape()[0], a.shape()[1], 3))
@@ -120,18 +126,13 @@ pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -
 }
 
 /// apply a colormap to a stack of 8 bit images
-pub fn colorize_stack_8bit(
-    arr: ArrayView3<u8>,
-    cmap: &[[u8; 3]; 256],
-    limits: [f64; 2],
-    parallel: bool,
-) -> Array4<u8> {
-    let shape_n = arr.shape()[0];
-    let shape_y = arr.shape()[1];
-    let shape_x = arr.shape()[2];
-    let mut rgb = stack_to_rgb(arr);
+pub fn colorize_stack_8bit(config: ChannelConfigU83D, parallel: bool) -> Array4<u8> {
+    let shape_n = config.arr.shape()[0];
+    let shape_y = config.arr.shape()[1];
+    let shape_x = config.arr.shape()[2];
+    let mut rgb = stack_to_rgb(config.arr);
 
-    if limits[0] == 0.0 && limits[1] == 255.0 {
+    if config.limits[0] == 0.0 && config.limits[1] == 255.0 {
         // fast path - direct lookup
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
@@ -140,8 +141,8 @@ pub fn colorize_stack_8bit(
                 .for_each(|(n, mut plane)| {
                     for y in 0..shape_y {
                         for x in 0..shape_x {
-                            let idx = arr[[n, y, x]] as usize;
-                            let color = cmap[idx];
+                            let idx = config.arr[[n, y, x]] as usize;
+                            let color = config.cmap[idx];
                             plane[[y, x, 0]] = color[0];
                             plane[[y, x, 1]] = color[1];
                             plane[[y, x, 2]] = color[2];
@@ -152,8 +153,8 @@ pub fn colorize_stack_8bit(
             for n in 0..shape_n {
                 for y in 0..shape_y {
                     for x in 0..shape_x {
-                        let idx = arr[[n, y, x]] as usize;
-                        let color = cmap[idx];
+                        let idx = config.arr[[n, y, x]] as usize;
+                        let color = config.cmap[idx];
                         rgb[[n, y, x, 0]] = color[0];
                         rgb[[n, y, x, 1]] = color[1];
                         rgb[[n, y, x, 2]] = color[2];
@@ -163,7 +164,7 @@ pub fn colorize_stack_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(limits);
+        let [offset, scale] = offset_and_scale(config.limits);
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
                 .into_par_iter()
@@ -171,9 +172,9 @@ pub fn colorize_stack_8bit(
                 .for_each(|(n, mut plane)| {
                     for y in 0..shape_y {
                         for x in 0..shape_x {
-                            let val = arr[[n, y, x]];
+                            let val = config.arr[[n, y, x]];
                             let idx = as_idx(val, offset, scale);
-                            let color = cmap[idx];
+                            let color = config.cmap[idx];
                             plane[[y, x, 0]] = color[0];
                             plane[[y, x, 1]] = color[1];
                             plane[[y, x, 2]] = color[2];
@@ -184,9 +185,9 @@ pub fn colorize_stack_8bit(
             for n in 0..shape_n {
                 for y in 0..shape_y {
                     for x in 0..shape_x {
-                        let val = arr[[n, y, x]];
+                        let val = config.arr[[n, y, x]];
                         let idx = as_idx(val, offset, scale);
-                        let color = cmap[idx];
+                        let color = config.cmap[idx];
                         rgb[[n, y, x, 0]] = color[0];
                         rgb[[n, y, x, 1]] = color[1];
                         rgb[[n, y, x, 2]] = color[2];
