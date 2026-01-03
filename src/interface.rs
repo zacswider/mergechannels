@@ -48,77 +48,37 @@ where
     Ok(first)
 }
 
-/// Extract 2D uint8 arrays from a Python iterable
+/// Extract arrays from a Python iterable with a given type and dimensionality
 ///
-/// Iterates over Python array references and extracts each as a readonly 2D uint8 numpy array.
-fn extract_2d_u8_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray2<'py, u8>> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray2<u8>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
+/// Generic function that extracts readonly numpy arrays of any extractable type
+/// from a Python iterable. Works for both 2D and 3D arrays.
+fn extract_arrays<'py, T>(array_references: &Bound<'py, PyAny>) -> PyResult<Vec<T>>
+where
+    for<'a> T: pyo3::FromPyObject<'a, 'py>,
+{
+    let array_iterator = array_references
+        .try_iter()
+        .map_err(|_| PyValueError::new_err("Expected an iterable of arrays"))?;
+
+    let mut arrs: Vec<T> = Vec::new();
+    for (i, py_arr_ref) in array_iterator.enumerate() {
+        let item = py_arr_ref?;
+        let py_arr = item.extract::<T>().map_err(|_| {
+            let dtype = item
+                .getattr("dtype")
+                .map(|d| d.to_string())
+                .unwrap_or_else(|_| "unknown".to_string());
+            let shape = item
+                .getattr("shape")
+                .map(|s| s.to_string())
+                .unwrap_or_else(|_| "unknown".to_string());
+            PyValueError::new_err(format!(
+                "Failed to extract array at index {i}: got dtype={dtype}, shape={shape}"
+            ))
+        })?;
+        arrs.push(py_arr);
     }
-    arrs
-}
-/// Extract 3D uint8 arrays from a Python iterable
-///
-/// Iterates over Python array references and extracts each as a readonly 3D uint8 numpy array.
-fn extract_3d_u8_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray3<'py, u8>> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray3<u8>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-/// Extract 2D uint16 arrays from a Python iterable
-///
-/// Iterates over Python array references and extracts each as a readonly 2D uint16 numpy array.
-fn extract_2d_u16_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray2<'py, u16>> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray2<u16>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-/// Extract 3D uint16 arrays from a Python iterable
-///
-/// Iterates over Python array references and extracts each as a readonly 3D uint16 numpy array.
-fn extract_3d_u16_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray3<'py, u16>> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray3<u16>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
+    Ok(arrs)
 }
 
 /// Build channel configurations from arrays, colormaps, and limits
@@ -265,13 +225,13 @@ pub fn dispatch_multi_channel_py<'py>(
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
-                let py_arrs = extract_2d_u8_arrays(array_references);
+                let py_arrs: Vec<PyReadonlyArray2<u8>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_2d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
-                let py_arrs = extract_3d_u8_arrays(array_references);
+                let py_arrs: Vec<PyReadonlyArray3<u8>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_3d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
@@ -280,13 +240,13 @@ pub fn dispatch_multi_channel_py<'py>(
         },
         "uint16" => match ndim {
             2 => {
-                let py_arrs = extract_2d_u16_arrays(array_references);
+                let py_arrs: Vec<PyReadonlyArray2<u16>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_2d_u16(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
-                let py_arrs = extract_3d_u16_arrays(array_references);
+                let py_arrs: Vec<PyReadonlyArray3<u16>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_3d_u16(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
