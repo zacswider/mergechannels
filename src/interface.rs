@@ -27,82 +27,6 @@ fn parse_cmap_from_args<'a>(
     }
 }
 
-/// Get a colormap array by name
-///
-/// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
-/// Raises ValueError if the colormap name is not found.
-#[pyfunction]
-#[pyo3(name = "get_cmap_array")]
-pub fn get_cmap_array_py<'py>(
-    py: Python<'py>,
-    cmap_name: String,
-) -> PyResult<Bound<'py, PyArray2<u8>>> {
-    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(PyValueError::new_err)?;
-
-    // Convert [[u8; 3]; 256] to Array2<u8> with shape (256, 3)
-    let mut arr = Array2::<u8>::zeros((256, 3));
-    for (i, rgb) in cmap.iter().enumerate() {
-        for (j, &val) in rgb.iter().enumerate() {
-            arr[[i, j]] = val;
-        }
-    }
-
-    Ok(arr.into_pyarray(py))
-}
-
-#[pyfunction]
-#[pyo3(name = "dispatch_single_channel")]
-pub fn dispatch_single_channel_py<'py>(
-    py: Python<'py>,
-    array_reference: &Bound<'py, PyAny>,
-    cmap_name: Option<String>,
-    cmap_values: Option<[[u8; 3]; 256]>,
-    limits: [f64; 2],
-    parallel: bool,
-) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
-    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
-    let dtype = untyped_array.dtype().to_string();
-    let ndim = untyped_array.ndim();
-    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
-    match dtype.as_str() {
-        "uint8" => match ndim {
-            2 => {
-                let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
-                let arr = py_arr.as_array();
-                let config = colorize::ChannelConfigU82D { arr, cmap, limits };
-                let rgb = colorize::colorize_single_channel_8bit(config, parallel);
-                Ok(rgb.into_dyn().into_pyarray(py))
-            }
-            3 => {
-                let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
-                let arr = py_arr.as_array();
-                let config = colorize::ChannelConfigU83D { arr, cmap, limits };
-                let rgb = colorize::colorize_stack_8bit(config, parallel);
-                Ok(rgb.into_dyn().into_pyarray(py))
-            }
-            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
-        },
-        "uint16" => match ndim {
-            2 => {
-                let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
-                let arr = py_arr.as_array();
-                let config = colorize::ChannelConfigU162D { arr, cmap, limits };
-                let rgb = colorize::colorize_single_channel_16bit(config, parallel);
-                Ok(rgb.into_dyn().into_pyarray(py))
-            }
-            3 => {
-                let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
-                let arr = py_arr.as_array();
-                let config = colorize::ChannelConfigU163D { arr, cmap, limits };
-                let rgb = colorize::colorize_stack_16bit(config, parallel);
-                Ok(rgb.into_dyn().into_pyarray(py))
-            }
-            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
-        },
-        _ => Err(errors::DispatchError::UnsupportedDataType(dtype).into()),
-    }
-}
-
 fn consensus_value<T>(dtypes: &[T]) -> Result<&T, String>
 where
     T: PartialEq + std::fmt::Debug,
@@ -187,6 +111,82 @@ fn build_configs<'a, A>(
         .zip(limits.iter())
         .map(|((arr, &cmap), &limits)| colorize::ChannelConfig { arr, cmap, limits })
         .collect()
+}
+
+/// Get a colormap array by name
+///
+/// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
+/// Raises ValueError if the colormap name is not found.
+#[pyfunction]
+#[pyo3(name = "get_cmap_array")]
+pub fn get_cmap_array_py<'py>(
+    py: Python<'py>,
+    cmap_name: String,
+) -> PyResult<Bound<'py, PyArray2<u8>>> {
+    let cmap = cmaps::try_load_cmap(&cmap_name).map_err(PyValueError::new_err)?;
+
+    // Convert [[u8; 3]; 256] to Array2<u8> with shape (256, 3)
+    let mut arr = Array2::<u8>::zeros((256, 3));
+    for (i, rgb) in cmap.iter().enumerate() {
+        for (j, &val) in rgb.iter().enumerate() {
+            arr[[i, j]] = val;
+        }
+    }
+
+    Ok(arr.into_pyarray(py))
+}
+
+#[pyfunction]
+#[pyo3(name = "dispatch_single_channel")]
+pub fn dispatch_single_channel_py<'py>(
+    py: Python<'py>,
+    array_reference: &Bound<'py, PyAny>,
+    cmap_name: Option<String>,
+    cmap_values: Option<[[u8; 3]; 256]>,
+    limits: [f64; 2],
+    parallel: bool,
+) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
+    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
+    let dtype = untyped_array.dtype().to_string();
+    let ndim = untyped_array.ndim();
+    let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
+    match dtype.as_str() {
+        "uint8" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
+                let arr = py_arr.as_array();
+                let config = colorize::ChannelConfigU82D { arr, cmap, limits };
+                let rgb = colorize::colorize_single_channel_8bit(config, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
+                let arr = py_arr.as_array();
+                let config = colorize::ChannelConfigU83D { arr, cmap, limits };
+                let rgb = colorize::colorize_stack_8bit(config, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
+        "uint16" => match ndim {
+            2 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
+                let arr = py_arr.as_array();
+                let config = colorize::ChannelConfigU162D { arr, cmap, limits };
+                let rgb = colorize::colorize_single_channel_16bit(config, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            3 => {
+                let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
+                let arr = py_arr.as_array();
+                let config = colorize::ChannelConfigU163D { arr, cmap, limits };
+                let rgb = colorize::colorize_stack_16bit(config, parallel);
+                Ok(rgb.into_dyn().into_pyarray(py))
+            }
+            _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
+        },
+        _ => Err(errors::DispatchError::UnsupportedDataType(dtype).into()),
+    }
 }
 
 #[pyfunction]
