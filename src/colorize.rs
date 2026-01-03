@@ -99,6 +99,9 @@ pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -
     } else {
         // normalize on the fly
         let [offset, scale] = offset_and_scale(config.limits);
+        // NOTE: I think we could define a "pixel value fn conditioanlly that is applied in an
+        // otherwise identical loop. This would cut a ton of boilerplate and the compiler should
+        // monomorphize"
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
                 .into_par_iter()
