@@ -4,6 +4,12 @@ use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use rayon::prelude::*;
 use smallvec::SmallVec;
 
+pub struct ChannelConfigU82D<'a> {
+    pub arr: ArrayView2<'a, u8>,
+    pub cmap: &'a [[u8; 3]; 256],
+    pub limits: [f64; 2],
+}
+
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
     Array::ones((a.shape()[0], a.shape()[1], 3))
@@ -49,17 +55,12 @@ where
 }
 
 ///apply a colormap to a single 8-bit image
-pub fn colorize_single_channel_8bit(
-    arr: ArrayView2<u8>,
-    cmap: &[[u8; 3]; 256],
-    limits: [f64; 2],
-    parallel: bool,
-) -> Array3<u8> {
-    let shape_y = arr.shape()[0];
-    let shape_x = arr.shape()[1];
-    let mut rgb = img_to_rgb(arr);
+pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -> Array3<u8> {
+    let shape_y = config.arr.shape()[0];
+    let shape_x = config.arr.shape()[1];
+    let mut rgb = img_to_rgb(config.arr);
 
-    if limits[0] == 0.0 && limits[1] == 255.0 {
+    if config.limits[0] == 0.0 && config.limits[1] == 255.0 {
         // fast path - direct lookup
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
@@ -67,8 +68,8 @@ pub fn colorize_single_channel_8bit(
                 .enumerate()
                 .for_each(|(y, mut row)| {
                     for x in 0..shape_x {
-                        let idx = arr[[y, x]] as usize;
-                        let color = cmap[idx];
+                        let idx = config.arr[[y, x]] as usize;
+                        let color = config.cmap[idx];
                         row[[x, 0]] = color[0];
                         row[[x, 1]] = color[1];
                         row[[x, 2]] = color[2];
@@ -77,8 +78,8 @@ pub fn colorize_single_channel_8bit(
         } else {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let idx = arr[[y, x]] as usize;
-                    let color = cmap[idx];
+                    let idx = config.arr[[y, x]] as usize;
+                    let color = config.cmap[idx];
                     rgb[[y, x, 0]] = color[0];
                     rgb[[y, x, 1]] = color[1];
                     rgb[[y, x, 2]] = color[2];
@@ -87,16 +88,16 @@ pub fn colorize_single_channel_8bit(
         }
     } else {
         // normalize on the fly
-        let [offset, scale] = offset_and_scale(limits);
+        let [offset, scale] = offset_and_scale(config.limits);
         if parallel {
             rgb.axis_iter_mut(numpy::ndarray::Axis(0))
                 .into_par_iter()
                 .enumerate()
                 .for_each(|(y, mut row)| {
                     for x in 0..shape_x {
-                        let val = arr[[y, x]];
+                        let val = config.arr[[y, x]];
                         let idx = as_idx(val, offset, scale);
-                        let color = cmap[idx];
+                        let color = config.cmap[idx];
                         row[[x, 0]] = color[0];
                         row[[x, 1]] = color[1];
                         row[[x, 2]] = color[2];
@@ -105,9 +106,9 @@ pub fn colorize_single_channel_8bit(
         } else {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let val = arr[[y, x]];
+                    let val = config.arr[[y, x]];
                     let idx = as_idx(val, offset, scale);
-                    let color = cmap[idx];
+                    let color = config.cmap[idx];
                     rgb[[y, x, 0]] = color[0];
                     rgb[[y, x, 1]] = color[1];
                     rgb[[y, x, 2]] = color[2];

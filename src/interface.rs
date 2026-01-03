@@ -69,7 +69,8 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits, parallel);
+                let config = colorize::ChannelConfigU82D { arr, cmap, limits };
+                let rgb = colorize::colorize_single_channel_8bit(config, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
