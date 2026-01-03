@@ -37,7 +37,7 @@ Mergechannels only depends on numpy, a matrix of compatible versions is shown be
 
 
 ## Threading and Parallelism
-Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The Rust backend releases the GIL during computation, enabling true parallelism with Python's `ThreadPoolExecutor`.
+Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The extension declares itself thread-safe (`gil_used(false)`), so it won't re-enable the GIL in no-GIL builds, enabling true parallelism with Python's `ThreadPoolExecutor`.
 
 By default, `parallel=True` uses [Rayon](https://github.com/rayon-rs/rayon) for internal parallelization across image rows/planes. This also works well alongside Python threading.
 
