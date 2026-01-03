@@ -175,6 +175,18 @@ fn extract_3d_u16_arrays<'py>(
     arrs
 }
 
+fn build_configs<'a, A>(
+    arrays: impl Iterator<Item = A>,
+    cmaps: &[&'a [[u8; 3]; 256]],
+    limits: &[[f64; 2]],
+) -> Vec<colorize::ChannelConfig<'a, A>> {
+    arrays
+        .zip(cmaps.iter())
+        .zip(limits.iter())
+        .map(|((arr, &cmap), &limits)| colorize::ChannelConfig { arr, cmap, limits })
+        .collect()
+}
+
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel")]
 pub fn dispatch_multi_channel_py<'py>(
@@ -218,31 +230,13 @@ pub fn dispatch_multi_channel_py<'py>(
         "uint8" => match ndim {
             2 => {
                 let py_arrs = extract_2d_u8_arrays(array_references);
-                let configs: Vec<colorize::ChannelConfigU82D> = py_arrs
-                    .iter()
-                    .zip(cmaps.iter())
-                    .zip(limits.iter())
-                    .map(|((py_arr, cmap), limit)| colorize::ChannelConfigU82D {
-                        arr: py_arr.as_array(),
-                        cmap,
-                        limits: *limit,
-                    })
-                    .collect();
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_2d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arrs = extract_3d_u8_arrays(array_references);
-                let configs: Vec<colorize::ChannelConfigU83D> = py_arrs
-                    .iter()
-                    .zip(cmaps.iter())
-                    .zip(limits.iter())
-                    .map(|((py_arr, cmap), limit)| colorize::ChannelConfigU83D {
-                        arr: py_arr.as_array(),
-                        cmap,
-                        limits: *limit,
-                    })
-                    .collect();
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
                 let rgb = colorize::merge_3d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }

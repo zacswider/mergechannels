@@ -4,29 +4,21 @@ use numpy::ndarray::{Array, Array3, Array4, ArrayView2, ArrayView3};
 use rayon::prelude::*;
 use smallvec::SmallVec;
 
-pub struct ChannelConfigU82D<'a> {
-    pub arr: ArrayView2<'a, u8>,
+pub struct ChannelConfig<'a, A> {
+    pub arr: A,
     pub cmap: &'a [[u8; 3]; 256],
     pub limits: [f64; 2],
 }
 
-impl<'a> ChannelConfigU82D<'a> {
+impl<'a, A> ChannelConfig<'a, A> {
     pub fn is_normalized(&self) -> bool {
         self.limits[0] == 0.0 && self.limits[1] == 255.0
     }
 }
 
-pub struct ChannelConfigU83D<'a> {
-    pub arr: ArrayView3<'a, u8>,
-    pub cmap: &'a [[u8; 3]; 256],
-    pub limits: [f64; 2],
-}
-
-impl<'a> ChannelConfigU83D<'a> {
-    pub fn is_normalized(&self) -> bool {
-        self.limits[0] == 0.0 && self.limits[1] == 255.0
-    }
-}
+// Type aliases for clarity
+pub type ChannelConfigU82D<'a> = ChannelConfig<'a, ArrayView2<'a, u8>>;
+pub type ChannelConfigU83D<'a> = ChannelConfig<'a, ArrayView3<'a, u8>>;
 
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
