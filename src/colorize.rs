@@ -19,6 +19,8 @@ impl<'a, A> ChannelConfig<'a, A> {
 // Type aliases for clarity
 pub type ChannelConfigU82D<'a> = ChannelConfig<'a, ArrayView2<'a, u8>>;
 pub type ChannelConfigU83D<'a> = ChannelConfig<'a, ArrayView3<'a, u8>>;
+pub type ChannelConfigU162D<'a> = ChannelConfig<'a, ArrayView2<'a, u16>>;
+pub type ChannelConfigU163D<'a> = ChannelConfig<'a, ArrayView3<'a, u16>>;
 
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
@@ -207,25 +209,20 @@ pub fn colorize_stack_8bit(config: ChannelConfigU83D, parallel: bool) -> Array4<
 }
 
 /// apply a colormap to a single 16 bit image, normalizing the intensity lookups on the fly
-pub fn colorize_single_channel_16bit(
-    arr: ArrayView2<u16>,
-    cmap: &[[u8; 3]; 256],
-    limits: [f64; 2],
-    parallel: bool,
-) -> Array3<u8> {
-    let shape_y = arr.shape()[0];
-    let shape_x = arr.shape()[1];
-    let mut rgb = img_to_rgb(arr);
-    let [offset, scale] = offset_and_scale(limits);
+pub fn colorize_single_channel_16bit(config: ChannelConfigU162D, parallel: bool) -> Array3<u8> {
+    let shape_y = config.arr.shape()[0];
+    let shape_x = config.arr.shape()[1];
+    let mut rgb = img_to_rgb(config.arr);
+    let [offset, scale] = offset_and_scale(config.limits);
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
             .into_par_iter()
             .enumerate()
             .for_each(|(y, mut row)| {
                 for x in 0..shape_x {
-                    let val = arr[[y, x]];
+                    let val = config.arr[[y, x]];
                     let idx = as_idx(val, offset, scale);
-                    let color = cmap[idx];
+                    let color = config.cmap[idx];
                     row[[x, 0]] = color[0];
                     row[[x, 1]] = color[1];
                     row[[x, 2]] = color[2];
@@ -234,9 +231,9 @@ pub fn colorize_single_channel_16bit(
     } else {
         for y in 0..shape_y {
             for x in 0..shape_x {
-                let val = arr[[y, x]];
+                let val = config.arr[[y, x]];
                 let idx = as_idx(val, offset, scale);
-                let color = cmap[idx];
+                let color = config.cmap[idx];
                 rgb[[y, x, 0]] = color[0];
                 rgb[[y, x, 1]] = color[1];
                 rgb[[y, x, 2]] = color[2];
@@ -247,17 +244,12 @@ pub fn colorize_single_channel_16bit(
 }
 
 /// apply a colormap to a stack of 16 bit images, normalizing the intensity lookups on the fly
-pub fn colorize_stack_16bit(
-    arr: ArrayView3<u16>,
-    cmap: &[[u8; 3]; 256],
-    limits: [f64; 2],
-    parallel: bool,
-) -> Array4<u8> {
-    let shape_n = arr.shape()[0];
-    let shape_y = arr.shape()[1];
-    let shape_x = arr.shape()[2];
-    let mut rgb = stack_to_rgb(arr);
-    let [offset, scale] = offset_and_scale(limits);
+pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array4<u8> {
+    let shape_n = config.arr.shape()[0];
+    let shape_y = config.arr.shape()[1];
+    let shape_x = config.arr.shape()[2];
+    let mut rgb = stack_to_rgb(config.arr);
+    let [offset, scale] = offset_and_scale(config.limits);
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
             .into_par_iter()
@@ -265,9 +257,9 @@ pub fn colorize_stack_16bit(
             .for_each(|(n, mut plane)| {
                 for y in 0..shape_y {
                     for x in 0..shape_x {
-                        let val = arr[[n, y, x]];
+                        let val = config.arr[[n, y, x]];
                         let idx = as_idx(val, offset, scale);
-                        let color = cmap[idx];
+                        let color = config.cmap[idx];
                         plane[[y, x, 0]] = color[0];
                         plane[[y, x, 1]] = color[1];
                         plane[[y, x, 2]] = color[2];
@@ -278,9 +270,9 @@ pub fn colorize_stack_16bit(
         for n in 0..shape_n {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let val = arr[[n, y, x]];
+                    let val = config.arr[[n, y, x]];
                     let idx = as_idx(val, offset, scale);
-                    let color = cmap[idx];
+                    let color = config.cmap[idx];
                     rgb[[n, y, x, 0]] = color[0];
                     rgb[[n, y, x, 1]] = color[1];
                     rgb[[n, y, x, 2]] = color[2];
@@ -513,16 +505,14 @@ pub fn merge_3d_u8(
 }
 
 pub fn merge_2d_u16(
-    arrs: Vec<ArrayView2<u16>>,
-    cmaps: Vec<&[[u8; 3]; 256]>,
+    configs: Vec<ChannelConfigU162D>,
     blending: &str,
-    limits: Vec<[f64; 2]>,
     parallel: bool,
 ) -> Result<Array3<u8>, MergeError> {
-    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
-    let shape_y = first_arr.shape()[0];
-    let shape_x = first_arr.shape()[1];
-    let mut rgb = img_to_rgb(first_arr);
+    let first_config = &configs[0]; // we guarantee that all arrays have the same shape before calling
+    let shape_y = first_config.arr.shape()[0];
+    let shape_x = first_config.arr.shape()[1];
+    let mut rgb = img_to_rgb(first_config.arr);
     let blend_fn: blend::BlendFn = match blending {
         "max" => blend::max_blending,
         "sum" => blend::sum_blending,
@@ -531,6 +521,7 @@ pub fn merge_2d_u16(
         _ => return Err(MergeError::InvalidBlendingMode(blending.to_string())),
     };
     // slow path - normalize on the fly
+    let limits: Vec<[f64; 2]> = configs.iter().map(|c| c.limits).collect();
     let offsets_and_scales = per_ch_offset_and_scale(limits);
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
@@ -540,13 +531,11 @@ pub fn merge_2d_u16(
                 let mut px_vals: SmallVec<[[u8; 3]; blend::MAX_N_CH]> = SmallVec::new();
                 for j in 0..shape_x {
                     px_vals.clear();
-                    for ((arr, cmap), offset_scale) in
-                        arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
-                    {
+                    for (config, offset_scale) in configs.iter().zip(offsets_and_scales.iter()) {
                         let [offset, scale] = offset_scale;
-                        let val = arr[[i, j]];
+                        let val = config.arr[[i, j]];
                         let idx = as_idx(val, *offset, *scale);
-                        let ch_color = cmap[idx];
+                        let ch_color = config.cmap[idx];
                         px_vals.push(ch_color);
                     }
                     let px_color = blend_fn(&px_vals);
@@ -560,13 +549,11 @@ pub fn merge_2d_u16(
         for i in 0..shape_y {
             for j in 0..shape_x {
                 px_vals.clear();
-                for ((arr, cmap), offset_scale) in
-                    arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
-                {
+                for (config, offset_scale) in configs.iter().zip(offsets_and_scales.iter()) {
                     let [offset, scale] = offset_scale;
-                    let val = arr[[i, j]];
+                    let val = config.arr[[i, j]];
                     let idx = as_idx(val, *offset, *scale);
-                    let ch_color = cmap[idx];
+                    let ch_color = config.cmap[idx];
                     px_vals.push(ch_color);
                 }
                 let px_color = blend_fn(&px_vals);
@@ -580,17 +567,15 @@ pub fn merge_2d_u16(
 }
 
 pub fn merge_3d_u16(
-    arrs: Vec<ArrayView3<u16>>,
-    cmaps: Vec<&[[u8; 3]; 256]>,
+    configs: Vec<ChannelConfigU163D>,
     blending: &str,
-    limits: Vec<[f64; 2]>,
     parallel: bool,
 ) -> Result<Array4<u8>, MergeError> {
-    let first_arr = arrs[0]; // we guarantee that all arrays have the same shape before calling
-    let shape_n = first_arr.shape()[0];
-    let shape_y = first_arr.shape()[1];
-    let shape_x = first_arr.shape()[2];
-    let mut rgb = stack_to_rgb(first_arr);
+    let first_config = &configs[0]; // we guarantee that all arrays have the same shape before calling
+    let shape_n = first_config.arr.shape()[0];
+    let shape_y = first_config.arr.shape()[1];
+    let shape_x = first_config.arr.shape()[2];
+    let mut rgb = stack_to_rgb(first_config.arr);
     let blend_fn: blend::BlendFn = match blending {
         "max" => blend::max_blending,
         "sum" => blend::sum_blending,
@@ -600,6 +585,7 @@ pub fn merge_3d_u16(
     };
 
     // slow path - normalize on the fly
+    let limits: Vec<[f64; 2]> = configs.iter().map(|c| c.limits).collect();
     let offsets_and_scales = per_ch_offset_and_scale(limits);
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
@@ -610,13 +596,12 @@ pub fn merge_3d_u16(
                 for i in 0..shape_y {
                     for j in 0..shape_x {
                         px_vals.clear();
-                        for ((arr, cmap), offset_scale) in
-                            arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
+                        for (config, offset_scale) in configs.iter().zip(offsets_and_scales.iter())
                         {
                             let [offset, scale] = offset_scale;
-                            let val = arr[[n, i, j]];
+                            let val = config.arr[[n, i, j]];
                             let idx = as_idx(val, *offset, *scale);
-                            let ch_color = cmap[idx];
+                            let ch_color = config.cmap[idx];
                             px_vals.push(ch_color);
                         }
                         let px_color = blend_fn(&px_vals);
@@ -632,13 +617,11 @@ pub fn merge_3d_u16(
             for i in 0..shape_y {
                 for j in 0..shape_x {
                     px_vals.clear();
-                    for ((arr, cmap), offset_scale) in
-                        arrs.iter().zip(cmaps.iter()).zip(offsets_and_scales.iter())
-                    {
+                    for (config, offset_scale) in configs.iter().zip(offsets_and_scales.iter()) {
                         let [offset, scale] = offset_scale;
-                        let val = arr[[n, i, j]];
+                        let val = config.arr[[n, i, j]];
                         let idx = as_idx(val, *offset, *scale);
-                        let ch_color = cmap[idx];
+                        let ch_color = config.cmap[idx];
                         px_vals.push(ch_color);
                     }
                     let px_color = blend_fn(&px_vals);
