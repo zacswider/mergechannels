@@ -66,190 +66,75 @@ where
     normalized_value.clamp(0.0, 255.0) as usize
 }
 
-///apply a colormap to a single 8-bit image
-pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -> Array3<u8> {
-    let shape_y = config.arr.shape()[0];
-    let shape_x = config.arr.shape()[1];
-    let mut rgb = img_to_rgb(config.arr);
-
-    if config.is_normalized() {
-        // fast path - direct lookup
-        if parallel {
-            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
-                .into_par_iter()
-                .enumerate()
-                .for_each(|(y, mut row)| {
-                    for x in 0..shape_x {
-                        let idx = config.arr[[y, x]] as usize;
-                        let color = config.cmap[idx];
-                        row[[x, 0]] = color[0];
-                        row[[x, 1]] = color[1];
-                        row[[x, 2]] = color[2];
-                    }
-                });
-        } else {
-            for y in 0..shape_y {
-                for x in 0..shape_x {
-                    let idx = config.arr[[y, x]] as usize;
-                    let color = config.cmap[idx];
-                    rgb[[y, x, 0]] = color[0];
-                    rgb[[y, x, 1]] = color[1];
-                    rgb[[y, x, 2]] = color[2];
-                }
-            }
-        }
-    } else {
-        // normalize on the fly
-        let [offset, scale] = offset_and_scale(config.limits);
-        // NOTE: I think we could define a "pixel value fn conditioanlly that is applied in an
-        // otherwise identical loop. This would cut a ton of boilerplate and the compiler should
-        // monomorphize"
-        if parallel {
-            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
-                .into_par_iter()
-                .enumerate()
-                .for_each(|(y, mut row)| {
-                    for x in 0..shape_x {
-                        let val = config.arr[[y, x]];
-                        let idx = as_idx(val, offset, scale);
-                        let color = config.cmap[idx];
-                        row[[x, 0]] = color[0];
-                        row[[x, 1]] = color[1];
-                        row[[x, 2]] = color[2];
-                    }
-                });
-        } else {
-            for y in 0..shape_y {
-                for x in 0..shape_x {
-                    let val = config.arr[[y, x]];
-                    let idx = as_idx(val, offset, scale);
-                    let color = config.cmap[idx];
-                    rgb[[y, x, 0]] = color[0];
-                    rgb[[y, x, 1]] = color[1];
-                    rgb[[y, x, 2]] = color[2];
-                }
-            }
-        }
-    }
-    rgb
-}
-
-/// apply a colormap to a stack of 8 bit images
-pub fn colorize_stack_8bit(config: ChannelConfigU83D, parallel: bool) -> Array4<u8> {
-    let shape_n = config.arr.shape()[0];
-    let shape_y = config.arr.shape()[1];
-    let shape_x = config.arr.shape()[2];
-    let mut rgb = stack_to_rgb(config.arr);
-
-    if config.is_normalized() {
-        // fast path - direct lookup
-        if parallel {
-            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
-                .into_par_iter()
-                .enumerate()
-                .for_each(|(n, mut plane)| {
-                    for y in 0..shape_y {
-                        for x in 0..shape_x {
-                            let idx = config.arr[[n, y, x]] as usize;
-                            let color = config.cmap[idx];
-                            plane[[y, x, 0]] = color[0];
-                            plane[[y, x, 1]] = color[1];
-                            plane[[y, x, 2]] = color[2];
-                        }
-                    }
-                });
-        } else {
-            for n in 0..shape_n {
-                for y in 0..shape_y {
-                    for x in 0..shape_x {
-                        let idx = config.arr[[n, y, x]] as usize;
-                        let color = config.cmap[idx];
-                        rgb[[n, y, x, 0]] = color[0];
-                        rgb[[n, y, x, 1]] = color[1];
-                        rgb[[n, y, x, 2]] = color[2];
-                    }
-                }
-            }
-        }
-    } else {
-        // normalize on the fly
-        let [offset, scale] = offset_and_scale(config.limits);
-        if parallel {
-            rgb.axis_iter_mut(numpy::ndarray::Axis(0))
-                .into_par_iter()
-                .enumerate()
-                .for_each(|(n, mut plane)| {
-                    for y in 0..shape_y {
-                        for x in 0..shape_x {
-                            let val = config.arr[[n, y, x]];
-                            let idx = as_idx(val, offset, scale);
-                            let color = config.cmap[idx];
-                            plane[[y, x, 0]] = color[0];
-                            plane[[y, x, 1]] = color[1];
-                            plane[[y, x, 2]] = color[2];
-                        }
-                    }
-                });
-        } else {
-            for n in 0..shape_n {
-                for y in 0..shape_y {
-                    for x in 0..shape_x {
-                        let val = config.arr[[n, y, x]];
-                        let idx = as_idx(val, offset, scale);
-                        let color = config.cmap[idx];
-                        rgb[[n, y, x, 0]] = color[0];
-                        rgb[[n, y, x, 1]] = color[1];
-                        rgb[[n, y, x, 2]] = color[2];
-                    }
-                }
-            }
-        }
-    }
-    rgb
-}
-
-/// apply a colormap to a single 16 bit image, normalizing the intensity lookups on the fly
-pub fn colorize_single_channel_16bit(config: ChannelConfigU162D, parallel: bool) -> Array3<u8> {
-    let shape_y = config.arr.shape()[0];
-    let shape_x = config.arr.shape()[1];
-    let mut rgb = img_to_rgb(config.arr);
-    let [offset, scale] = offset_and_scale(config.limits);
+/// Generic helper for applying a colormap to a 2D array
+fn apply_colormap_2d<T, F>(
+    arr: ArrayView2<T>,
+    cmap: &[[u8; 3]; 256],
+    rgb: &mut Array3<u8>,
+    parallel: bool,
+    idx_fn: F,
+) where
+    T: Copy + Sync + Send,
+    F: Fn(T) -> usize + Sync + Send,
+{
+    let shape_x = arr.shape()[1];
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
             .into_par_iter()
             .enumerate()
             .for_each(|(y, mut row)| {
                 for x in 0..shape_x {
-                    let val = config.arr[[y, x]];
-                    let idx = as_idx(val, offset, scale);
-                    let color = config.cmap[idx];
+                    let val = arr[[y, x]];
+                    let idx = idx_fn(val);
+                    let color = cmap[idx];
                     row[[x, 0]] = color[0];
                     row[[x, 1]] = color[1];
                     row[[x, 2]] = color[2];
                 }
             });
     } else {
+        let shape_y = arr.shape()[0];
         for y in 0..shape_y {
             for x in 0..shape_x {
-                let val = config.arr[[y, x]];
-                let idx = as_idx(val, offset, scale);
-                let color = config.cmap[idx];
+                let val = arr[[y, x]];
+                let idx = idx_fn(val);
+                let color = cmap[idx];
                 rgb[[y, x, 0]] = color[0];
                 rgb[[y, x, 1]] = color[1];
                 rgb[[y, x, 2]] = color[2];
             }
         }
     }
+}
+
+///apply a colormap to a single 8-bit image
+pub fn colorize_single_channel_8bit(config: ChannelConfigU82D, parallel: bool) -> Array3<u8> {
+    let mut rgb = img_to_rgb(config.arr);
+
+    if config.is_normalized() {
+        apply_colormap_2d(config.arr, config.cmap, &mut rgb, parallel, |v| v as usize);
+    } else {
+        let [offset, scale] = offset_and_scale(config.limits);
+        apply_colormap_2d(config.arr, config.cmap, &mut rgb, parallel, |v| {
+            as_idx(v, offset, scale)
+        });
+    }
     rgb
 }
 
-/// apply a colormap to a stack of 16 bit images, normalizing the intensity lookups on the fly
-pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array4<u8> {
-    let shape_n = config.arr.shape()[0];
-    let shape_y = config.arr.shape()[1];
-    let shape_x = config.arr.shape()[2];
-    let mut rgb = stack_to_rgb(config.arr);
-    let [offset, scale] = offset_and_scale(config.limits);
+/// Generic helper for applying a colormap to a 3D array (stack)
+fn apply_colormap_3d<T, F>(
+    arr: ArrayView3<T>,
+    cmap: &[[u8; 3]; 256],
+    rgb: &mut Array4<u8>,
+    parallel: bool,
+    idx_fn: F,
+) where
+    T: Copy + Sync + Send,
+    F: Fn(T) -> usize + Sync + Send,
+{
+    let shape_y = arr.shape()[1];
+    let shape_x = arr.shape()[2];
     if parallel {
         rgb.axis_iter_mut(numpy::ndarray::Axis(0))
             .into_par_iter()
@@ -257,9 +142,9 @@ pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array
             .for_each(|(n, mut plane)| {
                 for y in 0..shape_y {
                     for x in 0..shape_x {
-                        let val = config.arr[[n, y, x]];
-                        let idx = as_idx(val, offset, scale);
-                        let color = config.cmap[idx];
+                        let val = arr[[n, y, x]];
+                        let idx = idx_fn(val);
+                        let color = cmap[idx];
                         plane[[y, x, 0]] = color[0];
                         plane[[y, x, 1]] = color[1];
                         plane[[y, x, 2]] = color[2];
@@ -267,12 +152,13 @@ pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array
                 }
             });
     } else {
+        let shape_n = arr.shape()[0];
         for n in 0..shape_n {
             for y in 0..shape_y {
                 for x in 0..shape_x {
-                    let val = config.arr[[n, y, x]];
-                    let idx = as_idx(val, offset, scale);
-                    let color = config.cmap[idx];
+                    let val = arr[[n, y, x]];
+                    let idx = idx_fn(val);
+                    let color = cmap[idx];
                     rgb[[n, y, x, 0]] = color[0];
                     rgb[[n, y, x, 1]] = color[1];
                     rgb[[n, y, x, 2]] = color[2];
@@ -280,6 +166,40 @@ pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array
             }
         }
     }
+}
+
+/// apply a colormap to a stack of 8 bit images
+pub fn colorize_stack_8bit(config: ChannelConfigU83D, parallel: bool) -> Array4<u8> {
+    let mut rgb = stack_to_rgb(config.arr);
+
+    if config.is_normalized() {
+        apply_colormap_3d(config.arr, config.cmap, &mut rgb, parallel, |v| v as usize);
+    } else {
+        let [offset, scale] = offset_and_scale(config.limits);
+        apply_colormap_3d(config.arr, config.cmap, &mut rgb, parallel, |v| {
+            as_idx(v, offset, scale)
+        });
+    }
+    rgb
+}
+
+/// apply a colormap to a single 16 bit image, normalizing the intensity lookups on the fly
+pub fn colorize_single_channel_16bit(config: ChannelConfigU162D, parallel: bool) -> Array3<u8> {
+    let mut rgb = img_to_rgb(config.arr);
+    let [offset, scale] = offset_and_scale(config.limits);
+    apply_colormap_2d(config.arr, config.cmap, &mut rgb, parallel, |v| {
+        as_idx(v, offset, scale)
+    });
+    rgb
+}
+
+/// apply a colormap to a stack of 16 bit images, normalizing the intensity lookups on the fly
+pub fn colorize_stack_16bit(config: ChannelConfigU163D, parallel: bool) -> Array4<u8> {
+    let mut rgb = stack_to_rgb(config.arr);
+    let [offset, scale] = offset_and_scale(config.limits);
+    apply_colormap_3d(config.arr, config.cmap, &mut rgb, parallel, |v| {
+        as_idx(v, offset, scale)
+    });
     rgb
 }
 
