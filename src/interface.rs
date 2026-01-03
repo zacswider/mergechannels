@@ -218,16 +218,32 @@ pub fn dispatch_multi_channel_py<'py>(
         "uint8" => match ndim {
             2 => {
                 let py_arrs = extract_2d_u8_arrays(array_references);
-                let arrs: Vec<ArrayView2<u8>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                let configs: Vec<colorize::ChannelConfigU82D> = py_arrs
+                    .iter()
+                    .zip(cmaps.iter())
+                    .zip(limits.iter())
+                    .map(|((py_arr, cmap), limit)| colorize::ChannelConfigU82D {
+                        arr: py_arr.as_array(),
+                        cmap,
+                        limits: *limit,
+                    })
+                    .collect();
+                let rgb = colorize::merge_2d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arrs = extract_3d_u8_arrays(array_references);
-                let arrs: Vec<ArrayView3<u8>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                let configs: Vec<colorize::ChannelConfigU83D> = py_arrs
+                    .iter()
+                    .zip(cmaps.iter())
+                    .zip(limits.iter())
+                    .map(|((py_arr, cmap), limit)| colorize::ChannelConfigU83D {
+                        arr: py_arr.as_array(),
+                        cmap,
+                        limits: *limit,
+                    })
+                    .collect();
+                let rgb = colorize::merge_3d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
