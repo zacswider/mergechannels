@@ -1,7 +1,7 @@
 use crate::cmaps;
 use crate::colorize;
 use crate::errors;
-use ndarray::{Array2, ArrayView2, ArrayView3};
+use ndarray::Array2;
 use numpy::{
     IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -11,6 +11,10 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 use pyo3::{Bound, Python};
 
+/// Parse and load a colormap from name or values
+///
+/// Attempts to load a colormap by name if provided, otherwise uses pre-defined values.
+/// Returns an error if neither a valid name nor values are provided.
 fn parse_cmap_from_args<'a>(
     cmap_name: &'a Option<String>,
     cmap_values: &'a Option<[[u8; 3]; 256]>,
@@ -25,6 +29,71 @@ fn parse_cmap_from_args<'a>(
             ),
         },
     }
+}
+
+/// Verify that all values in a slice are identical
+///
+/// Checks that all elements equal the first element. Returns the first element
+/// if all are equal, or an error if any differ.
+fn consensus_value<T>(dtypes: &[T]) -> Result<&T, String>
+where
+    T: PartialEq + std::fmt::Debug,
+{
+    let (first, rest) = dtypes.split_first().ok_or("No dtypes found".to_string())?;
+    if !rest.iter().all(|dtype| dtype == first) {
+        return Err(format!(
+            "Expected all arrays to have the same dtype, got {dtypes:?}"
+        ));
+    }
+    Ok(first)
+}
+
+/// Extract arrays from a Python iterable with a given type and dimensionality
+///
+/// Generic function that extracts readonly numpy arrays of any extractable type
+/// from a Python iterable. Works for both 2D and 3D arrays.
+fn extract_arrays<'py, T>(array_references: &Bound<'py, PyAny>) -> PyResult<Vec<T>>
+where
+    for<'a> T: pyo3::FromPyObject<'a, 'py>,
+{
+    let array_iterator = array_references
+        .try_iter()
+        .map_err(|_| PyValueError::new_err("Expected an iterable of arrays"))?;
+
+    let mut arrs: Vec<T> = Vec::new();
+    for (i, py_arr_ref) in array_iterator.enumerate() {
+        let item = py_arr_ref?;
+        let py_arr = item.extract::<T>().map_err(|_| {
+            let dtype = item
+                .getattr("dtype")
+                .map(|d| d.to_string())
+                .unwrap_or_else(|_| "unknown".to_string());
+            let shape = item
+                .getattr("shape")
+                .map(|s| s.to_string())
+                .unwrap_or_else(|_| "unknown".to_string());
+            PyValueError::new_err(format!(
+                "Failed to extract array at index {i}: got dtype={dtype}, shape={shape}"
+            ))
+        })?;
+        arrs.push(py_arr);
+    }
+    Ok(arrs)
+}
+
+/// Build channel configurations from arrays, colormaps, and limits
+///
+/// Zips together arrays, colormaps, and limit ranges to create ChannelConfig objects.
+fn build_configs<'a, A>(
+    arrays: impl Iterator<Item = A>,
+    cmaps: &[&'a [[u8; 3]; 256]],
+    limits: &[[f64; 2]],
+) -> Vec<colorize::ChannelConfig<'a, A>> {
+    arrays
+        .zip(cmaps.iter())
+        .zip(limits.iter())
+        .map(|((arr, &cmap), &limits)| colorize::ChannelConfig { arr, cmap, limits })
+        .collect()
 }
 
 /// Get a colormap array by name
@@ -50,6 +119,11 @@ pub fn get_cmap_array_py<'py>(
     Ok(arr.into_pyarray(py))
 }
 
+/// Colorize a single channel image
+///
+/// Applies a colormap to a single-channel 2D or 3D array and returns an RGB image.
+/// Supports uint8 and uint16 data types with optional parallel processing.
+/// Raises ValueError if the colormap name is invalid or array type is unsupported.
 #[pyfunction]
 #[pyo3(name = "dispatch_single_channel")]
 pub fn dispatch_single_channel_py<'py>(
@@ -69,13 +143,15 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_single_channel_8bit(arr, cmap, limits, parallel);
+                let config = colorize::ChannelConfigU82D { arr, cmap, limits };
+                let rgb = colorize::colorize_single_channel_8bit(config, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_stack_8bit(arr, cmap, limits, parallel);
+                let config = colorize::ChannelConfigU83D { arr, cmap, limits };
+                let rgb = colorize::colorize_stack_8bit(config, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
@@ -84,13 +160,15 @@ pub fn dispatch_single_channel_py<'py>(
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_single_channel_16bit(arr, cmap, limits, parallel);
+                let config = colorize::ChannelConfigU162D { arr, cmap, limits };
+                let rgb = colorize::colorize_single_channel_16bit(config, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
                 let arr = py_arr.as_array();
-                let rgb = colorize::colorize_stack_16bit(arr, cmap, limits, parallel);
+                let config = colorize::ChannelConfigU163D { arr, cmap, limits };
+                let rgb = colorize::colorize_stack_16bit(config, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
@@ -99,80 +177,12 @@ pub fn dispatch_single_channel_py<'py>(
     }
 }
 
-fn consensus_value<T>(dtypes: &[T]) -> Result<&T, String>
-where
-    T: PartialEq + std::fmt::Debug,
-{
-    let (first, rest) = dtypes.split_first().ok_or("No dtypes found".to_string())?;
-    if !rest.iter().all(|dtype| dtype == first) {
-        return Err(format!(
-            "Expected all arrays to have the same dtype, got {dtypes:?}"
-        ));
-    }
-    Ok(first)
-}
-
-fn extract_2d_u8_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray2<'py, u8>> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u8>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray2<u8>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-fn extract_3d_u8_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray3<'py, u8>> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u8>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray3<u8>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-fn extract_2d_u16_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray2<'py, u16>> {
-    let mut arrs: Vec<PyReadonlyArray2<'py, u16>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray2<u16>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-fn extract_3d_u16_arrays<'py>(
-    array_references: &Bound<'py, PyAny>,
-) -> Vec<PyReadonlyArray3<'py, u16>> {
-    let mut arrs: Vec<PyReadonlyArray3<'py, u16>> = Vec::new();
-    if let Ok(array_iterator) = array_references.try_iter() {
-        for py_arr_ref in array_iterator {
-            let py_arr = py_arr_ref
-                .unwrap()
-                .extract::<PyReadonlyArray3<u16>>()
-                .unwrap();
-            arrs.push(py_arr);
-        }
-    }
-    arrs
-}
-
+/// Merge and blend multiple single-channel images into an RGB composite
+///
+/// Colorizes multiple channels using specified colormaps and blends them together.
+/// Supports uint8 and uint16 data types with various blending modes.
+/// All arrays must have the same dimensionality (2D or 3D) and data type.
+/// Raises ValueError if colormaps are invalid or array properties are inconsistent.
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel")]
 pub fn dispatch_multi_channel_py<'py>(
@@ -215,34 +225,30 @@ pub fn dispatch_multi_channel_py<'py>(
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
-                let py_arrs = extract_2d_u8_arrays(array_references);
-                let arrs: Vec<ArrayView2<u8>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_2d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                let py_arrs: Vec<PyReadonlyArray2<u8>> = extract_arrays(array_references)?;
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
+                let rgb = colorize::merge_2d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
-                let py_arrs = extract_3d_u8_arrays(array_references);
-                let arrs: Vec<ArrayView3<u8>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_3d_u8(arrs, cmaps, blending, limits, parallel).unwrap();
+                let py_arrs: Vec<PyReadonlyArray3<u8>> = extract_arrays(array_references)?;
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
+                let rgb = colorize::merge_3d_u8(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
         },
         "uint16" => match ndim {
             2 => {
-                let py_arrs = extract_2d_u16_arrays(array_references);
-                let arrs: Vec<ArrayView2<u16>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_2d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
+                let py_arrs: Vec<PyReadonlyArray2<u16>> = extract_arrays(array_references)?;
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
+                let rgb = colorize::merge_2d_u16(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
-                let py_arrs = extract_3d_u16_arrays(array_references);
-                let arrs: Vec<ArrayView3<u16>> =
-                    py_arrs.iter().map(|py_arr| py_arr.as_array()).collect();
-                let rgb = colorize::merge_3d_u16(arrs, cmaps, blending, limits, parallel).unwrap();
+                let py_arrs: Vec<PyReadonlyArray3<u16>> = extract_arrays(array_references)?;
+                let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
+                let rgb = colorize::merge_3d_u16(configs, blending, parallel).unwrap();
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
