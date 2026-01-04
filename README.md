@@ -22,31 +22,6 @@ Build from source on your own machine:
 pip install git+https://github.com/zacswider/mergechannels.git
 ```
 
-## Dependencies
-Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
-
-| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
-|--------|--------|--------|-------|-------|-------|-------|-------|
-| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
-| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
-| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
-| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
-| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
-
-
-## Threading and Parallelism
-Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The extension declares itself thread-safe (`gil_used(false)`), so it won't re-enable the GIL in no-GIL builds, enabling true parallelism with Python's `ThreadPoolExecutor`.
-
-By default, `parallel=True` uses [Rayon](https://github.com/rayon-rs/rayon) for internal parallelization across image rows/planes. This also works well alongside Python threading.
-
-To configure Rayon's thread count, set the `RAYON_NUM_THREADS` environment variable **before** importing mergechannels:
-```python
-import os
-os.environ['RAYON_NUM_THREADS'] = '4'  # Must be set before import
-import mergechannels as mc
-```
 
 ## Usage
 *NOTE*: `skimage`, `matplotlib`, and `cmap` are not dependencies of this project, but are used in the examples below to fetch data/colormaps, and display images.
@@ -241,6 +216,34 @@ cmap_array = mc.get_cmap_array('betterBlue')
 print(cmap_array.shape, cmap_array.dtype)
 >> (256, 3) uint8
 ```
+
+
+## Dependencies
+Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
+
+| Python | 1.25.0 | 1.26.0 | 2.0.0 | 2.1.0 | 2.2.0 | 2.3.0 | 2.4.0 |
+|--------|--------|--------|-------|-------|-------|-------|-------|
+| 3.9    | ✅      | ✅      | ✅     | ❌     | ❌     | ❌     | ❌     |
+| 3.10   | ✅      | ✅      | ✅     | ✅     | ✅     | ❌     | ❌     |
+| 3.11   | ✅      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.12   | ❌      | ✅      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.13   | ❌      | ❌      | ✅     | ✅     | ✅     | ✅     | ✅     |
+| 3.14   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+| 3.14t   | ❌      | ❌      | ❌     | ❌     | ❌     | ❌     | ✅     |
+
+
+## Threading and Parallelism
+Mergechannels is fully compatible with free-threaded Python (3.13t/3.14t). The extension declares itself thread-safe (`gil_used(false)`), so it won't re-enable the GIL in no-GIL builds, enabling true parallelism with Python's `ThreadPoolExecutor`.
+
+By default, `parallel=True` uses [Rayon](https://github.com/rayon-rs/rayon) for internal parallelization across image rows/planes. This also works well alongside Python threading.
+
+To configure Rayon's thread count, set the `RAYON_NUM_THREADS` environment variable **before** importing mergechannels:
+```python
+import os
+os.environ['RAYON_NUM_THREADS'] = '4'  # Must be set before import
+import mergechannels as mc
+```
+
 
 ## Performance
 
