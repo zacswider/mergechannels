@@ -22,6 +22,146 @@ pub type ChannelConfigU83D<'a> = ChannelConfig<'a, ArrayView3<'a, u8>>;
 pub type ChannelConfigU162D<'a> = ChannelConfig<'a, ArrayView2<'a, u16>>;
 pub type ChannelConfigU163D<'a> = ChannelConfig<'a, ArrayView3<'a, u16>>;
 
+/// Configuration for a binary mask overlay
+/// The mask is applied on top of the merged result using alpha blending
+/// For bool masks: true = apply mask color, false = no change
+/// For i32 masks: any non-zero value = apply mask color, zero = no change
+pub struct MaskConfig<A> {
+    pub arr: A,
+    pub color: [u8; 3], // RGB color for the mask
+    pub alpha: f32,     // Alpha value for blending (0.0-1.0)
+}
+
+// Type aliases for mask configurations
+pub type MaskConfigBool2D<'a> = MaskConfig<ArrayView2<'a, bool>>;
+pub type MaskConfigBool3D<'a> = MaskConfig<ArrayView3<'a, bool>>;
+pub type MaskConfigI322D<'a> = MaskConfig<ArrayView2<'a, i32>>;
+pub type MaskConfigI323D<'a> = MaskConfig<ArrayView3<'a, i32>>;
+
+/// Enum to hold either bool or i32 mask types for 2D arrays
+#[allow(dead_code)] // Variants constructed via Python interface
+pub enum Mask2D<'a> {
+    Bool(MaskConfigBool2D<'a>),
+    I32(MaskConfigI322D<'a>),
+}
+
+/// Enum to hold either bool or i32 mask types for 3D arrays
+#[allow(dead_code)] // Variants constructed via Python interface
+pub enum Mask3D<'a> {
+    Bool(MaskConfigBool3D<'a>),
+    I32(MaskConfigI323D<'a>),
+}
+
+impl<'a> Mask2D<'a> {
+    #[inline]
+    pub fn is_active(&self, i: usize, j: usize) -> bool {
+        match self {
+            Mask2D::Bool(m) => m.arr[[i, j]],
+            Mask2D::I32(m) => m.arr[[i, j]] != 0,
+        }
+    }
+
+    #[inline]
+    pub fn color(&self) -> [u8; 3] {
+        match self {
+            Mask2D::Bool(m) => m.color,
+            Mask2D::I32(m) => m.color,
+        }
+    }
+
+    #[inline]
+    pub fn alpha(&self) -> f32 {
+        match self {
+            Mask2D::Bool(m) => m.alpha,
+            Mask2D::I32(m) => m.alpha,
+        }
+    }
+}
+
+impl<'a> Mask3D<'a> {
+    #[inline]
+    pub fn is_active(&self, n: usize, i: usize, j: usize) -> bool {
+        match self {
+            Mask3D::Bool(m) => m.arr[[n, i, j]],
+            Mask3D::I32(m) => m.arr[[n, i, j]] != 0,
+        }
+    }
+
+    #[inline]
+    pub fn color(&self) -> [u8; 3] {
+        match self {
+            Mask3D::Bool(m) => m.color,
+            Mask3D::I32(m) => m.color,
+        }
+    }
+
+    #[inline]
+    pub fn alpha(&self) -> f32 {
+        match self {
+            Mask3D::Bool(m) => m.alpha,
+            Mask3D::I32(m) => m.alpha,
+        }
+    }
+}
+
+/// Trait for optional mask application - allows monomorphization
+/// When M = NoMasks, the apply method is a no-op that compiles away
+/// When M = MaskSlice2D/MaskSlice3D, actual mask blending occurs
+trait MaskApplicator2D: Sync {
+    fn apply(&self, color: [u8; 3], y: usize, x: usize) -> [u8; 3];
+}
+
+trait MaskApplicator3D: Sync {
+    fn apply(&self, color: [u8; 3], n: usize, y: usize, x: usize) -> [u8; 3];
+}
+
+/// Wrapper for actual mask slice - performs blending
+struct MaskSlice2D<'a>(&'a [Mask2D<'a>]);
+
+impl<'a> MaskApplicator2D for MaskSlice2D<'a> {
+    #[inline]
+    fn apply(&self, mut color: [u8; 3], y: usize, x: usize) -> [u8; 3] {
+        for mask in self.0 {
+            if mask.is_active(y, x) {
+                color = blend::alpha_blend(color, mask.color(), mask.alpha());
+            }
+        }
+        color
+    }
+}
+
+struct MaskSlice3D<'a>(&'a [Mask3D<'a>]);
+
+impl<'a> MaskApplicator3D for MaskSlice3D<'a> {
+    #[inline]
+    fn apply(&self, mut color: [u8; 3], n: usize, y: usize, x: usize) -> [u8; 3] {
+        for mask in self.0 {
+            if mask.is_active(n, y, x) {
+                color = blend::alpha_blend(color, mask.color(), mask.alpha());
+            }
+        }
+        color
+    }
+}
+
+/// Zero-cost abstraction for "no masks" case - compiles to nothing
+#[derive(Clone, Copy)]
+struct NoMasks;
+
+impl MaskApplicator2D for NoMasks {
+    #[inline(always)]
+    fn apply(&self, color: [u8; 3], _y: usize, _x: usize) -> [u8; 3] {
+        color
+    }
+}
+
+impl MaskApplicator3D for NoMasks {
+    #[inline(always)]
+    fn apply(&self, color: [u8; 3], _n: usize, _y: usize, _x: usize) -> [u8; 3] {
+        color
+    }
+}
+
 /// Create a (y, x, 3) array with ones
 fn img_to_rgb<T>(a: ArrayView2<T>) -> Array3<u8> {
     Array::ones((a.shape()[0], a.shape()[1], 3))
