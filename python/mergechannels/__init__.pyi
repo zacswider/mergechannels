@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy as np
 
@@ -10,6 +16,7 @@ from mergechannels._luts import COLORMAPS
 if TYPE_CHECKING:
     from cmap import Colormap as CmapColormap
     from matplotlib.colors import Colormap as MatplotlibColormap
+    from matplotlib.colors import ListedColormap
     from nptyping import (
         NDArray,
         Shape,
@@ -17,6 +24,9 @@ if TYPE_CHECKING:
     )
 
 Number = Union[int, float]
+
+# Type alias for mask color specification
+MaskColor = Union[str, Tuple[int, int, int], Sequence[int]]
 
 def apply_color_map(
     arr: np.ndarray,
@@ -28,6 +38,9 @@ def apply_color_map(
     ],
     percentiles: tuple[Number, Number] | None = None,
     saturation_limits: tuple[Number, Number] | None = None,
+    masks: Sequence[np.ndarray] | np.ndarray | None = None,
+    mask_colors: Sequence[MaskColor] | MaskColor | None = None,
+    mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
 ) -> np.ndarray: ...
 def merge(
@@ -36,6 +49,9 @@ def merge(
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
+    masks: Sequence[np.ndarray] | np.ndarray | None = None,
+    mask_colors: Sequence[MaskColor] | MaskColor | None = None,
+    mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
 ) -> np.ndarray: ...
 def dispatch_single_channel(
@@ -48,6 +64,9 @@ def dispatch_single_channel(
         None,
     ],
     limits: tuple[Number, Number] | None = None,
+    mask_arrays: list[np.ndarray] | None = None,
+    mask_colors: list[Tuple[int, int, int]] | None = None,
+    mask_alphas: list[float] | None = None,
     parallel: bool = False,
 ) -> np.ndarray: ...
 def dispatch_multi_channel(
@@ -63,6 +82,10 @@ def dispatch_multi_channel(
     ],
     blending: Literal[BLENDING_OPTIONS],
     limits: Sequence[tuple[Number, Number]] | None = None,
+    mask_arrays: list[np.ndarray] | None = None,
+    mask_colors: list[Tuple[int, int, int]] | None = None,
+    mask_alphas: list[float] | None = None,
     parallel: bool = False,
 ) -> np.ndarray: ...
 def get_cmap_array(name: COLORMAPS) -> NDArray[Shape['256, 3'], UInt8]: ...
+def get_mpl_cmap(name: COLORMAPS) -> ListedColormap: ...
