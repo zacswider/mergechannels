@@ -64,10 +64,10 @@ def dispatch_single_channel(
         None,
     ],
     limits: tuple[Number, Number] | None = None,
+    parallel: bool = False,
     mask_arrays: list[np.ndarray] | None = None,
     mask_colors: list[Tuple[int, int, int]] | None = None,
     mask_alphas: list[float] | None = None,
-    parallel: bool = False,
 ) -> np.ndarray: ...
 def dispatch_multi_channel(
     array_references: Sequence[np.ndarray],
@@ -82,10 +82,10 @@ def dispatch_multi_channel(
     ],
     blending: Literal[BLENDING_OPTIONS],
     limits: Sequence[tuple[Number, Number]] | None = None,
+    parallel: bool = False,
     mask_arrays: list[np.ndarray] | None = None,
     mask_colors: list[Tuple[int, int, int]] | None = None,
     mask_alphas: list[float] | None = None,
-    parallel: bool = False,
 ) -> np.ndarray: ...
 def get_cmap_array(name: COLORMAPS) -> NDArray[Shape['256, 3'], UInt8]: ...
 def get_mpl_cmap(name: COLORMAPS) -> ListedColormap: ...

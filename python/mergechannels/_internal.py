@@ -389,10 +389,10 @@ def apply_color_map(
         cmap_name=cmap_name,
         cmap_values=cmap_values,
         limits=saturation_limits,
+        parallel=parallel,
         mask_arrays=masks_list,
         mask_colors=colors_list,
         mask_alphas=alphas_list,
-        parallel=parallel,
     )
 
 
@@ -512,10 +512,10 @@ def merge(
         cmap_values=cmap_values,
         blending=blending,
         limits=saturation_limits,  # type: ignore
+        parallel=parallel,
         mask_arrays=masks_list,
         mask_colors=colors_list,
         mask_alphas=alphas_list,
-        parallel=parallel,
     )
 
 
