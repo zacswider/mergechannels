@@ -198,6 +198,150 @@ impl<'py> ExtractedMasks3D<'py> {
     }
 }
 
+/// Extract 2D mask arrays from Python, handling both bool and i32 dtypes
+fn extract_masks_2d<'py>(
+    mask_arrays: Option<&Bound<'py, PyAny>>,
+    mask_colors: Option<Vec<[u8; 3]>>,
+    mask_alphas: Option<Vec<f32>>,
+) -> PyResult<Option<ExtractedMasks2D<'py>>> {
+    let mask_arrays = match mask_arrays {
+        Some(arr) => arr,
+        None => return Ok(None),
+    };
+
+    let mask_iterator = mask_arrays
+        .try_iter()
+        .map_err(|_| PyValueError::new_err("Expected an iterable of mask arrays"))?;
+
+    let colors = mask_colors.unwrap_or_default();
+    let alphas = mask_alphas.unwrap_or_default();
+
+    let mut extracted = ExtractedMasks2D::new();
+
+    for (i, mask_ref) in mask_iterator.enumerate() {
+        let mask_item = mask_ref?;
+        let untyped = mask_item.cast::<PyUntypedArray>()?;
+        let dtype = untyped.dtype().to_string();
+
+        let color = colors.get(i).copied().unwrap_or([128, 0, 128]); // default purple
+        let alpha = alphas.get(i).copied().unwrap_or(0.5);
+
+        // raise an error if we get an alpha value less than 0 or greater than 1
+        if alpha < 0.0 || alpha > 1.0 {
+            return Err(PyValueError::new_err(format!(
+                "Alpha value at index {} must be between 0 and 1, got {}",
+                i, alpha
+            )));
+        }
+
+        match dtype.as_str() {
+            "bool" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<bool>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract bool mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.bool_masks.len();
+                extracted.bool_masks.push(py_arr);
+                extracted.mask_info.push((true, idx, color, alpha));
+            }
+            "int32" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<i32>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract int32 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.i32_masks.len();
+                extracted.i32_masks.push(py_arr);
+                extracted.mask_info.push((false, idx, color, alpha));
+            }
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                )));
+            }
+        }
+    }
+
+    if extracted.mask_info.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(extracted))
+    }
+}
+
+/// Extract 3D mask arrays from Python, handling both bool and i32 dtypes
+fn extract_masks_3d<'py>(
+    mask_arrays: Option<&Bound<'py, PyAny>>,
+    mask_colors: Option<Vec<[u8; 3]>>,
+    mask_alphas: Option<Vec<f32>>,
+) -> PyResult<Option<ExtractedMasks3D<'py>>> {
+    let mask_arrays = match mask_arrays {
+        Some(arr) => arr,
+        None => return Ok(None),
+    };
+
+    let mask_iterator = mask_arrays
+        .try_iter()
+        .map_err(|_| PyValueError::new_err("Expected an iterable of mask arrays"))?;
+
+    let colors = mask_colors.unwrap_or_default();
+    let alphas = mask_alphas.unwrap_or_default();
+
+    let mut extracted = ExtractedMasks3D::new();
+
+    for (i, mask_ref) in mask_iterator.enumerate() {
+        let mask_item = mask_ref?;
+        let untyped = mask_item.cast::<PyUntypedArray>()?;
+        let dtype = untyped.dtype().to_string();
+
+        let color = colors.get(i).copied().unwrap_or([128, 0, 128]);
+        let alpha = alphas.get(i).copied().unwrap_or(0.5);
+
+        // raise an error if we get an alpha value less than 0 or greater than 1
+        if alpha < 0.0 || alpha > 1.0 {
+            return Err(PyValueError::new_err(format!(
+                "Alpha value at index {} must be between 0 and 1, got {}",
+                i, alpha
+            )));
+        }
+
+        match dtype.as_str() {
+            "bool" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray3<bool>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract bool mask at index {i} as 3D array"
+                    ))
+                })?;
+                let idx = extracted.bool_masks.len();
+                extracted.bool_masks.push(py_arr);
+                extracted.mask_info.push((true, idx, color, alpha));
+            }
+            "int32" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray3<i32>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract int32 mask at index {i} as 3D array"
+                    ))
+                })?;
+                let idx = extracted.i32_masks.len();
+                extracted.i32_masks.push(py_arr);
+                extracted.mask_info.push((false, idx, color, alpha));
+            }
+            _ => {
+                return Err(PyValueError::new_err(format!(
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                )));
+            }
+        }
+    }
+
+    if extracted.mask_info.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(extracted))
+    }
+}
+
 /// Get a colormap array by name
 ///
 /// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
