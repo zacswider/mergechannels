@@ -110,7 +110,7 @@ trait MaskApplicator3D: Sync {
 }
 
 /// Wrapper for actual mask slice - performs blending
-struct MaskSlice2D<'a>(&'a [Mask2D<'a>]);
+struct MaskSlice2D<'a>(&'a [MaskConfig2D<'a>]);
 
 impl<'a> MaskApplicator2D for MaskSlice2D<'a> {
     #[inline]
@@ -124,7 +124,7 @@ impl<'a> MaskApplicator2D for MaskSlice2D<'a> {
     }
 }
 
-struct MaskSlice3D<'a>(&'a [Mask3D<'a>]);
+struct MaskSlice3D<'a>(&'a [MaskConfig3D<'a>]);
 
 impl<'a> MaskApplicator3D for MaskSlice3D<'a> {
     #[inline]
