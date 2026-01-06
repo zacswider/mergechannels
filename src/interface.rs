@@ -369,9 +369,10 @@ pub fn get_cmap_array_py<'py>(
 ///
 /// Applies a colormap to a single-channel 2D or 3D array and returns an RGB image.
 /// Supports uint8 and uint16 data types with optional parallel processing.
+/// Optional masks can overlay colored regions with alpha blending.
 /// Raises ValueError if the colormap name is invalid or array type is unsupported.
 #[pyfunction]
-#[pyo3(name = "dispatch_single_channel")]
+#[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None))]
 pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
@@ -379,25 +380,42 @@ pub fn dispatch_single_channel_py<'py>(
     cmap_values: Option<[[u8; 3]; 256]>,
     limits: [f64; 2],
     parallel: bool,
+    mask_arrays: Option<&Bound<'py, PyAny>>,
+    mask_colors: Option<Vec<[u8; 3]>>,
+    mask_alphas: Option<Vec<f32>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
     let ndim = untyped_array.ndim();
     let cmap = parse_cmap_from_args(&cmap_name, &cmap_values).map_err(PyValueError::new_err)?;
+
     match dtype.as_str() {
         "uint8" => match ndim {
             2 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU82D { arr, cmap, limits };
-                let rgb = colorize::colorize_single_channel_8bit(config, parallel);
+
+                // read-only views into python memory - these must live until the function returns
+                let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
+                // owned vec of ArrayView2 into numpy array
+                let masks = extracted.as_ref().map(|e| e.build_masks());
+                // just pass a reference to the vec to the colorize function
+                let masks_slice = masks.as_deref();
+
+                let rgb = colorize::colorize_single_channel_8bit(config, masks_slice, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u8>>()?;
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU83D { arr, cmap, limits };
-                let rgb = colorize::colorize_stack_8bit(config, parallel);
+
+                let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
+                let masks = extracted.as_ref().map(|e| e.build_masks());
+                let masks_slice = masks.as_deref();
+
+                let rgb = colorize::colorize_stack_8bit(config, masks_slice, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
@@ -407,14 +425,24 @@ pub fn dispatch_single_channel_py<'py>(
                 let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU162D { arr, cmap, limits };
-                let rgb = colorize::colorize_single_channel_16bit(config, parallel);
+
+                let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
+                let masks = extracted.as_ref().map(|e| e.build_masks());
+                let masks_slice = masks.as_deref();
+
+                let rgb = colorize::colorize_single_channel_16bit(config, masks_slice, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             3 => {
                 let py_arr = array_reference.extract::<PyReadonlyArray3<u16>>()?;
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU163D { arr, cmap, limits };
-                let rgb = colorize::colorize_stack_16bit(config, parallel);
+
+                let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
+                let masks = extracted.as_ref().map(|e| e.build_masks());
+                let masks_slice = masks.as_deref();
+
+                let rgb = colorize::colorize_stack_16bit(config, masks_slice, parallel);
                 Ok(rgb.into_dyn().into_pyarray(py))
             }
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into()),
