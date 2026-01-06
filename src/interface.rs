@@ -123,20 +123,20 @@ impl<'py> ExtractedMasks2D<'py> {
         }
     }
 
-    /// Build Mask2D vec from the extracted arrays
+    /// Build MaskConfig2D slice from the extracted arrays
     /// The returned Vec borrows from self, so self must outlive the returned masks
-    fn build_masks<'a>(&'a self) -> Vec<colorize::Mask2D<'a>> {
+    fn build_masks<'a>(&'a self) -> Vec<colorize::MaskConfig2D<'a>> {
         self.mask_info
             .iter()
             .map(|&(is_bool, idx, color, alpha)| {
                 if is_bool {
-                    colorize::Mask2D::Bool(colorize::MaskConfig {
+                    colorize::MaskConfig2D::Bool(colorize::MaskConfig {
                         arr: self.bool_masks[idx].as_array(),
                         color,
                         alpha,
                     })
                 } else {
-                    colorize::Mask2D::I32(colorize::MaskConfig {
+                    colorize::MaskConfig2D::I32(colorize::MaskConfig {
                         arr: self.i32_masks[idx].as_array(),
                         color,
                         alpha,
@@ -176,18 +176,18 @@ impl<'py> ExtractedMasks3D<'py> {
 
     /// Build Mask2D vec from the extracted arrays
     /// The returned Vec borrows from self, so self must outlive the returned masks
-    fn build_masks<'a>(&'a self) -> Vec<colorize::Mask3D<'a>> {
+    fn build_masks<'a>(&'a self) -> Vec<colorize::MaskConfig3D<'a>> {
         self.mask_info
             .iter()
             .map(|&(is_bool, idx, color, alpha)| {
                 if is_bool {
-                    colorize::Mask3D::Bool(colorize::MaskConfig {
+                    colorize::MaskConfig3D::Bool(colorize::MaskConfig {
                         arr: self.bool_masks[idx].as_array(),
                         color,
                         alpha,
                     })
                 } else {
-                    colorize::Mask3D::I32(colorize::MaskConfig {
+                    colorize::MaskConfig3D::I32(colorize::MaskConfig {
                         arr: self.i32_masks[idx].as_array(),
                         color,
                         alpha,
