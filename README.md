@@ -5,7 +5,7 @@
 
 # mergechannels
 
-This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things likes speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust (success! mergechannels is typically several times faster than matplotlib).
+This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things like speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust (success! mergechannels is typically several times faster than matplotlib).
 
 The current goal of this library is to be a simple, fast, and memory-efficient way to apply and blend colormaps to images. The api should be intuitive, flexible, and simple. If this is not the case in your hands, please open an issue.
 
@@ -28,7 +28,7 @@ pip install git+https://github.com/zacswider/mergechannels.git
 
 
 ### Apply a different colormap to each channel
-The primary entrypoint for merging multiple channels is with `mergechannels.merge`. This function expects a sequence of arrays, a sequence of colormaps, a blending approach, and optionally a sequence of pre-determined saturation limits. The arrays is expected to be either u8 or u16 and 2 or 3D.
+The primary entrypoint for merging multiple channels is with `mergechannels.merge`. This function expects a sequence of arrays, a sequence of colormaps, a blending approach, and optionally a sequence of pre-determined saturation limits. The arrays are expected to be either u8 or u16 and 2 or 3D.
 
 ```python
 from skimage import data
@@ -72,7 +72,7 @@ c.imshow(mc.merge([nuclei, cells], [blue, copper]))
 The `blending` argument to `mergechannels.merge` can be one of the following:
 - `'max'`: the maximum RGB value of each pixel is used. This is the default (and intuitive) behavior.
 - `'min'`: the minimum RGB value of each pixel is used. This is useful when combining inverted colormaps.
-- `'mean'`: the mean RGB value of each pixel is used. This is typically most useful when combinding fluorescence with brightfield, but can often require re-scaling the images after blending.
+- `'mean'`: the mean RGB value of each pixel is used. This is typically most useful when combining fluorescence with brightfield, but can often require re-scaling the images after blending.
 - `'sum'`: the sum of the RGB values of each pixel is used (saturating). Results in high saturation images but can often be overwhelming and difficult to interpret.
 
 The default and intuitive behavior is the use `'max'` blending, but oftentimes minimum blending is desired when combining inverted colormaps.
@@ -92,7 +92,7 @@ c.imshow(mc.merge([cells, nuclei],['I Blue', 'I Forest'], blending='min'))
 ![minimum blending with inverted colormaps](https://raw.githubusercontent.com/zacswider/README_Images/main/inverted_blending.png)
 
 #### Control display brightness
-If desired, pre-determined saturation limits can be passed to `apply_color_map` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling). The default behavior is to calculate use the 1.1th percentile value as the dark point and the 99.9th percentile as the bright point.
+If desired, pre-determined saturation limits can be passed to `apply_color_map` or `merge` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling"). The default behavior is to calculate use the 1.1th percentile value as the dark point and the 99.9th percentile as the bright point.
 
 ```python
 from skimage import data
@@ -129,7 +129,7 @@ c.imshow(
     ),
 )
 ```
-![adjust the brightness with explicit of percentile based approaches](https://raw.githubusercontent.com/zacswider/README_Images/main/brightness_adjust.png)
+![adjust the brightness with explicit or percentile based approaches](https://raw.githubusercontent.com/zacswider/README_Images/main/brightness_adjust.png)
 
 
 NOTE: if you are already working with appropriately scaled u8 images, you will see ~10X performance improvements (relative to the mergechannels and matplotlib naive default implementations) by passing `saturation_limits=(0, 255)` as this significantly reduces the amount of arithmetic done per pixel.
@@ -151,7 +151,7 @@ plt.imshow(merged[24]); plt.show()
 
 
 ### colorize a single image
-The primary entrypoint to applying a colormap to a single image is with `apply_color_map`. this function takes an array, a colormap, and an optional percentiles argument. The arrays is expected to be either u8 or u16 and 2 or 3D.
+The primary entrypoint to applying a colormap to a single image is with `apply_color_map`. this function takes an array, a colormap, and an optional percentiles argument. The array is expected to be either u8 or u16 and 2 or 3D.
 
 ```python
 from skimage import data
@@ -267,7 +267,7 @@ labels = np.asarray(measure.label(ndimage.binary_fill_holes(thresh)))
 mean_nuclei_inten = threshold_otsu(nuclei[thresh])
 label_vals = [l for l in np.unique(labels) if l!=0]
 
-# categrorize two different types of nuclei masks
+# categorize two different types of nuclei masks
 def only_keep_these_labels(arr, labels):
     out = arr.copy()
     mask = np.isin(out, labels)
