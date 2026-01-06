@@ -109,6 +109,24 @@ trait MaskApplicator3D: Sync {
     fn apply(&self, color: [u8; 3], n: usize, y: usize, x: usize) -> [u8; 3];
 }
 
+/// Zero-cost abstraction for "no masks" case - compiles to nothing
+#[derive(Clone, Copy)]
+struct NoMasks;
+
+impl MaskApplicator2D for NoMasks {
+    #[inline(always)]
+    fn apply(&self, color: [u8; 3], _y: usize, _x: usize) -> [u8; 3] {
+        color
+    }
+}
+
+impl MaskApplicator3D for NoMasks {
+    #[inline(always)]
+    fn apply(&self, color: [u8; 3], _n: usize, _y: usize, _x: usize) -> [u8; 3] {
+        color
+    }
+}
+
 /// Wrapper for actual mask slice - performs blending
 struct MaskSlice2D<'a>(&'a [MaskConfig2D<'a>]);
 
@@ -134,24 +152,6 @@ impl<'a> MaskApplicator3D for MaskSlice3D<'a> {
                 color = blend::alpha_blend(color, mask.color(), mask.alpha());
             }
         }
-        color
-    }
-}
-
-/// Zero-cost abstraction for "no masks" case - compiles to nothing
-#[derive(Clone, Copy)]
-struct NoMasks;
-
-impl MaskApplicator2D for NoMasks {
-    #[inline(always)]
-    fn apply(&self, color: [u8; 3], _y: usize, _x: usize) -> [u8; 3] {
-        color
-    }
-}
-
-impl MaskApplicator3D for NoMasks {
-    #[inline(always)]
-    fn apply(&self, color: [u8; 3], _n: usize, _y: usize, _x: usize) -> [u8; 3] {
         color
     }
 }
