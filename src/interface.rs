@@ -371,6 +371,7 @@ pub fn get_cmap_array_py<'py>(
 /// Supports uint8 and uint16 data types with optional parallel processing.
 /// Optional masks can overlay colored regions with alpha blending.
 /// Raises ValueError if the colormap name is invalid or array type is unsupported.
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None))]
 pub fn dispatch_single_channel_py<'py>(
@@ -458,6 +459,7 @@ pub fn dispatch_single_channel_py<'py>(
 /// Optional masks can overlay colored regions with alpha blending on the final result.
 /// All arrays must have the same dimensionality (2D or 3D) and data type.
 /// Raises ValueError if colormaps are invalid or array properties are inconsistent.
+#[allow(clippy::too_many_arguments)]
 #[pyfunction]
 #[pyo3(name = "dispatch_multi_channel", signature = (array_references, cmap_names, cmap_values, blending, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None))]
 pub fn dispatch_multi_channel_py<'py>(
