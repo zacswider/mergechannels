@@ -46,54 +46,54 @@ pub enum MaskConfig3D<'a> {
     I32(MaskConfig<ArrayView3<'a, i32>>),
 }
 
-impl<'a> Mask2D<'a> {
+impl<'a> MaskConfig2D<'a> {
     #[inline]
     pub fn is_active(&self, i: usize, j: usize) -> bool {
         match self {
-            Mask2D::Bool(m) => m.arr[[i, j]],
-            Mask2D::I32(m) => m.arr[[i, j]] != 0,
+            MaskConfig2D::Bool(m) => m.arr[[i, j]],
+            MaskConfig2D::I32(m) => m.arr[[i, j]] != 0,
         }
     }
 
     #[inline]
     pub fn color(&self) -> [u8; 3] {
         match self {
-            Mask2D::Bool(m) => m.color,
-            Mask2D::I32(m) => m.color,
+            MaskConfig2D::Bool(m) => m.color,
+            MaskConfig2D::I32(m) => m.color,
         }
     }
 
     #[inline]
     pub fn alpha(&self) -> f32 {
         match self {
-            Mask2D::Bool(m) => m.alpha,
-            Mask2D::I32(m) => m.alpha,
+            MaskConfig2D::Bool(m) => m.alpha,
+            MaskConfig2D::I32(m) => m.alpha,
         }
     }
 }
 
-impl<'a> Mask3D<'a> {
+impl<'a> MaskConfig3D<'a> {
     #[inline]
     pub fn is_active(&self, n: usize, i: usize, j: usize) -> bool {
         match self {
-            Mask3D::Bool(m) => m.arr[[n, i, j]],
-            Mask3D::I32(m) => m.arr[[n, i, j]] != 0,
+            MaskConfig3D::Bool(m) => m.arr[[n, i, j]],
+            MaskConfig3D::I32(m) => m.arr[[n, i, j]] != 0,
         }
     }
 
     #[inline]
     pub fn color(&self) -> [u8; 3] {
         match self {
-            Mask3D::Bool(m) => m.color,
-            Mask3D::I32(m) => m.color,
+            MaskConfig3D::Bool(m) => m.color,
+            MaskConfig3D::I32(m) => m.color,
         }
     }
 
     #[inline]
     pub fn alpha(&self) -> f32 {
         match self {
-            Mask3D::Bool(m) => m.alpha,
-            Mask3D::I32(m) => m.alpha,
+            MaskConfig3D::Bool(m) => m.alpha,
+            MaskConfig3D::I32(m) => m.alpha,
         }
     }
 }
