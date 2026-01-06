@@ -2,9 +2,9 @@ use smallvec::SmallVec;
 
 pub const MAX_N_CH: usize = 5;
 
-pub type BlendFn = fn(&SmallVec<[[u8; 3]; 5]>) -> [u8; 3];
+pub type BlendFn = fn(&SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3];
 
-pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
+pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3] {
     let mut r: u8 = 0;
     let mut g: u8 = 0;
     let mut b: u8 = 0;
@@ -22,7 +22,7 @@ pub fn max_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     [r, g, b]
 }
 
-pub fn sum_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
+pub fn sum_blending(px_vals: &SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3] {
     let mut r: u8 = 0;
     let mut g: u8 = 0;
     let mut b: u8 = 0;
@@ -34,7 +34,7 @@ pub fn sum_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     [r, g, b]
 }
 
-pub fn min_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
+pub fn min_blending(px_vals: &SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3] {
     let mut r: u8 = 255;
     let mut g: u8 = 255;
     let mut b: u8 = 255;
@@ -52,7 +52,7 @@ pub fn min_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
     [r, g, b]
 }
 
-pub fn mean_blending(px_vals: &SmallVec<[[u8; 3]; 5]>) -> [u8; 3] {
+pub fn mean_blending(px_vals: &SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3] {
     let mut r: u16 = 0;
     let mut g: u16 = 0;
     let mut b: u16 = 0;
