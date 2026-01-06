@@ -112,6 +112,15 @@ struct ExtractedMasks2D<'py> {
         f32,     // the alpha blending value
     )>,
 }
+
+impl<'py> ExtractedMasks2D<'py> {
+    fn new() -> Self {
+        Self {
+            bool_masks: Vec::new(),
+            i32_masks: Vec::new(),
+            mask_info: Vec::new(),
+        }
+    }
 /// Container for extracted 3D mask arrays to manage lifetimes
 /// Contains separate vectors (bool and i32) of read-only references to python memory which must
 /// live until the end of the function call. The "extracted arrays" are held separately to ensure
@@ -128,6 +137,15 @@ struct ExtractedMasks3D<'py> {
         f32,     // the alpha blending value
     )>,
 }
+
+impl<'py> ExtractedMasks3D<'py> {
+    fn new() -> Self {
+        Self {
+            bool_masks: Vec::new(),
+            i32_masks: Vec::new(),
+            mask_info: Vec::new(),
+        }
+    }
 /// Get a colormap array by name
 ///
 /// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
