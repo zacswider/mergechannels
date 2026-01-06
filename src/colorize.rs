@@ -32,24 +32,18 @@ pub struct MaskConfig<A> {
     pub alpha: f32,     // Alpha value for blending (0.0-1.0)
 }
 
-// Type aliases for mask configurations
-pub type MaskConfigBool2D<'a> = MaskConfig<ArrayView2<'a, bool>>;
-pub type MaskConfigBool3D<'a> = MaskConfig<ArrayView3<'a, bool>>;
-pub type MaskConfigI322D<'a> = MaskConfig<ArrayView2<'a, i32>>;
-pub type MaskConfigI323D<'a> = MaskConfig<ArrayView3<'a, i32>>;
-
 /// Enum to hold either bool or i32 mask types for 2D arrays
 #[allow(dead_code)] // Variants constructed via Python interface
-pub enum Mask2D<'a> {
-    Bool(MaskConfigBool2D<'a>),
-    I32(MaskConfigI322D<'a>),
+pub enum MaskConfig2D<'a> {
+    Bool(MaskConfig<ArrayView2<'a, bool>>),
+    I32(MaskConfig<ArrayView2<'a, i32>>),
 }
 
 /// Enum to hold either bool or i32 mask types for 3D arrays
 #[allow(dead_code)] // Variants constructed via Python interface
-pub enum Mask3D<'a> {
-    Bool(MaskConfigBool3D<'a>),
-    I32(MaskConfigI323D<'a>),
+pub enum MaskConfig3D<'a> {
+    Bool(MaskConfig<ArrayView3<'a, bool>>),
+    I32(MaskConfig<ArrayView3<'a, i32>>),
 }
 
 impl<'a> Mask2D<'a> {
