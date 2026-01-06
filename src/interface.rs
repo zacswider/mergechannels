@@ -227,7 +227,7 @@ fn extract_masks_2d<'py>(
         let alpha = alphas.get(i).copied().unwrap_or(0.5);
 
         // raise an error if we get an alpha value less than 0 or greater than 1
-        if alpha < 0.0 || alpha > 1.0 {
+        if !(0.0..=1.0).contains(&alpha) {
             return Err(PyValueError::new_err(format!(
                 "Alpha value at index {} must be between 0 and 1, got {}",
                 i, alpha
@@ -299,7 +299,7 @@ fn extract_masks_3d<'py>(
         let alpha = alphas.get(i).copied().unwrap_or(0.5);
 
         // raise an error if we get an alpha value less than 0 or greater than 1
-        if alpha < 0.0 || alpha > 1.0 {
+        if !(0.0..=1.0).contains(&alpha) {
             return Err(PyValueError::new_err(format!(
                 "Alpha value at index {} must be between 0 and 1, got {}",
                 i, alpha
