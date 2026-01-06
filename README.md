@@ -17,7 +17,7 @@ Install pre-compiled binaries from [PyPI](https://pypi.org/project/mergechannels
 pip install mergechannels
 ```
 
-Build from source on your own machine:
+Build from source on your own machine (requires [Rust toolchain](https://rustup.rs/)):
 ```bash
 pip install git+https://github.com/zacswider/mergechannels.git
 ```
