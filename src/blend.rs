@@ -1,6 +1,6 @@
 use smallvec::SmallVec;
 
-pub const MAX_N_CH: usize = 12;
+pub const MAX_N_CH: usize = 8;
 
 pub type BlendFn = fn(&SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3];
 
