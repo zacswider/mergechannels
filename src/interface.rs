@@ -114,6 +114,7 @@ struct ExtractedMasks2D<'py> {
 }
 
 impl<'py> ExtractedMasks2D<'py> {
+    /// Create a new instance
     fn new() -> Self {
         Self {
             bool_masks: Vec::new(),
@@ -121,6 +122,31 @@ impl<'py> ExtractedMasks2D<'py> {
             mask_info: Vec::new(),
         }
     }
+
+    /// Build Mask2D vec from the extracted arrays
+    /// The returned Vec borrows from self, so self must outlive the returned masks
+    fn build_masks<'a>(&'a self) -> Vec<colorize::Mask2D<'a>> {
+        self.mask_info
+            .iter()
+            .map(|&(is_bool, idx, color, alpha)| {
+                if is_bool {
+                    colorize::Mask2D::Bool(colorize::MaskConfig {
+                        arr: self.bool_masks[idx].as_array(),
+                        color,
+                        alpha,
+                    })
+                } else {
+                    colorize::Mask2D::I32(colorize::MaskConfig {
+                        arr: self.i32_masks[idx].as_array(),
+                        color,
+                        alpha,
+                    })
+                }
+            })
+            .collect()
+    }
+}
+
 /// Container for extracted 3D mask arrays to manage lifetimes
 /// Contains separate vectors (bool and i32) of read-only references to python memory which must
 /// live until the end of the function call. The "extracted arrays" are held separately to ensure
@@ -139,6 +165,7 @@ struct ExtractedMasks3D<'py> {
 }
 
 impl<'py> ExtractedMasks3D<'py> {
+    /// Create a new instance
     fn new() -> Self {
         Self {
             bool_masks: Vec::new(),
@@ -146,6 +173,31 @@ impl<'py> ExtractedMasks3D<'py> {
             mask_info: Vec::new(),
         }
     }
+
+    /// Build Mask2D vec from the extracted arrays
+    /// The returned Vec borrows from self, so self must outlive the returned masks
+    fn build_masks<'a>(&'a self) -> Vec<colorize::Mask3D<'a>> {
+        self.mask_info
+            .iter()
+            .map(|&(is_bool, idx, color, alpha)| {
+                if is_bool {
+                    colorize::Mask3D::Bool(colorize::MaskConfig {
+                        arr: self.bool_masks[idx].as_array(),
+                        color,
+                        alpha,
+                    })
+                } else {
+                    colorize::Mask3D::I32(colorize::MaskConfig {
+                        arr: self.i32_masks[idx].as_array(),
+                        color,
+                        alpha,
+                    })
+                }
+            })
+            .collect()
+    }
+}
+
 /// Get a colormap array by name
 ///
 /// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
