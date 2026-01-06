@@ -96,6 +96,38 @@ fn build_configs<'a, A>(
         .collect()
 }
 
+/// Container for extracted 2D mask arrays to manage lifetimes
+/// Contains separate vectors (bool and i32) of read-only references to python memory which must
+/// live until the end of the function call. The "extracted arrays" are held separately to ensure
+/// that their data remains valid and referenced where needed.
+struct ExtractedMasks2D<'py> {
+    bool_masks: Vec<PyReadonlyArray2<'py, bool>>,
+    i32_masks: Vec<PyReadonlyArray2<'py, i32>>,
+    /// mask_info tracks metadata about each array
+    /// for (is_bool, idx, color, alpha) in &vec {...}
+    mask_info: Vec<(
+        bool,    // whether the array is bool. If not, it must be i32
+        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
+        [u8; 3], // the RGB color to use for the mask
+        f32,     // the alpha blending value
+    )>,
+}
+/// Container for extracted 3D mask arrays to manage lifetimes
+/// Contains separate vectors (bool and i32) of read-only references to python memory which must
+/// live until the end of the function call. The "extracted arrays" are held separately to ensure
+/// that their data remains valid and referenced where needed.
+struct ExtractedMasks3D<'py> {
+    bool_masks: Vec<PyReadonlyArray3<'py, bool>>,
+    i32_masks: Vec<PyReadonlyArray3<'py, i32>>,
+    /// mask_info tracks metadata about each array
+    /// for (is_bool, idx, color, alpha) in &vec {...}
+    mask_info: Vec<(
+        bool,    // whether the array is bool. If not, it must be i32
+        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
+        [u8; 3], // the RGB color to use for the mask
+        f32,     // the alpha blending value
+    )>,
+}
 /// Get a colormap array by name
 ///
 /// Returns a (256, 3) numpy array of uint8 RGB values for the specified colormap.
