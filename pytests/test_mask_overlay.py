@@ -202,3 +202,186 @@ class TestMaskOverlayU16:
         assert result[1, 0, 0] == blended[0]
         assert result[1, 2, 0] == blended[0]
         assert result[2, 1, 0] == blended[0]
+
+
+class TestMaskOverlaySerialVsParallel:
+    """Test that serial and parallel mask overlay produce identical results."""
+
+    def test_u8_serial_vs_parallel(self, arr_u8, mask_i32):
+        """Test that serial and parallel produce identical results for u8 arrays."""
+        mask = mask_i32.astype(bool)
+
+        serial_result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+            parallel=False,
+        )
+
+        parallel_result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+            parallel=True,
+        )
+
+        assert np.array_equal(serial_result, parallel_result)
+
+    def test_u16_serial_vs_parallel(self, arr_u16, mask_i32):
+        """Test that serial and parallel produce identical results for u16 arrays."""
+        mask = mask_i32.astype(bool)
+
+        serial_result = mc.apply_color_map(
+            arr_u16,
+            'Grays',
+            saturation_limits=(0, 65535),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+            parallel=False,
+        )
+
+        parallel_result = mc.apply_color_map(
+            arr_u16,
+            'Grays',
+            saturation_limits=(0, 65535),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+            parallel=True,
+        )
+
+        assert np.array_equal(serial_result, parallel_result)
+
+
+class TestMaskOverlayNamedColors:
+    """Test mask overlay with named colormap colors."""
+
+    def test_named_color_from_colormap(self, arr_u8, mask_i32):
+        """Test mask color specified as a colormap name uses index 255."""
+        mask = mask_i32.astype(bool)
+
+        # 'betterBlue' at index 255 is [0, 188, 254]
+        blue_color = (0, 188, 254)
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, blue_color, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=['betterBlue'],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask != 0 should be blended with blue
+        assert result[0, 1, 0] == blended[0]  # R channel
+        assert result[0, 1, 1] == blended[1]  # G channel
+        assert result[0, 1, 2] == blended[2]  # B channel
+
+    def test_hex_color_full(self, arr_u8, mask_i32):
+        """Test mask color specified as a full hex string."""
+        mask = mask_i32.astype(bool)
+
+        # '#FF0000' is red
+        red_color = (255, 0, 0)
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, red_color, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=['#FF0000'],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask != 0 should be blended with red
+        assert result[0, 1, 0] == blended[0]  # R channel
+        assert result[0, 1, 1] == blended[1]  # G channel
+        assert result[0, 1, 2] == blended[2]  # B channel
+
+    def test_hex_color_shorthand(self, arr_u8, mask_i32):
+        """Test mask color specified as a shorthand hex string."""
+        mask = mask_i32.astype(bool)
+
+        # 'f00' is red (shorthand for FF0000)
+        red_color = (255, 0, 0)
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, red_color, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=['f00'],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask != 0 should be blended with red
+        assert result[0, 1, 0] == blended[0]
+        assert result[0, 1, 1] == blended[1]
+        assert result[0, 1, 2] == blended[2]
+
+
+class TestMaskOverlayMultipleMasks:
+    """Test mask overlay with multiple masks."""
+
+    def test_two_masks_different_colors(self, arr_u8):
+        """Test two non-overlapping masks with different colors."""
+        # Create two non-overlapping masks
+        mask1 = np.array(
+            [
+                [True, False, False],
+                [False, False, False],
+                [False, False, False],
+            ],
+            dtype=bool,
+        )
+        mask2 = np.array(
+            [
+                [False, False, False],
+                [False, False, False],
+                [False, False, True],
+            ],
+            dtype=bool,
+        )
+
+        red = (255, 0, 0)
+        green = (0, 255, 0)
+        base_color = (100, 100, 100)
+        blended_red = alpha_blend(base_color, red, ALPHA)
+        blended_green = alpha_blend(base_color, green, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask1, mask2],
+            mask_colors=[red, green],
+            mask_alphas=[ALPHA, ALPHA],
+        )
+
+        # Pixel at [0,0] should be blended with red
+        assert result[0, 0, 0] == blended_red[0]
+        assert result[0, 0, 1] == blended_red[1]
+        assert result[0, 0, 2] == blended_red[2]
+
+        # Pixel at [2,2] should be blended with green
+        assert result[2, 2, 0] == blended_green[0]
+        assert result[2, 2, 1] == blended_green[1]
+        assert result[2, 2, 2] == blended_green[2]
+
+        # Pixel at [1,1] should be unchanged (no mask)
+        assert result[1, 1, 0] == base_color[0]
+        assert result[1, 1, 1] == base_color[1]
+        assert result[1, 1, 2] == base_color[2]
