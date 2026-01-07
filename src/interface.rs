@@ -97,20 +97,30 @@ fn build_configs<'a, A>(
         .collect()
 }
 
+/// Enum to track which dtype vector a mask belongs to
+#[derive(Clone, Copy)]
+enum MaskDtype {
+    Bool,
+    I32,
+    U8,
+    U16,
+}
+
 /// Container for extracted 2D mask arrays to manage lifetimes
-/// Contains separate vectors (bool and i32) of read-only references to python memory which must
+/// Contains separate vectors for each dtype of read-only references to python memory which must
 /// live until the end of the function call. The "extracted arrays" are held separately to ensure
 /// that their data remains valid and referenced where needed.
 struct ExtractedMasks2D<'py> {
     bool_masks: Vec<PyReadonlyArray2<'py, bool>>,
     i32_masks: Vec<PyReadonlyArray2<'py, i32>>,
+    u8_masks: Vec<PyReadonlyArray2<'py, u8>>,
+    u16_masks: Vec<PyReadonlyArray2<'py, u16>>,
     /// mask_info tracks metadata about each array
-    /// for (is_bool, idx, color, alpha) in &vec {...}
     mask_info: Vec<(
-        bool,    // whether the array is bool. If not, it must be i32
-        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
-        [u8; 3], // the RGB color to use for the mask
-        f32,     // the alpha blending value
+        MaskDtype, // which dtype vector this mask belongs to
+        usize,     // the index of the array in the appropriate vector
+        [u8; 3],   // the RGB color to use for the mask
+        f32,       // the alpha blending value
     )>,
 }
 
@@ -120,6 +130,8 @@ impl<'py> ExtractedMasks2D<'py> {
         Self {
             bool_masks: Vec::new(),
             i32_masks: Vec::new(),
+            u8_masks: Vec::new(),
+            u16_masks: Vec::new(),
             mask_info: Vec::new(),
         }
     }
@@ -155,13 +167,14 @@ impl<'py> ExtractedMasks2D<'py> {
 struct ExtractedMasks3D<'py> {
     bool_masks: Vec<PyReadonlyArray3<'py, bool>>,
     i32_masks: Vec<PyReadonlyArray3<'py, i32>>,
+    u8_masks: Vec<PyReadonlyArray3<'py, u8>>,
+    u16_masks: Vec<PyReadonlyArray3<'py, u16>>,
     /// mask_info tracks metadata about each array
-    /// for (is_bool, idx, color, alpha) in &vec {...}
     mask_info: Vec<(
-        bool,    // whether the array is bool. If not, it must be i32
-        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
-        [u8; 3], // the RGB color to use for the mask
-        f32,     // the alpha blending value
+        MaskDtype, // which dtype vector this mask belongs to
+        usize,     // the index of the array in the appropriate vector
+        [u8; 3],   // the RGB color to use for the mask
+        f32,       // the alpha blending value
     )>,
 }
 
@@ -171,35 +184,44 @@ impl<'py> ExtractedMasks3D<'py> {
         Self {
             bool_masks: Vec::new(),
             i32_masks: Vec::new(),
+            u8_masks: Vec::new(),
+            u16_masks: Vec::new(),
             mask_info: Vec::new(),
         }
     }
 
-    /// Build Mask2D vec from the extracted arrays
+    /// Build MaskConfig3D vec from the extracted arrays
     /// The returned Vec borrows from self, so self must outlive the returned masks
     fn build_masks<'a>(&'a self) -> Vec<colorize::MaskConfig3D<'a>> {
         self.mask_info
             .iter()
-            .map(|&(is_bool, idx, color, alpha)| {
-                if is_bool {
-                    colorize::MaskConfig3D::Bool(colorize::MaskConfig {
-                        arr: self.bool_masks[idx].as_array(),
-                        color,
-                        alpha,
-                    })
-                } else {
-                    colorize::MaskConfig3D::I32(colorize::MaskConfig {
-                        arr: self.i32_masks[idx].as_array(),
-                        color,
-                        alpha,
-                    })
-                }
+            .map(|&(dtype, idx, color, alpha)| match dtype {
+                MaskDtype::Bool => colorize::MaskConfig3D::Bool(colorize::MaskConfig {
+                    arr: self.bool_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::I32 => colorize::MaskConfig3D::I32(colorize::MaskConfig {
+                    arr: self.i32_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U8 => colorize::MaskConfig3D::U8(colorize::MaskConfig {
+                    arr: self.u8_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U16 => colorize::MaskConfig3D::U16(colorize::MaskConfig {
+                    arr: self.u16_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
             })
             .collect()
     }
 }
 
-/// Extract 2D mask arrays from Python, handling both bool and i32 dtypes
+/// Extract 2D mask arrays from Python, handling bool, i32, u8, and u16 dtypes
 fn extract_masks_2d<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
@@ -244,7 +266,9 @@ fn extract_masks_2d<'py>(
                 })?;
                 let idx = extracted.bool_masks.len();
                 extracted.bool_masks.push(py_arr);
-                extracted.mask_info.push((true, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::Bool, idx, color, alpha));
             }
             "int32" => {
                 let py_arr = mask_item.extract::<PyReadonlyArray2<i32>>().map_err(|_| {
@@ -254,11 +278,35 @@ fn extract_masks_2d<'py>(
                 })?;
                 let idx = extracted.i32_masks.len();
                 extracted.i32_masks.push(py_arr);
-                extracted.mask_info.push((false, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::I32, idx, color, alpha));
+            }
+            "uint8" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u8>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint8 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u8_masks.len();
+                extracted.u8_masks.push(py_arr);
+                extracted.mask_info.push((MaskDtype::U8, idx, color, alpha));
+            }
+            "uint16" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u16>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint16 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u16_masks.len();
+                extracted.u16_masks.push(py_arr);
+                extracted
+                    .mask_info
+                    .push((MaskDtype::U16, idx, color, alpha));
             }
             _ => {
                 return Err(PyValueError::new_err(format!(
-                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool, int32, uint8, or uint16"
                 )));
             }
         }
@@ -271,7 +319,7 @@ fn extract_masks_2d<'py>(
     }
 }
 
-/// Extract 3D mask arrays from Python, handling both bool and i32 dtypes
+/// Extract 3D mask arrays from Python, handling bool, i32, u8, and u16 dtypes
 fn extract_masks_3d<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
@@ -316,7 +364,9 @@ fn extract_masks_3d<'py>(
                 })?;
                 let idx = extracted.bool_masks.len();
                 extracted.bool_masks.push(py_arr);
-                extracted.mask_info.push((true, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::Bool, idx, color, alpha));
             }
             "int32" => {
                 let py_arr = mask_item.extract::<PyReadonlyArray3<i32>>().map_err(|_| {
@@ -326,11 +376,35 @@ fn extract_masks_3d<'py>(
                 })?;
                 let idx = extracted.i32_masks.len();
                 extracted.i32_masks.push(py_arr);
-                extracted.mask_info.push((false, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::I32, idx, color, alpha));
+            }
+            "uint8" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u8>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint8 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u8_masks.len();
+                extracted.u8_masks.push(py_arr);
+                extracted.mask_info.push((MaskDtype::U8, idx, color, alpha));
+            }
+            "uint16" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u16>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint16 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u16_masks.len();
+                extracted.u16_masks.push(py_arr);
+                extracted
+                    .mask_info
+                    .push((MaskDtype::U16, idx, color, alpha));
             }
             _ => {
                 return Err(PyValueError::new_err(format!(
-                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool, int32, uint8, or uint16"
                 )));
             }
         }
