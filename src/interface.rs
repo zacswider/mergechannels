@@ -3,6 +3,9 @@ use crate::colorize;
 use crate::errors;
 use crate::process;
 use ndarray::Array2;
+
+/// Mask metadata: RGB color and alpha value
+type MaskMetadata = ([u8; 3], f32);
 use numpy::{
     IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -169,7 +172,7 @@ impl<'py> ExtractedMasks2D<'py> {
     /// Compute boundary detection on each mask and return owned boundary arrays.
     /// Returns a tuple of (boundary_arrays, mask_metadata) where mask_metadata contains
     /// (color, alpha) for each mask in the same order.
-    fn compute_boundaries(&self) -> (Vec<Array2<bool>>, Vec<([u8; 3], f32)>) {
+    fn compute_boundaries(&self) -> (Vec<Array2<bool>>, Vec<MaskMetadata>) {
         let mut boundaries = Vec::with_capacity(self.mask_info.len());
         let mut metadata = Vec::with_capacity(self.mask_info.len());
 
@@ -192,7 +195,7 @@ impl<'py> ExtractedMasks2D<'py> {
 /// The boundary_arrays must outlive the returned Vec
 fn build_masks_from_boundaries<'a>(
     boundary_arrays: &'a [Array2<bool>],
-    metadata: &[([u8; 3], f32)],
+    metadata: &[MaskMetadata],
 ) -> Vec<colorize::MaskConfig2D<'a>> {
     boundary_arrays
         .iter()
