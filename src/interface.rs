@@ -565,7 +565,7 @@ pub fn dispatch_multi_channel_py<'py>(
 /// This is equivalent to: max_filter(arr, 3, 'reflect') != min_filter(arr, 3, 'reflect')
 /// but computed in a single pass without intermediate arrays.
 ///
-/// Supports bool and uint16 input arrays.
+/// Supports bool, uint8, int32, and uint16 input arrays.
 /// Returns a boolean array where True indicates a boundary pixel.
 #[pyfunction]
 #[pyo3(name = "create_mask_boundaries")]
@@ -586,6 +586,10 @@ pub fn create_mask_boundaries_py<'py>(
             let py_arr = array_reference.extract::<PyReadonlyArray2<bool>>()?;
             Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
         }
+        "uint8" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
+        }
         "int32" => {
             let py_arr = array_reference.extract::<PyReadonlyArray2<i32>>()?;
             Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
@@ -595,7 +599,7 @@ pub fn create_mask_boundaries_py<'py>(
             Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
         }
         _ => Err(PyValueError::new_err(format!(
-            "create_mask_boundaries only supports bool, int32, and uint16 arrays, got dtype '{}'",
+            "create_mask_boundaries only supports bool, uint8, int32, and uint16 arrays, got dtype '{}'",
             dtype
         ))),
     }

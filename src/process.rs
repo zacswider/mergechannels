@@ -277,6 +277,7 @@ mod tests {
     #[test]
     fn test_dtype_consistency_two_regions() {
         // Same pattern should produce same results across dtypes
+        let arr_u8 = array![[1u8, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2],];
         let arr_u16 = array![[1u16, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2],];
         let arr_i32 = array![[1i32, 1, 2, 2], [1, 1, 2, 2], [1, 1, 2, 2],];
         let arr_bool = array![
@@ -285,25 +286,30 @@ mod tests {
             [false, false, true, true],
         ];
 
+        let result_u8 = find_boundaries(arr_u8.view());
         let result_u16 = find_boundaries(arr_u16.view());
         let result_i32 = find_boundaries(arr_i32.view());
         let result_bool = find_boundaries(arr_bool.view());
 
-        assert_eq!(result_u16, result_i32);
-        assert_eq!(result_u16, result_bool);
+        assert_eq!(result_u8, result_u16);
+        assert_eq!(result_u8, result_i32);
+        assert_eq!(result_u8, result_bool);
     }
 
     #[test]
     fn test_dtype_consistency_uniform() {
         // Uniform arrays should all produce no boundaries
+        let arr_u8 = array![[5u8, 5, 5], [5, 5, 5], [5, 5, 5],];
         let arr_u16 = array![[5u16, 5, 5], [5, 5, 5], [5, 5, 5],];
         let arr_i32 = array![[5i32, 5, 5], [5, 5, 5], [5, 5, 5],];
         let arr_bool = array![[true, true, true], [true, true, true], [true, true, true],];
 
+        let result_u8 = find_boundaries(arr_u8.view());
         let result_u16 = find_boundaries(arr_u16.view());
         let result_i32 = find_boundaries(arr_i32.view());
         let result_bool = find_boundaries(arr_bool.view());
 
+        assert!(result_u8.iter().all(|&v| !v));
         assert!(result_u16.iter().all(|&v| !v));
         assert!(result_i32.iter().all(|&v| !v));
         assert!(result_bool.iter().all(|&v| !v));
@@ -312,6 +318,7 @@ mod tests {
     #[test]
     fn test_dtype_consistency_center_pixel() {
         // Single different center pixel - all should be boundaries
+        let arr_u8 = array![[0u8, 0, 0], [0, 1, 0], [0, 0, 0],];
         let arr_u16 = array![[0u16, 0, 0], [0, 1, 0], [0, 0, 0],];
         let arr_i32 = array![[0i32, 0, 0], [0, 1, 0], [0, 0, 0],];
         let arr_bool = array![
@@ -320,10 +327,12 @@ mod tests {
             [false, false, false],
         ];
 
+        let result_u8 = find_boundaries(arr_u8.view());
         let result_u16 = find_boundaries(arr_u16.view());
         let result_i32 = find_boundaries(arr_i32.view());
         let result_bool = find_boundaries(arr_bool.view());
 
+        assert!(result_u8.iter().all(|&v| v));
         assert!(result_u16.iter().all(|&v| v));
         assert!(result_i32.iter().all(|&v| v));
         assert!(result_bool.iter().all(|&v| v));
