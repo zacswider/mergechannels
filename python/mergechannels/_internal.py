@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import warnings
 from typing import (
     TYPE_CHECKING,
     Sequence,
@@ -206,8 +207,10 @@ def _validate_mask(
             f'Mask{idx_str} shape {mask.shape} does not match array shape {expected_shape}'
         )
 
-    if mask.dtype not in (np.bool_, np.int32):
-        raise ValueError(f'Mask{idx_str} dtype must be bool or int32, got {mask.dtype}')
+    if mask.dtype not in (np.bool_, np.int32, np.uint8, np.uint16):
+        raise ValueError(
+            f'Mask{idx_str} dtype must be bool, int32, uint8, or uint16, got {mask.dtype}'
+        )
 
 
 def _parse_mask_arguments(
@@ -309,6 +312,7 @@ def apply_color_map(
     mask_colors: Sequence[MaskColor] | MaskColor | None = None,
     mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
+    boundaries_only: bool = False,
 ) -> np.ndarray:
     """
     Apply a colormap to a grayscale array.
@@ -330,8 +334,8 @@ def apply_color_map(
         Explicit intensity limits (low, high) to set the black and white points.
     masks : Sequence[np.ndarray] | np.ndarray | None, optional
         Mask array(s) to overlay on the result. Each mask must have the same shape as the input
-        array and dtype of bool or int32. For bool masks, True pixels are overlaid. For int32
-        masks, any non-zero value is overlaid.
+        array and dtype of bool, int32, uint8, or uint16. For bool masks, True pixels are overlaid.
+        For integer masks, any non-zero value is overlaid.
     mask_colors : Sequence[MaskColor] | MaskColor | None, optional
         Color(s) for the mask overlay. Can be:
         - A colormap name (uses the color at index 255)
@@ -344,6 +348,12 @@ def apply_color_map(
         to all masks. Default is 0.5.
     parallel : bool, optional
         Whether to use a Rayon threadpool on the Rust side for parallel processing. Default is True.
+    boundaries_only : bool, optional
+        If True and masks are provided, only the boundary pixels of each mask will be overlaid
+        instead of the full mask region. Boundaries are detected using a 3x3 neighborhood check.
+        Only supported for 2D arrays; a warning is emitted for 3D arrays and masks are applied
+        normally. Default is False. This step does create an intermediate boolean array with the
+        same shape as arr.
 
     Returns
     -------
@@ -373,6 +383,15 @@ def apply_color_map(
     ...     arr, 'Grays', saturation_limits=(0, 255),
     ...     masks=[mask], mask_colors=['#FF0000'], mask_alphas=[0.5]
     ... )
+
+    With boundary-only mask overlay:
+
+    >>> labels = np.zeros((512, 512), dtype=np.int32)
+    >>> labels[100:200, 100:200] = 1
+    >>> rgb = mc.apply_color_map(
+    ...     arr, 'Grays', saturation_limits=(0, 255),
+    ...     masks=[labels], mask_colors=['#00FF00'], boundaries_only=True
+    ... )
     """
     if saturation_limits is None:
         if percentiles is None:
@@ -387,6 +406,18 @@ def apply_color_map(
         masks, mask_colors, mask_alphas, expected_shape=arr.shape
     )
 
+    # Handle boundaries_only warning for 3D arrays
+    use_boundaries = boundaries_only
+    if boundaries_only and masks_list is not None and arr.ndim == 3:
+        warnings.warn(
+            'boundaries_only=True is not supported for 3D arrays. '
+            'find_boundaries only operates on 2D arrays. '
+            'Masks will be applied without boundary detection.',
+            UserWarning,
+            stacklevel=2,
+        )
+        use_boundaries = False
+
     return dispatch_single_channel(
         array_reference=arr,
         cmap_name=cmap_name,
@@ -396,6 +427,7 @@ def apply_color_map(
         mask_arrays=masks_list,
         mask_colors=colors_list,
         mask_alphas=alphas_list,
+        boundaries_only=use_boundaries,
     )
 
 
@@ -409,6 +441,7 @@ def merge(
     mask_colors: Sequence[MaskColor] | MaskColor | None = None,
     mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
+    boundaries_only: bool = False,
 ) -> np.ndarray:
     """
     Apply colormaps to multiple arrays and blend them into a single RGB image.
@@ -435,8 +468,8 @@ def merge(
         Per-channel explicit intensity limits (low, high) for scaling.
     masks : Sequence[np.ndarray] | np.ndarray | None, optional
         Mask array(s) to overlay on the blended result. Each mask must have the same shape as the
-        input arrays and dtype of bool or int32. For bool masks, True pixels are overlaid. For int32
-        masks, any non-zero value is overlaid.
+        input arrays and dtype of bool, int32, uint8, or uint16. For bool masks, True pixels are
+        overlaid. For integer masks, any non-zero value is overlaid.
     mask_colors : Sequence[MaskColor] | MaskColor | None, optional
         Color(s) for the mask overlay. Can be:
         - A colormap name (uses the color at index 255)
@@ -449,6 +482,12 @@ def merge(
         to all masks. Default is 0.5.
     parallel : bool, optional
         Whether to use a Rayon threadpool on the Rust side for parallel processing. Default is True.
+    boundaries_only : bool, optional
+        If True and masks are provided, only the boundary pixels of each mask will be overlaid
+        instead of the full mask region. Boundaries are detected using a 3x3 neighborhood check.
+        Only supported for 2D arrays; a warning is emitted for 3D arrays and masks are applied
+        normally. Default is False. This step does create an intermediate boolean array with the
+        same shape as arr.
 
     Returns
     -------
@@ -486,6 +525,17 @@ def merge(
     ...     saturation_limits=[(0, 255), (0, 255)],
     ...     masks=[mask], mask_colors=[(255, 0, 0)], mask_alphas=[0.5]
     ... )
+
+    With boundary-only mask overlay:
+
+    >>> labels = np.zeros((512, 512), dtype=np.int32)
+    >>> labels[100:200, 100:200] = 1
+    >>> rgb = mc.merge(
+    ...     [ch1, ch2],
+    ...     ['betterBlue', 'betterOrange'],
+    ...     saturation_limits=[(0, 255), (0, 255)],
+    ...     masks=[labels], mask_colors=['#00FF00'], boundaries_only=True
+    ... )
     """
     cmap_names, cmap_values = zip(*[_parse_cmap_arguments(color) for color in colors])
     if saturation_limits is None:
@@ -509,6 +559,18 @@ def merge(
         masks, mask_colors, mask_alphas, expected_shape=expected_shape
     )
 
+    # Handle boundaries_only warning for 3D arrays
+    use_boundaries = boundaries_only
+    if boundaries_only and masks_list is not None and arrs[0].ndim == 3:
+        warnings.warn(
+            'boundaries_only=True is not supported for 3D arrays. '
+            'find_boundaries only operates on 2D arrays. '
+            'Masks will be applied without boundary detection.',
+            UserWarning,
+            stacklevel=2,
+        )
+        use_boundaries = False
+
     return dispatch_multi_channel(
         array_references=arrs,
         cmap_names=cmap_names,
@@ -519,6 +581,7 @@ def merge(
         mask_arrays=masks_list,
         mask_colors=colors_list,
         mask_alphas=alphas_list,
+        boundaries_only=use_boundaries,
     )
 
 
