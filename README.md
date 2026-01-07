@@ -264,7 +264,7 @@ import matplotlib.pyplot as plt
 cells, nuclei = data.cells3d().max(axis=0)
 thresh = nuclei > threshold_otsu(nuclei)
 labels = np.asarray(measure.label(ndimage.binary_fill_holes(thresh)))
-mean_nuclei_inten = threshold_otsu(nuclei[thresh])
+bright_nuclei_threshold = threshold_otsu(nuclei[thresh])
 label_vals = [l for l in np.unique(labels) if l!=0]
 
 # categorize two different types of nuclei masks
@@ -274,14 +274,14 @@ def only_keep_these_labels(arr, labels):
     out[~mask] = 0
     return out
 
-bright_nuclei_labels = [nl for nl in label_vals if nuclei[labels == nl].mean() > mean_nuclei_inten]
+bright_nuclei_labels = [lv for lv in label_vals if nuclei[labels == lv].mean() > bright_nuclei_threshold ]
 bright_nuclei_masks = only_keep_these_labels(
     arr=labels,
     labels=bright_nuclei_labels,
 )
 dim_nuclei_masks = only_keep_these_labels(
     arr=labels,
-    labels=[nl for nl in label_vals if nl not in bright_nuclei_labels],
+    labels=[lv for lv in label_vals if lv not in bright_nuclei_labels],
 )
 
 # overlay the masks with mergechannels
