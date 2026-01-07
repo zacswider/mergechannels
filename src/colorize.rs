@@ -32,18 +32,22 @@ pub struct MaskConfig<A> {
     pub alpha: f32,     // Alpha value for blending (0.0-1.0)
 }
 
-/// Enum to hold either bool or i32 mask types for 2D arrays
+/// Enum to hold bool, i32, u8, or u16 mask types for 2D arrays
 #[allow(dead_code)] // Variants constructed via Python interface
 pub enum MaskConfig2D<'a> {
     Bool(MaskConfig<ArrayView2<'a, bool>>),
     I32(MaskConfig<ArrayView2<'a, i32>>),
+    U8(MaskConfig<ArrayView2<'a, u8>>),
+    U16(MaskConfig<ArrayView2<'a, u16>>),
 }
 
-/// Enum to hold either bool or i32 mask types for 3D arrays
+/// Enum to hold bool, i32, u8, or u16 mask types for 3D arrays
 #[allow(dead_code)] // Variants constructed via Python interface
 pub enum MaskConfig3D<'a> {
     Bool(MaskConfig<ArrayView3<'a, bool>>),
     I32(MaskConfig<ArrayView3<'a, i32>>),
+    U8(MaskConfig<ArrayView3<'a, u8>>),
+    U16(MaskConfig<ArrayView3<'a, u16>>),
 }
 
 impl<'a> MaskConfig2D<'a> {
@@ -52,6 +56,8 @@ impl<'a> MaskConfig2D<'a> {
         match self {
             MaskConfig2D::Bool(m) => m.arr[[i, j]],
             MaskConfig2D::I32(m) => m.arr[[i, j]] != 0,
+            MaskConfig2D::U8(m) => m.arr[[i, j]] != 0,
+            MaskConfig2D::U16(m) => m.arr[[i, j]] != 0,
         }
     }
 
@@ -60,6 +66,8 @@ impl<'a> MaskConfig2D<'a> {
         match self {
             MaskConfig2D::Bool(m) => m.color,
             MaskConfig2D::I32(m) => m.color,
+            MaskConfig2D::U8(m) => m.color,
+            MaskConfig2D::U16(m) => m.color,
         }
     }
 
@@ -68,6 +76,8 @@ impl<'a> MaskConfig2D<'a> {
         match self {
             MaskConfig2D::Bool(m) => m.alpha,
             MaskConfig2D::I32(m) => m.alpha,
+            MaskConfig2D::U8(m) => m.alpha,
+            MaskConfig2D::U16(m) => m.alpha,
         }
     }
 }
@@ -78,6 +88,8 @@ impl<'a> MaskConfig3D<'a> {
         match self {
             MaskConfig3D::Bool(m) => m.arr[[n, i, j]],
             MaskConfig3D::I32(m) => m.arr[[n, i, j]] != 0,
+            MaskConfig3D::U8(m) => m.arr[[n, i, j]] != 0,
+            MaskConfig3D::U16(m) => m.arr[[n, i, j]] != 0,
         }
     }
 
@@ -86,6 +98,8 @@ impl<'a> MaskConfig3D<'a> {
         match self {
             MaskConfig3D::Bool(m) => m.color,
             MaskConfig3D::I32(m) => m.color,
+            MaskConfig3D::U8(m) => m.color,
+            MaskConfig3D::U16(m) => m.color,
         }
     }
 
@@ -94,6 +108,8 @@ impl<'a> MaskConfig3D<'a> {
         match self {
             MaskConfig3D::Bool(m) => m.alpha,
             MaskConfig3D::I32(m) => m.alpha,
+            MaskConfig3D::U8(m) => m.alpha,
+            MaskConfig3D::U16(m) => m.alpha,
         }
     }
 }
