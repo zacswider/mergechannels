@@ -1,6 +1,7 @@
 use crate::cmaps;
 use crate::colorize;
 use crate::errors;
+use crate::process;
 use ndarray::Array2;
 use numpy::{
     IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
@@ -555,5 +556,53 @@ pub fn dispatch_multi_channel_py<'py>(
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
         },
         _ => Err(errors::DispatchError::UnsupportedDataType(dtype.clone()).into()),
+    }
+}
+
+/// Create a boundary mask from a 2D array.
+///
+/// Detects boundary pixels where not all neighbors in a 3x3 window have the same value.
+/// This is equivalent to: max_filter(arr, 3, 'reflect') != min_filter(arr, 3, 'reflect')
+/// but computed in a single pass without intermediate arrays.
+///
+/// Supports bool and uint16 input arrays.
+/// Returns a boolean array where True indicates a boundary pixel.
+#[pyfunction]
+#[pyo3(name = "create_mask_boundaries")]
+pub fn create_mask_boundaries_py<'py>(
+    py: Python<'py>,
+    array_reference: &Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyArray2<bool>>> {
+    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
+    let dtype = untyped_array.dtype().to_string();
+    let ndim = untyped_array.ndim();
+
+    if ndim != 2 {
+        return Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into());
+    }
+
+    match dtype.as_str() {
+        "bool" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<bool>>()?;
+            let arr = py_arr.as_array();
+            let result = process::find_boundaries_bool(arr);
+            Ok(result.into_pyarray(py))
+        }
+        "int32" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<i32>>()?;
+            let arr = py_arr.as_array();
+            let result = process::find_boundaries_i32(arr);
+            Ok(result.into_pyarray(py))
+        }
+        "uint16" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
+            let arr = py_arr.as_array();
+            let result = process::find_boundaries_u16(arr);
+            Ok(result.into_pyarray(py))
+        }
+        _ => Err(PyValueError::new_err(format!(
+            "create_mask_boundaries only supports bool, int32, and uint16 arrays, got dtype '{}'",
+            dtype
+        ))),
     }
 }
