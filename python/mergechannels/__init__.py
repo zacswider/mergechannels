@@ -6,6 +6,7 @@ from ._internal import (
 )
 from ._luts import COLORMAPS
 from .mergechannels import (
+    create_mask_boundaries,
     dispatch_multi_channel,
     dispatch_single_channel,
 )
@@ -17,5 +18,6 @@ __all__ = [
     'apply_color_map',
     'get_cmap_array',
     'get_mpl_cmap',
+    'create_mask_boundaries',
     'COLORMAPS',
 ]

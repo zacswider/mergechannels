@@ -12,6 +12,9 @@ import numpy as np
 
 from ._blending import BLENDING_OPTIONS
 from ._luts import COLORMAPS
+from .mergechannels import (
+    create_mask_boundaries as _create_mask_boundaries,  # aliasing to inject docstring and types
+)
 from .mergechannels import (  # type: ignore
     dispatch_multi_channel,
     dispatch_single_channel,
@@ -598,3 +601,25 @@ def get_mpl_cmap(name: COLORMAPS) -> ListedColormap:
     cmap_array = get_cmap_array(name)
     colors = cmap_array / 255.0  # Convert from uint8 (0-255) to float (0-1) for matplotlib
     return ListedColormap(colors, name=name)
+
+
+def create_mask_boundaries(arr: np.ndarray):
+    """
+    Create a boolean mask defining the boundaries of the input masks
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array of shape (H, W) with dtype bool, uint8, uint16, or i32.
+
+    Returns
+    -------
+    np.ndarray
+        a boolean array of shape (H, W) where boundaries of the input masks are True
+
+    Raises
+    ------
+    TypeError
+        If masks are not numpy arrays.
+    """
+    return _create_mask_boundaries(arr)
