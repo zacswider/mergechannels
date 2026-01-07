@@ -584,21 +584,15 @@ pub fn create_mask_boundaries_py<'py>(
     match dtype.as_str() {
         "bool" => {
             let py_arr = array_reference.extract::<PyReadonlyArray2<bool>>()?;
-            let arr = py_arr.as_array();
-            let result = process::find_boundaries_bool(arr);
-            Ok(result.into_pyarray(py))
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
         }
         "int32" => {
             let py_arr = array_reference.extract::<PyReadonlyArray2<i32>>()?;
-            let arr = py_arr.as_array();
-            let result = process::find_boundaries_i32(arr);
-            Ok(result.into_pyarray(py))
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
         }
         "uint16" => {
             let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
-            let arr = py_arr.as_array();
-            let result = process::find_boundaries_u16(arr);
-            Ok(result.into_pyarray(py))
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
         }
         _ => Err(PyValueError::new_err(format!(
             "create_mask_boundaries only supports bool, int32, and uint16 arrays, got dtype '{}'",
