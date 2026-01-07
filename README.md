@@ -345,7 +345,6 @@ import mergechannels as mc
 Benchmarks show that with appropriately scaled images, (i.e., if pre-determined saturation limits are passed to `mc.merge` or `mc.apply_color_map`) mergechannel is either on par or significantly faster than the underlying numpy operations used by Matplotlib. Note: you can run the benchmarks on your own machine by creating a virtual environment with the dev dependencies `uv sync --dev && source .venv/bin/activate` and running the benchmark code `py.test --benchmark-only`
 
 ## Roadmap
-mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2/3D 8/16-bit images and that's it.
 - ~~Add support to u8 and u16 images~~
 - Add support for any numerical dtype
 - ~~Add option to return any colormap as a matplotlib colormap~~
