@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import (
     TYPE_CHECKING,
     Sequence,
@@ -28,6 +29,13 @@ if TYPE_CHECKING:
         Shape,
         UInt8,
     )
+
+# Type alias for mask color specification
+MaskColor = Union[COLORMAPS, Tuple[int, int, int], Sequence[int]]
+
+# Default mask color (purple) and alpha
+DEFAULT_MASK_COLOR: Tuple[int, int, int] = (128, 0, 128)
+DEFAULT_MASK_ALPHA: float = 0.5
 
 
 def _parse_cmap_arguments(
@@ -74,6 +82,216 @@ def _parse_cmap_arguments(
     return None, cmap_values
 
 
+def _hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
+    """
+    Convert a hex color string to RGB tuple.
+
+    Args:
+        hex_color: Hex color string like '#FF00FF', 'FF00FF', '#f0f', or 'f0f'
+
+    Returns:
+        Tuple of (R, G, B) values in range 0-255
+
+    Raises:
+        ValueError: If the hex string is invalid
+    """
+    # Remove leading '#' if present
+    hex_color = hex_color.lstrip('#')
+
+    # Handle shorthand hex (e.g., 'f0f' -> 'ff00ff')
+    if len(hex_color) == 3:
+        hex_color = ''.join(c * 2 for c in hex_color)
+
+    if len(hex_color) != 6:
+        raise ValueError(
+            f"Invalid hex color '{hex_color}': expected 3 or 6 hex digits"
+            " (with optional '#' prefix)"
+        )
+
+    # Validate hex characters
+    if not re.match(r'^[0-9a-fA-F]{6}$', hex_color):
+        raise ValueError(f"Invalid hex color '{hex_color}': contains non-hexadecimal characters")
+
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return (r, g, b)
+
+
+def _parse_mask_color(color: MaskColor | None) -> Tuple[int, int, int]:
+    """
+    Parse a mask color specification into an RGB tuple.
+
+    Args:
+        color: Can be:
+            - None: returns default purple (128, 0, 128)
+            - A colormap name (str): uses the color at index 255 of that colormap
+            - A hex string: '#FF00FF', 'FF00FF', '#f0f', 'f0f'
+            - An RGB tuple/sequence: (R, G, B) with values 0-255
+
+    Returns:
+        Tuple of (R, G, B) values in range 0-255
+
+    Raises:
+        ValueError: If the color specification is invalid
+    """
+    if color is None:
+        return DEFAULT_MASK_COLOR
+
+    if isinstance(color, str):
+        # Check if it's a hex color (starts with # or is all hex digits)
+        if color.startswith('#') or re.match(r'^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$', color):
+            return _hex_to_rgb(color)
+
+        # Otherwise, treat as a colormap name
+        try:
+            cmap_array = _get_cmap_array(color)
+            # Use the color at index 255 (brightest value in the colormap)
+            return tuple(cmap_array[255])  # type: ignore
+        except ValueError as e:
+            raise ValueError(
+                f"Invalid mask color '{color}': not a valid hex color or colormap name. "
+                f"Hex colors should be like '#FF00FF' or 'f0f'. "
+                f'Available colormaps can be found in mergechannels.COLORMAPS.'
+            ) from e
+
+    # Must be a sequence of RGB values
+    try:
+        rgb = tuple(color)  # type: ignore
+        if len(rgb) != 3:
+            raise ValueError(f'Invalid mask color: expected 3 RGB values, got {len(rgb)}')
+        r, g, b = rgb
+        # Validate range
+        for val, name in [(r, 'R'), (g, 'G'), (b, 'B')]:
+            if not isinstance(val, (int, np.integer)):
+                raise ValueError(
+                    f'Invalid mask color: {name} value must be an integer, got {type(val).__name__}'
+                )
+            if not 0 <= val <= 255:
+                raise ValueError(f'Invalid mask color: {name} value {val} out of range [0, 255]')
+        return (int(r), int(g), int(b))
+    except TypeError:
+        raise ValueError(
+            f'Invalid mask color type: expected str, tuple, or sequence, got {type(color).__name__}'
+        )
+
+
+def _validate_mask(
+    mask: np.ndarray,
+    expected_shape: tuple,
+    mask_index: int | None = None,
+) -> None:
+    """
+    Validate a mask array.
+
+    Args:
+        mask: The mask array to validate
+        expected_shape: Expected shape of the mask (should match the data array shape)
+        mask_index: Optional index for error messages when validating multiple masks
+
+    Raises:
+        TypeError: If mask is not a numpy array
+        ValueError: If mask shape doesn't match or dtype is invalid
+    """
+    idx_str = f' at index {mask_index}' if mask_index is not None else ''
+
+    if not isinstance(mask, np.ndarray):
+        raise TypeError(f'Mask{idx_str} must be a numpy array, got {type(mask).__name__}')
+
+    if mask.shape != expected_shape:
+        raise ValueError(
+            f'Mask{idx_str} shape {mask.shape} does not match array shape {expected_shape}'
+        )
+
+    if mask.dtype not in (np.bool_, np.int32):
+        raise ValueError(f'Mask{idx_str} dtype must be bool or int32, got {mask.dtype}')
+
+
+def _parse_mask_arguments(
+    masks: Sequence[np.ndarray] | np.ndarray | None,
+    mask_colors: Sequence[MaskColor] | MaskColor | None,
+    mask_alphas: Sequence[float] | float | None,
+    expected_shape: tuple,
+) -> Tuple[list[np.ndarray] | None, list[Tuple[int, int, int]] | None, list[float] | None]:
+    """
+    Parse and validate mask arguments, handling single values and sequences.
+
+    Args:
+        masks: Single mask array, sequence of masks, or None
+        mask_colors: Single color, sequence of colors, or None
+        mask_alphas: Single alpha, sequence of alphas, or None
+        expected_shape: Expected shape for all masks (should match data array shape)
+
+    Returns:
+        Tuple of (masks_list, colors_list, alphas_list) or (None, None, None) if no masks
+
+    Raises:
+        ValueError: If arguments are inconsistent or invalid
+    """
+    if masks is None:
+        return None, None, None
+
+    # Normalize masks to a list
+    if isinstance(masks, np.ndarray):
+        masks_list = [masks]
+    else:
+        masks_list = list(masks)
+
+    if len(masks_list) == 0:
+        return None, None, None
+
+    # Validate all masks
+    for i, mask in enumerate(masks_list):
+        _validate_mask(mask, expected_shape, mask_index=i if len(masks_list) > 1 else None)
+
+    n_masks = len(masks_list)
+
+    # Parse colors
+    if mask_colors is None:
+        colors_list = [DEFAULT_MASK_COLOR] * n_masks
+    elif isinstance(mask_colors, (str, tuple)) or (
+        isinstance(mask_colors, Sequence)
+        and len(mask_colors) == 3
+        and isinstance(mask_colors[0], (int, np.integer))
+    ):
+        # Single color specification - apply to all masks
+        parsed_color = _parse_mask_color(mask_colors)  # type: ignore
+        colors_list = [parsed_color] * n_masks
+    else:
+        # Sequence of colors
+        colors_list = [_parse_mask_color(c) for c in mask_colors]  # type: ignore
+        if len(colors_list) != n_masks:
+            raise ValueError(
+                f'Number of mask colors ({len(colors_list)}) does not match '
+                f'number of masks ({n_masks})'
+            )
+
+    # Parse alphas
+    if mask_alphas is None:
+        alphas_list = [DEFAULT_MASK_ALPHA] * n_masks
+    elif isinstance(mask_alphas, (int, float)):
+        # Single alpha - apply to all masks
+        alpha = float(mask_alphas)
+        if not 0.0 <= alpha <= 1.0:
+            raise ValueError(f'Mask alpha {alpha} out of range [0.0, 1.0]')
+        alphas_list = [alpha] * n_masks
+    else:
+        # Sequence of alphas
+        alphas_list = []
+        for i, a in enumerate(mask_alphas):
+            alpha = float(a)
+            if not 0.0 <= alpha <= 1.0:
+                raise ValueError(f'Mask alpha at index {i} ({alpha}) out of range [0.0, 1.0]')
+            alphas_list.append(alpha)
+        if len(alphas_list) != n_masks:
+            raise ValueError(
+                f'Number of mask alphas ({len(alphas_list)}) does not match '
+                f'number of masks ({n_masks})'
+            )
+
+    return masks_list, colors_list, alphas_list
+
+
 def apply_color_map(
     arr: np.ndarray,
     color: Union[
@@ -84,6 +302,9 @@ def apply_color_map(
     ],
     percentiles: Union[tuple[float, float], None] = None,
     saturation_limits: Union[tuple[float, float], None] = None,
+    masks: Sequence[np.ndarray] | np.ndarray | None = None,
+    mask_colors: Sequence[MaskColor] | MaskColor | None = None,
+    mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
 ) -> np.ndarray:
     """
@@ -104,6 +325,20 @@ def apply_color_map(
         provided. Default is (1.1, 99.9).
     saturation_limits : tuple[float, float] | None, optional
         Explicit intensity limits (low, high) to set the black and white points.
+    masks : Sequence[np.ndarray] | np.ndarray | None, optional
+        Mask array(s) to overlay on the result. Each mask must have the same shape as the input
+        array and dtype of bool or int32. For bool masks, True pixels are overlaid. For int32
+        masks, any non-zero value is overlaid.
+    mask_colors : Sequence[MaskColor] | MaskColor | None, optional
+        Color(s) for the mask overlay. Can be:
+        - A colormap name (uses the color at index 255)
+        - A hex string ('#FF00FF', 'f0f')
+        - An RGB tuple (R, G, B) with values 0-255
+        If a single color is provided, it applies to all masks.
+        Default is purple (128, 0, 128).
+    mask_alphas : Sequence[float] | float | None, optional
+        Alpha value(s) for mask blending (0.0-1.0). If a single value is provided, it applies
+        to all masks. Default is 0.5.
     parallel : bool, optional
         Whether to use a Rayon threadpool on the Rust side for parallel processing. Default is True.
 
@@ -115,7 +350,9 @@ def apply_color_map(
     Raises
     ------
     ValueError
-        If the colormap name is not found or color format is invalid.
+        If the colormap name is not found, color format is invalid, or mask arguments are invalid.
+    TypeError
+        If masks are not numpy arrays.
 
     Examples
     --------
@@ -125,6 +362,14 @@ def apply_color_map(
     >>> rgb = mc.apply_color_map(arr, 'betterBlue', saturation_limits=(0, 255))
     >>> rgb.shape
     (512, 512, 3)
+
+    With a mask overlay:
+
+    >>> mask = arr > 200  # Highlight bright pixels
+    >>> rgb = mc.apply_color_map(
+    ...     arr, 'Grays', saturation_limits=(0, 255),
+    ...     masks=[mask], mask_colors=['#FF0000'], mask_alphas=[0.5]
+    ... )
     """
     if saturation_limits is None:
         if percentiles is None:
@@ -134,12 +379,20 @@ def apply_color_map(
 
     cmap_name, cmap_values = _parse_cmap_arguments(color)
 
+    # Parse mask arguments
+    masks_list, colors_list, alphas_list = _parse_mask_arguments(
+        masks, mask_colors, mask_alphas, expected_shape=arr.shape
+    )
+
     return dispatch_single_channel(
         array_reference=arr,
         cmap_name=cmap_name,
         cmap_values=cmap_values,
         limits=saturation_limits,
         parallel=parallel,
+        mask_arrays=masks_list,
+        mask_colors=colors_list,
+        mask_alphas=alphas_list,
     )
 
 
@@ -149,6 +402,9 @@ def merge(
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
+    masks: Sequence[np.ndarray] | np.ndarray | None = None,
+    mask_colors: Sequence[MaskColor] | MaskColor | None = None,
+    mask_alphas: Sequence[float] | float | None = None,
     parallel: bool = True,
 ) -> np.ndarray:
     """
@@ -174,6 +430,20 @@ def merge(
         provided. Default is (1.1, 99.9) for each.
     saturation_limits : Sequence[tuple[float, float]] | None, optional
         Per-channel explicit intensity limits (low, high) for scaling.
+    masks : Sequence[np.ndarray] | np.ndarray | None, optional
+        Mask array(s) to overlay on the blended result. Each mask must have the same shape as the
+        input arrays and dtype of bool or int32. For bool masks, True pixels are overlaid. For int32
+        masks, any non-zero value is overlaid.
+    mask_colors : Sequence[MaskColor] | MaskColor | None, optional
+        Color(s) for the mask overlay. Can be:
+        - A colormap name (uses the color at index 255)
+        - A hex string ('#FF00FF', 'f0f')
+        - An RGB tuple (R, G, B) with values 0-255
+        If a single color is provided, it applies to all masks.
+        Default is purple (128, 0, 128).
+    mask_alphas : Sequence[float] | float | None, optional
+        Alpha value(s) for mask blending (0.0-1.0). If a single value is provided, it applies
+        to all masks. Default is 0.5.
     parallel : bool, optional
         Whether to use a Rayon threadpool on the Rust side for parallel processing. Default is True.
 
@@ -185,7 +455,9 @@ def merge(
     Raises
     ------
     ValueError
-        If a colormap name is not found or color format is invalid.
+        If a colormap name is not found, color format is invalid, or mask arguments are invalid.
+    TypeError
+        If masks are not numpy arrays.
 
     Examples
     --------
@@ -201,6 +473,16 @@ def merge(
     ... )
     >>> rgb.shape
     (512, 512, 3)
+
+    With a mask overlay:
+
+    >>> mask = ch1 > 200  # Highlight bright pixels from channel 1
+    >>> rgb = mc.merge(
+    ...     [ch1, ch2],
+    ...     ['betterBlue', 'betterOrange'],
+    ...     saturation_limits=[(0, 255), (0, 255)],
+    ...     masks=[mask], mask_colors=[(255, 0, 0)], mask_alphas=[0.5]
+    ... )
     """
     cmap_names, cmap_values = zip(*[_parse_cmap_arguments(color) for color in colors])
     if saturation_limits is None:
@@ -210,6 +492,20 @@ def merge(
             np.percentile(arr, ch_percentiles)
             for arr, ch_percentiles in zip(arrs, percentiles)  # type: ignore
         )
+
+    # Get expected shape from first array
+    expected_shape = arrs[0].shape
+    for a in arrs[1:]:
+        if not a.shape == expected_shape:
+            raise ValueError(
+                f'Expected all input arrays to have the same shape, {a.shape} != {expected_shape}'
+            )
+
+    # Parse mask arguments
+    masks_list, colors_list, alphas_list = _parse_mask_arguments(
+        masks, mask_colors, mask_alphas, expected_shape=expected_shape
+    )
+
     return dispatch_multi_channel(
         array_references=arrs,
         cmap_names=cmap_names,
@@ -217,6 +513,9 @@ def merge(
         blending=blending,
         limits=saturation_limits,  # type: ignore
         parallel=parallel,
+        mask_arrays=masks_list,
+        mask_colors=colors_list,
+        mask_alphas=alphas_list,
     )
 
 

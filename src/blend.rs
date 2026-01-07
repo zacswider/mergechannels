@@ -68,6 +68,19 @@ pub fn mean_blending(px_vals: &SmallVec<[[u8; 3]; MAX_N_CH]>) -> [u8; 3] {
     [r, g, b]
 }
 
+/// Alpha blend a mask color on top of a base color
+/// Takes the base RGB color and blends the mask color on top with the given alpha
+/// Formula: result = base * (1 - alpha) + mask * alpha
+pub fn alpha_blend(base: [u8; 3], mask: [u8; 3], alpha: f32) -> [u8; 3] {
+    let alpha = alpha.clamp(0.0, 1.0);
+    let inv_alpha = 1.0 - alpha;
+    [
+        (base[0] as f32 * inv_alpha + mask[0] as f32 * alpha) as u8,
+        (base[1] as f32 * inv_alpha + mask[1] as f32 * alpha) as u8,
+        (base[2] as f32 * inv_alpha + mask[2] as f32 * alpha) as u8,
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

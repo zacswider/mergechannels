@@ -5,7 +5,7 @@
 
 # mergechannels
 
-This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things likes speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust (success! mergechannels is typically several times faster than matplotlib).
+This project was originally conceived because I often find myself wanting to apply and blend colormaps to images while working from Python, and many of my favorite colormaps are distributed as [FIJI](https://imagej.net/software/fiji/) lookup tables. I also care about things like speed and memory usage, so I was interested in seeing if I could at least match matplotlib's colormapping performance with my own hand-rolled colorizer in Rust (success! mergechannels is typically several times faster than matplotlib).
 
 The current goal of this library is to be a simple, fast, and memory-efficient way to apply and blend colormaps to images. The api should be intuitive, flexible, and simple. If this is not the case in your hands, please open an issue.
 
@@ -27,8 +27,8 @@ pip install git+https://github.com/zacswider/mergechannels.git
 *NOTE*: `skimage`, `matplotlib`, and `cmap` are not dependencies of this project, but are used in the examples below to fetch data/colormaps, and display images.
 
 
-### apply a different colormap to each channel
-The primary entrypoint for merging multiple channels is with `mergechannels.merge`. This function expects a sequence of arrays, a sequence of colormaps, a blending approach, and optionally a sequence of pre-determined saturation limits. The arrays is expected to be either u8 or u16 and 2 or 3D.
+### Apply a different colormap to each channel
+The primary entrypoint for merging multiple channels is with `mergechannels.merge`. This function expects a sequence of arrays, a sequence of colormaps, a blending approach, and optionally a sequence of pre-determined saturation limits. The arrays are expected to be either u8 or u16 and 2 or 3D.
 
 ```python
 from skimage import data
@@ -46,8 +46,8 @@ c.imshow(mc.merge([cells, nuclei], ['Orange Hot', 'Cyan Hot']))
 ```
 ![simple channel blending](https://raw.githubusercontent.com/zacswider/README_Images/main/simple_channel_merge.png)
 
-#### What constitutes a colormap?
-Colormaps can be the literal name of one of the FIJI colormaps compiled into the mergechannels binary (see a list as the bottom of the page), a matplotlib colormap, or a [cmap](https://pypi.org/project/cmap/) colormap. The example below creates a similar blending as above, but by explicitly passing pre-generated colormaps (one from the matplotlib library, one from the cmap library). These can also be combined with string literals.
+#### Using external colormaps
+Colormaps can be the literal name of one of the colormaps compiled into the mergechannels binary (see a list as the bottom of the page), a matplotlib colormap, or a [cmap](https://pypi.org/project/cmap/) colormap. The example below creates a similar blending as above, but by explicitly passing pre-generated colormaps (one from the matplotlib library, one from the cmap library). These can also be combined with string literals.
 
 ```python
 import cmap
@@ -68,11 +68,11 @@ c.imshow(mc.merge([nuclei, cells], [blue, copper]))
 ```
 ![channel blending with external cmaps](https://raw.githubusercontent.com/zacswider/README_Images/main/external_cmaps.png)
 
-#### What are my blending options?
+#### Blending options
 The `blending` argument to `mergechannels.merge` can be one of the following:
 - `'max'`: the maximum RGB value of each pixel is used. This is the default (and intuitive) behavior.
 - `'min'`: the minimum RGB value of each pixel is used. This is useful when combining inverted colormaps.
-- `'mean'`: the mean RGB value of each pixel is used. This is typically most useful when combinding fluorescence with brightfield, but can often require re-scaling the images after blending.
+- `'mean'`: the mean RGB value of each pixel is used. This is typically most useful when combining fluorescence with brightfield, but can often require re-scaling the images after blending.
 - `'sum'`: the sum of the RGB values of each pixel is used (saturating). Results in high saturation images but can often be overwhelming and difficult to interpret.
 
 The default and intuitive behavior is the use `'max'` blending, but oftentimes minimum blending is desired when combining inverted colormaps.
@@ -91,8 +91,8 @@ c.imshow(mc.merge([cells, nuclei],['I Blue', 'I Forest'], blending='min'))
 ```
 ![minimum blending with inverted colormaps](https://raw.githubusercontent.com/zacswider/README_Images/main/inverted_blending.png)
 
-#### How can I control display brightness?
-If desired, pre-determined saturation limits can be passed to `apply_color_map` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling). The default behavior is to calculate use the 1.1th percentile value as the dark point and the 99.9th percentile as the bright point.
+#### Control display brightness
+If desired, pre-determined saturation limits can be passed to `apply_color_map` or `merge` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling"). The default behavior is to calculate use the 1.1th percentile value as the dark point and the 99.9th percentile as the bright point.
 
 ```python
 from skimage import data
@@ -129,7 +129,7 @@ c.imshow(
     ),
 )
 ```
-![adjust the brightness with explicit of percentile based approaches](https://raw.githubusercontent.com/zacswider/README_Images/main/brightness_adjust.png)
+![adjust the brightness with explicit or percentile based approaches](https://raw.githubusercontent.com/zacswider/README_Images/main/brightness_adjust.png)
 
 
 NOTE: if you are already working with appropriately scaled u8 images, you will see ~10X performance improvements (relative to the mergechannels and matplotlib naive default implementations) by passing `saturation_limits=(0, 255)` as this significantly reduces the amount of arithmetic done per pixel.
@@ -151,7 +151,7 @@ plt.imshow(merged[24]); plt.show()
 
 
 ### colorize a single image
-The primary entrypoint to applying a colormap to a single image is with `apply_color_map`. this function takes an array, a colormap, and an optional percentiles argument. The arrays is expected to be either u8 or u16 and 2 or 3D.
+The primary entrypoint to applying a colormap to a single image is with `apply_color_map`. this function takes an array, a colormap, and an optional percentiles argument. The array is expected to be either u8 or u16 and 2 or 3D.
 
 ```python
 from skimage import data
@@ -218,6 +218,101 @@ print(cmap_array.shape, cmap_array.dtype)
 ```
 
 
+#### Overlay segmentation masks on top of colorized/merged channels
+Both `apply_color_map` and `merge` support overlaying binary or instance masks on top of the colorized images. The examples below use `apply_color_map` but the arguments are identical for `merge`.
+
+```python
+from skimage import data
+from scipy import ndimage
+from skimage.filters import threshold_otsu
+import matplotlib.pyplot as plt
+
+# get an image and create some masks
+_, nuclei = data.cells3d().max(axis=0)
+thresh = nuclei > threshold_otsu(nuclei)
+thresh = ndimage.binary_fill_holes(thresh)
+max_filter = ndimage.maximum_filter(thresh, size=3, mode='reflect')
+min_filter = ndimage.minimum_filter(thresh, size=3, mode='reflect')
+boundaries = max_filter != min_filter
+
+# overlay the masks with mergechannels
+import mergechannels as mc
+
+fig, (a, b, c) = plt.subplots(1, 3, dpi=300)
+for ax in (a, b, c): ax.axis('off')
+a.imshow(mc.apply_color_map(nuclei, 'betterBlue'))  # no overlay
+b.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[boundaries]))  # add mask overlay
+c.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[boundaries], mask_colors=['#f00']))  # non-default color
+plt.show()
+```
+![Overlay a single mask array with different color settings](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks.png)
+
+
+Multiple masks can be overlaid with different color or alpha-blending values.
+
+```python
+from skimage import (
+    data,
+    measure,
+)
+from scipy import ndimage
+from skimage.filters import threshold_otsu
+import numpy as np
+import matplotlib.pyplot as plt
+
+# get an image and create some masks
+cells, nuclei = data.cells3d().max(axis=0)
+thresh = nuclei > threshold_otsu(nuclei)
+labels = np.asarray(measure.label(ndimage.binary_fill_holes(thresh)))
+bright_nuclei_threshold = threshold_otsu(nuclei[thresh])
+label_vals = [l for l in np.unique(labels) if l!=0]
+
+# categorize two different types of nuclei masks
+def only_keep_these_labels(arr, labels):
+    out = arr.copy()
+    mask = np.isin(out, labels)
+    out[~mask] = 0
+    return out
+
+bright_nuclei_labels = [lv for lv in label_vals if nuclei[labels == lv].mean() > bright_nuclei_threshold ]
+bright_nuclei_masks = only_keep_these_labels(
+    arr=labels,
+    labels=bright_nuclei_labels,
+)
+dim_nuclei_masks = only_keep_these_labels(
+    arr=labels,
+    labels=[lv for lv in label_vals if lv not in bright_nuclei_labels],
+)
+
+# overlay the masks with mergechannels
+import mergechannels as mc
+
+fig, (a, b, c) = plt.subplots(1, 3, dpi=300)
+for ax in (a, b, c):
+    ax.axis('off')
+
+a.imshow(bright_nuclei_masks, cmap=mc.get_mpl_cmap('glasbey'))
+b.imshow(dim_nuclei_masks, cmap=mc.get_mpl_cmap('glasbey'))
+c.imshow(
+    mc.apply_color_map(
+        arr=nuclei,
+        color='Grays',
+        masks=[bright_nuclei_masks, dim_nuclei_masks],
+        mask_colors=['betterOrange', 'betterBlue'],
+        mask_alphas=[0.2, 0.2],
+    )
+)  # add mask overlay
+plt.show()
+```
+![Overlay multiple mask arrays with different colors](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks_different_color.png)
+
+
+Mask color specifications accept:
+- Colormap names (see an exhaustive list at the bottom of README or print mergechannels.COLORMAPS)
+- Hex strings (e.g., `'#FF0000'`)
+- RGB tuples or sequences (e.g., `(255, 0, 0)` or `[255, 0, 0]`)
+
+
 ## Dependencies
 Mergechannels only depends on numpy, a matrix of compatible versions is shown below. Mergechannels can also interop with matplotlib and cmap (see the `Usage` sections below), but these dependencies are optional for core functionality.
 
@@ -247,16 +342,15 @@ import mergechannels as mc
 
 ## Performance
 
-Benchmarks show that with appropriately scalled images, (i.e., if pre-determined saturation limits are passed to `mc.merge` or `mc.apply_color_map`) mergechannel is either on par or significantly faster than the underlying numpy operations used by Matplotlib. Note: you can run the benchmarks on your own machine by creating a virtual environment with the dev dependencies `uv sync --dev && source .venv/bin/activate` and running the benchmark code `py.test --benchmark-only`
+Benchmarks show that with appropriately scaled images, (i.e., if pre-determined saturation limits are passed to `mc.merge` or `mc.apply_color_map`) mergechannel is either on par or significantly faster than the underlying numpy operations used by Matplotlib. Note: you can run the benchmarks on your own machine by creating a virtual environment with the dev dependencies `uv sync --dev && source .venv/bin/activate` and running the benchmark code `py.test --benchmark-only`
 
 ## Roadmap
-mergechannels is currently incredibly simple. It can apply one or more colormaps to one or more 2/3D 8/16-bit images and that's it.
 - ~~Add support to u8 and u16 images~~
 - Add support for any numerical dtype
 - ~~Add option to return any colormap as a matplotlib colormap~~
 - ~~Add option to pass external colormaps to mergechannels~~
 - ~~Parallelize colormap application on large images (it is helpful!)~~
-- Add option to overlay binary or instance masks onto colorized images
+- ~~Add option to overlay binary or instance masks onto colorized images~~
 - ~~Add support for free-threaded Python~~
 
 ## Acknowledgements
