@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     )
 
 # Type alias for mask color specification
-MaskColor = Union[COLORMAPS, Tuple[int, int, int], Sequence[int]]
+MaskColor = Union[COLORMAPS, Tuple[int, int, int], Sequence[int], str]
 
 # Default mask color (purple) and alpha
 DEFAULT_MASK_COLOR: Tuple[int, int, int] = (128, 0, 128)
