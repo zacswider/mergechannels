@@ -219,11 +219,11 @@ print(cmap_array.shape, cmap_array.dtype)
 
 
 #### Overlay segmentation masks on top of colorized/merged channels
-Both `apply_color_map` and `merge` support overlaying binary or instance masks on top of the colorized images. The examples below use `apply_color_map` but the arguments are identical for `merge`.
+Both `apply_color_map` and `merge` support overlaying binary or instance masks on top of the colorized images. The examples below use `apply_color_map` but the arguments are identical for `merge`. If the `boundaries_only` argument is set to True, an intermediate boolean array of just the mask boundaries is created and used for the overlay. This array can also be created and returned to Python with `mc.create_mask_boundaries`.
+
 
 ```python
 from skimage import data
-from scipy import ndimage
 from skimage.filters import threshold_otsu
 import matplotlib.pyplot as plt
 
@@ -231,9 +231,6 @@ import matplotlib.pyplot as plt
 _, nuclei = data.cells3d().max(axis=0)
 thresh = nuclei > threshold_otsu(nuclei)
 thresh = ndimage.binary_fill_holes(thresh)
-max_filter = ndimage.maximum_filter(thresh, size=3, mode='reflect')
-min_filter = ndimage.minimum_filter(thresh, size=3, mode='reflect')
-boundaries = max_filter != min_filter
 
 # overlay the masks with mergechannels
 import mergechannels as mc
@@ -241,11 +238,11 @@ import mergechannels as mc
 fig, (a, b, c) = plt.subplots(1, 3, dpi=300)
 for ax in (a, b, c): ax.axis('off')
 a.imshow(mc.apply_color_map(nuclei, 'betterBlue'))  # no overlay
-b.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[boundaries]))  # add mask overlay
-c.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[boundaries], mask_colors=['#f00']))  # non-default color
+b.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[thresh]))  # add mask overlay
+c.imshow(mc.apply_color_map(nuclei, 'betterBlue', masks=[thresh], mask_colors=['#f00'], boundaries_only=True))  # non-default color
 plt.show()
 ```
-![Overlay a single mask array with different color settings](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks.png)
+![Overlay a single mask array with different color settings](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks_internal_boundaries.png)
 
 
 Multiple masks can be overlaid with different color or alpha-blending values.
@@ -296,15 +293,16 @@ b.imshow(dim_nuclei_masks, cmap=mc.get_mpl_cmap('glasbey'))
 c.imshow(
     mc.apply_color_map(
         arr=nuclei,
-        color='Grays',
-        masks=[bright_nuclei_masks, dim_nuclei_masks],
-        mask_colors=['betterOrange', 'betterBlue'],
-        mask_alphas=[0.2, 0.2],
+        color='Grays',  # colormap for the image
+        masks=[bright_nuclei_masks, dim_nuclei_masks],  # overlay each mask array individually
+        mask_colors=['betterOrange', 'betterBlue'],  # the max value of these cmaps are used
+        mask_alphas=[0.8, 0.2],  # show bright nuclei in bold, dim nuclei or faded
+        boundaries_only=[True, False]  # show outlines of bright nuclei, whole-masks for dim nuclei
     )
 )  # add mask overlay
 plt.show()
 ```
-![Overlay multiple mask arrays with different colors](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks_different_color.png)
+![Overlay multiple mask arrays with different settings](https://raw.githubusercontent.com/zacswider/README_Images/main/overlay_masks_different_settings.png)
 
 
 Mask color specifications accept:
