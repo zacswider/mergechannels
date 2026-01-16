@@ -468,7 +468,14 @@ def apply_color_map(
 
 def merge(
     arrs: Sequence[np.ndarray],
-    colors: Sequence[COLORMAPS],
+    colors: Sequence[
+        Union[
+            COLORMAPS,
+            NDArray[Shape['256, 3'], UInt8],
+            MatplotlibColormap,
+            CmapColormap,
+        ]
+    ],
     blending: BLENDING_OPTIONS = 'max',
     percentiles: Sequence[tuple[float, float]] | None = None,
     saturation_limits: Sequence[tuple[float, float]] | None = None,
