@@ -296,7 +296,7 @@ c.imshow(
         color='Grays',  # colormap for the image
         masks=[bright_nuclei_masks, dim_nuclei_masks],  # overlay each mask array individually
         mask_colors=['betterOrange', 'betterBlue'],  # the max value of these cmaps are used
-        mask_alphas=[0.8, 0.2],  # show bright nuclei in bold, dim nuclei or faded
+        mask_alphas=[0.8, 0.2],  # show bright nuclei in bold while dim nuclei are faded
         boundaries_only=[True, False]  # show outlines of bright nuclei, whole-masks for dim nuclei
     )
 )  # add mask overlay
