@@ -612,7 +612,11 @@ def merge(
 
     # Parse mask arguments
     masks_list, colors_list, alphas_list, boundaries_list = _parse_mask_arguments(
-        masks, mask_colors, mask_alphas, boundaries_only, expected_shape=expected_shape
+        masks,
+        mask_colors,
+        mask_alphas,
+        boundaries_only,
+        expected_shape=expected_shape,
     )
 
     # Handle boundaries_only warning for 3D arrays
