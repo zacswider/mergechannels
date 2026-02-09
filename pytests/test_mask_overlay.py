@@ -333,6 +333,132 @@ class TestMaskOverlayNamedColors:
         assert result[0, 1, 2] == blended[2]
 
 
+class TestMaskOverlayU8U16Masks:
+    """Test mask overlay with uint8 and uint16 mask dtypes."""
+
+    def test_u8_mask_overlay_2d(self, arr_u8):
+        """Test uint8 mask overlay on 2D array (non-zero values are active)."""
+        mask = np.array(
+            [
+                [0, 1, 0],
+                [2, 0, 255],
+                [0, 128, 0],
+            ],
+            dtype=np.uint8,
+        )
+
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, PURPLE, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask == 0 should be unchanged
+        assert result[0, 0, 0] == base_color[0]
+        assert result[1, 1, 0] == base_color[0]
+        assert result[2, 0, 0] == base_color[0]
+
+        # Pixels where mask != 0 should be blended
+        assert result[0, 1, 0] == blended[0]  # mask = 1
+        assert result[1, 0, 0] == blended[0]  # mask = 2
+        assert result[1, 2, 0] == blended[0]  # mask = 255
+        assert result[2, 1, 0] == blended[0]  # mask = 128
+
+    def test_u16_mask_overlay_2d(self, arr_u8):
+        """Test uint16 mask overlay on 2D array (non-zero values are active)."""
+        mask = np.array(
+            [
+                [0, 1, 0],
+                [2, 0, 65535],
+                [0, 32768, 0],
+            ],
+            dtype=np.uint16,
+        )
+
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, PURPLE, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_u8,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask == 0 should be unchanged
+        assert result[0, 0, 0] == base_color[0]
+        assert result[1, 1, 0] == base_color[0]
+        assert result[2, 0, 0] == base_color[0]
+
+        # Pixels where mask != 0 should be blended
+        assert result[0, 1, 0] == blended[0]  # mask = 1
+        assert result[1, 0, 0] == blended[0]  # mask = 2
+        assert result[1, 2, 0] == blended[0]  # mask = 65535
+        assert result[2, 1, 0] == blended[0]  # mask = 32768
+
+    def test_u8_mask_overlay_3d(self):
+        """Test uint8 mask overlay on 3D array."""
+        arr_3d = np.full((2, 3, 3), 100, dtype=np.uint8)
+        mask = np.zeros((2, 3, 3), dtype=np.uint8)
+        mask[0, 1, 1] = 1
+        mask[1, 0, 0] = 255
+
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, PURPLE, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_3d,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask == 0 should be unchanged
+        assert result[0, 0, 0, 0] == base_color[0]
+        assert result[1, 1, 1, 0] == base_color[0]
+
+        # Pixels where mask != 0 should be blended
+        assert result[0, 1, 1, 0] == blended[0]  # mask = 1
+        assert result[1, 0, 0, 0] == blended[0]  # mask = 255
+
+    def test_u16_mask_overlay_3d(self):
+        """Test uint16 mask overlay on 3D array."""
+        arr_3d = np.full((2, 3, 3), 100, dtype=np.uint8)
+        mask = np.zeros((2, 3, 3), dtype=np.uint16)
+        mask[0, 1, 1] = 1
+        mask[1, 0, 0] = 65535
+
+        base_color = (100, 100, 100)
+        blended = alpha_blend(base_color, PURPLE, ALPHA)
+
+        result = mc.apply_color_map(
+            arr_3d,
+            'Grays',
+            saturation_limits=(0, 255),
+            masks=[mask],
+            mask_colors=[PURPLE],
+            mask_alphas=[ALPHA],
+        )
+
+        # Pixels where mask == 0 should be unchanged
+        assert result[0, 0, 0, 0] == base_color[0]
+        assert result[1, 1, 1, 0] == base_color[0]
+
+        # Pixels where mask != 0 should be blended
+        assert result[0, 1, 1, 0] == blended[0]  # mask = 1
+        assert result[1, 0, 0, 0] == blended[0]  # mask = 65535
+
+
 class TestMaskOverlayMultipleMasks:
     """Test mask overlay with multiple masks."""
 

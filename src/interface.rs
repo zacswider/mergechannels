@@ -1,7 +1,9 @@
 use crate::cmaps;
 use crate::colorize;
 use crate::errors;
+use crate::process;
 use ndarray::Array2;
+
 use numpy::{
     IntoPyArray, PyArray2, PyArrayDyn, PyReadonlyArray2, PyReadonlyArray3, PyUntypedArray,
     PyUntypedArrayMethods,
@@ -96,20 +98,30 @@ fn build_configs<'a, A>(
         .collect()
 }
 
+/// Enum to track which dtype vector a mask belongs to
+#[derive(Clone, Copy)]
+enum MaskDtype {
+    Bool,
+    I32,
+    U8,
+    U16,
+}
+
 /// Container for extracted 2D mask arrays to manage lifetimes
-/// Contains separate vectors (bool and i32) of read-only references to python memory which must
+/// Contains separate vectors for each dtype of read-only references to python memory which must
 /// live until the end of the function call. The "extracted arrays" are held separately to ensure
 /// that their data remains valid and referenced where needed.
 struct ExtractedMasks2D<'py> {
     bool_masks: Vec<PyReadonlyArray2<'py, bool>>,
     i32_masks: Vec<PyReadonlyArray2<'py, i32>>,
+    u8_masks: Vec<PyReadonlyArray2<'py, u8>>,
+    u16_masks: Vec<PyReadonlyArray2<'py, u16>>,
     /// mask_info tracks metadata about each array
-    /// for (is_bool, idx, color, alpha) in &vec {...}
     mask_info: Vec<(
-        bool,    // whether the array is bool. If not, it must be i32
-        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
-        [u8; 3], // the RGB color to use for the mask
-        f32,     // the alpha blending value
+        MaskDtype, // which dtype vector this mask belongs to
+        usize,     // the index of the array in the appropriate vector
+        [u8; 3],   // the RGB color to use for the mask
+        f32,       // the alpha blending value
     )>,
 }
 
@@ -119,6 +131,8 @@ impl<'py> ExtractedMasks2D<'py> {
         Self {
             bool_masks: Vec::new(),
             i32_masks: Vec::new(),
+            u8_masks: Vec::new(),
+            u16_masks: Vec::new(),
             mask_info: Vec::new(),
         }
     }
@@ -128,19 +142,99 @@ impl<'py> ExtractedMasks2D<'py> {
     fn build_masks<'a>(&'a self) -> Vec<colorize::MaskConfig2D<'a>> {
         self.mask_info
             .iter()
-            .map(|&(is_bool, idx, color, alpha)| {
-                if is_bool {
-                    colorize::MaskConfig2D::Bool(colorize::MaskConfig {
-                        arr: self.bool_masks[idx].as_array(),
+            .map(|&(dtype, idx, color, alpha)| match dtype {
+                MaskDtype::Bool => colorize::MaskConfig2D::Bool(colorize::MaskConfig {
+                    arr: self.bool_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::I32 => colorize::MaskConfig2D::I32(colorize::MaskConfig {
+                    arr: self.i32_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U8 => colorize::MaskConfig2D::U8(colorize::MaskConfig {
+                    arr: self.u8_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U16 => colorize::MaskConfig2D::U16(colorize::MaskConfig {
+                    arr: self.u16_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+            })
+            .collect()
+    }
+
+    /// Compute boundary detection on selected masks and return owned boundary arrays.
+    /// The `boundaries_only` slice indicates which masks should have boundary detection applied.
+    /// Returns a tuple of (boundary_arrays, indices) where indices maps back to which masks
+    /// in mask_info had boundaries computed.
+    fn compute_boundaries(&self, boundaries_only: &[bool]) -> Vec<Array2<bool>> {
+        let mut boundaries = Vec::new();
+
+        for (i, &(dtype, idx, _color, _alpha)) in self.mask_info.iter().enumerate() {
+            if boundaries_only.get(i).copied().unwrap_or(false) {
+                let boundary = match dtype {
+                    MaskDtype::Bool => process::find_boundaries(self.bool_masks[idx].as_array()),
+                    MaskDtype::I32 => process::find_boundaries(self.i32_masks[idx].as_array()),
+                    MaskDtype::U8 => process::find_boundaries(self.u8_masks[idx].as_array()),
+                    MaskDtype::U16 => process::find_boundaries(self.u16_masks[idx].as_array()),
+                };
+                boundaries.push(boundary);
+            }
+        }
+
+        boundaries
+    }
+
+    /// Build MaskConfig2D slice from the extracted arrays, using boundary arrays for masks
+    /// where boundaries_only is true.
+    /// The boundary_arrays must outlive the returned Vec.
+    fn build_masks_with_boundaries<'a>(
+        &'a self,
+        boundaries_only: &[bool],
+        boundary_arrays: &'a [Array2<bool>],
+    ) -> Vec<colorize::MaskConfig2D<'a>> {
+        let mut boundary_idx = 0;
+        self.mask_info
+            .iter()
+            .enumerate()
+            .map(|(i, &(dtype, idx, color, alpha))| {
+                if boundaries_only.get(i).copied().unwrap_or(false) {
+                    // Use the pre-computed boundary array
+                    let mask = colorize::MaskConfig2D::Bool(colorize::MaskConfig {
+                        arr: boundary_arrays[boundary_idx].view(),
                         color,
                         alpha,
-                    })
+                    });
+                    boundary_idx += 1;
+                    mask
                 } else {
-                    colorize::MaskConfig2D::I32(colorize::MaskConfig {
-                        arr: self.i32_masks[idx].as_array(),
-                        color,
-                        alpha,
-                    })
+                    // Use the original mask
+                    match dtype {
+                        MaskDtype::Bool => colorize::MaskConfig2D::Bool(colorize::MaskConfig {
+                            arr: self.bool_masks[idx].as_array(),
+                            color,
+                            alpha,
+                        }),
+                        MaskDtype::I32 => colorize::MaskConfig2D::I32(colorize::MaskConfig {
+                            arr: self.i32_masks[idx].as_array(),
+                            color,
+                            alpha,
+                        }),
+                        MaskDtype::U8 => colorize::MaskConfig2D::U8(colorize::MaskConfig {
+                            arr: self.u8_masks[idx].as_array(),
+                            color,
+                            alpha,
+                        }),
+                        MaskDtype::U16 => colorize::MaskConfig2D::U16(colorize::MaskConfig {
+                            arr: self.u16_masks[idx].as_array(),
+                            color,
+                            alpha,
+                        }),
+                    }
                 }
             })
             .collect()
@@ -148,19 +242,20 @@ impl<'py> ExtractedMasks2D<'py> {
 }
 
 /// Container for extracted 3D mask arrays to manage lifetimes
-/// Contains separate vectors (bool and i32) of read-only references to python memory which must
+/// Contains separate vectors for each dtype of read-only references to python memory which must
 /// live until the end of the function call. The "extracted arrays" are held separately to ensure
 /// that their data remains valid and referenced where needed.
 struct ExtractedMasks3D<'py> {
     bool_masks: Vec<PyReadonlyArray3<'py, bool>>,
     i32_masks: Vec<PyReadonlyArray3<'py, i32>>,
+    u8_masks: Vec<PyReadonlyArray3<'py, u8>>,
+    u16_masks: Vec<PyReadonlyArray3<'py, u16>>,
     /// mask_info tracks metadata about each array
-    /// for (is_bool, idx, color, alpha) in &vec {...}
     mask_info: Vec<(
-        bool,    // whether the array is bool. If not, it must be i32
-        usize,   // the index of the array in the vector containing it (bool_masks or i32_masks)
-        [u8; 3], // the RGB color to use for the mask
-        f32,     // the alpha blending value
+        MaskDtype, // which dtype vector this mask belongs to
+        usize,     // the index of the array in the appropriate vector
+        [u8; 3],   // the RGB color to use for the mask
+        f32,       // the alpha blending value
     )>,
 }
 
@@ -170,35 +265,44 @@ impl<'py> ExtractedMasks3D<'py> {
         Self {
             bool_masks: Vec::new(),
             i32_masks: Vec::new(),
+            u8_masks: Vec::new(),
+            u16_masks: Vec::new(),
             mask_info: Vec::new(),
         }
     }
 
-    /// Build Mask2D vec from the extracted arrays
+    /// Build MaskConfig3D vec from the extracted arrays
     /// The returned Vec borrows from self, so self must outlive the returned masks
     fn build_masks<'a>(&'a self) -> Vec<colorize::MaskConfig3D<'a>> {
         self.mask_info
             .iter()
-            .map(|&(is_bool, idx, color, alpha)| {
-                if is_bool {
-                    colorize::MaskConfig3D::Bool(colorize::MaskConfig {
-                        arr: self.bool_masks[idx].as_array(),
-                        color,
-                        alpha,
-                    })
-                } else {
-                    colorize::MaskConfig3D::I32(colorize::MaskConfig {
-                        arr: self.i32_masks[idx].as_array(),
-                        color,
-                        alpha,
-                    })
-                }
+            .map(|&(dtype, idx, color, alpha)| match dtype {
+                MaskDtype::Bool => colorize::MaskConfig3D::Bool(colorize::MaskConfig {
+                    arr: self.bool_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::I32 => colorize::MaskConfig3D::I32(colorize::MaskConfig {
+                    arr: self.i32_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U8 => colorize::MaskConfig3D::U8(colorize::MaskConfig {
+                    arr: self.u8_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
+                MaskDtype::U16 => colorize::MaskConfig3D::U16(colorize::MaskConfig {
+                    arr: self.u16_masks[idx].as_array(),
+                    color,
+                    alpha,
+                }),
             })
             .collect()
     }
 }
 
-/// Extract 2D mask arrays from Python, handling both bool and i32 dtypes
+/// Extract 2D mask arrays from Python, handling bool, i32, u8, and u16 dtypes
 fn extract_masks_2d<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
@@ -243,7 +347,9 @@ fn extract_masks_2d<'py>(
                 })?;
                 let idx = extracted.bool_masks.len();
                 extracted.bool_masks.push(py_arr);
-                extracted.mask_info.push((true, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::Bool, idx, color, alpha));
             }
             "int32" => {
                 let py_arr = mask_item.extract::<PyReadonlyArray2<i32>>().map_err(|_| {
@@ -253,11 +359,35 @@ fn extract_masks_2d<'py>(
                 })?;
                 let idx = extracted.i32_masks.len();
                 extracted.i32_masks.push(py_arr);
-                extracted.mask_info.push((false, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::I32, idx, color, alpha));
+            }
+            "uint8" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u8>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint8 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u8_masks.len();
+                extracted.u8_masks.push(py_arr);
+                extracted.mask_info.push((MaskDtype::U8, idx, color, alpha));
+            }
+            "uint16" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray2<u16>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint16 mask at index {i} as 2D array"
+                    ))
+                })?;
+                let idx = extracted.u16_masks.len();
+                extracted.u16_masks.push(py_arr);
+                extracted
+                    .mask_info
+                    .push((MaskDtype::U16, idx, color, alpha));
             }
             _ => {
                 return Err(PyValueError::new_err(format!(
-                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool, int32, uint8, or uint16"
                 )));
             }
         }
@@ -270,7 +400,7 @@ fn extract_masks_2d<'py>(
     }
 }
 
-/// Extract 3D mask arrays from Python, handling both bool and i32 dtypes
+/// Extract 3D mask arrays from Python, handling bool, i32, u8, and u16 dtypes
 fn extract_masks_3d<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
@@ -315,7 +445,9 @@ fn extract_masks_3d<'py>(
                 })?;
                 let idx = extracted.bool_masks.len();
                 extracted.bool_masks.push(py_arr);
-                extracted.mask_info.push((true, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::Bool, idx, color, alpha));
             }
             "int32" => {
                 let py_arr = mask_item.extract::<PyReadonlyArray3<i32>>().map_err(|_| {
@@ -325,11 +457,35 @@ fn extract_masks_3d<'py>(
                 })?;
                 let idx = extracted.i32_masks.len();
                 extracted.i32_masks.push(py_arr);
-                extracted.mask_info.push((false, idx, color, alpha));
+                extracted
+                    .mask_info
+                    .push((MaskDtype::I32, idx, color, alpha));
+            }
+            "uint8" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray3<u8>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint8 mask at index {i} as 3D array"
+                    ))
+                })?;
+                let idx = extracted.u8_masks.len();
+                extracted.u8_masks.push(py_arr);
+                extracted.mask_info.push((MaskDtype::U8, idx, color, alpha));
+            }
+            "uint16" => {
+                let py_arr = mask_item.extract::<PyReadonlyArray3<u16>>().map_err(|_| {
+                    PyValueError::new_err(format!(
+                        "Failed to extract uint16 mask at index {i} as 3D array"
+                    ))
+                })?;
+                let idx = extracted.u16_masks.len();
+                extracted.u16_masks.push(py_arr);
+                extracted
+                    .mask_info
+                    .push((MaskDtype::U16, idx, color, alpha));
             }
             _ => {
                 return Err(PyValueError::new_err(format!(
-                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool or int32"
+                    "Mask at index {i} has unsupported dtype '{dtype}': expected bool, int32, uint8, or uint16"
                 )));
             }
         }
@@ -370,10 +526,12 @@ pub fn get_cmap_array_py<'py>(
 /// Applies a colormap to a single-channel 2D or 3D array and returns an RGB image.
 /// Supports uint8 and uint16 data types with optional parallel processing.
 /// Optional masks can overlay colored regions with alpha blending.
+/// When boundaries_only contains true values (only for 2D), mask boundaries are detected
+/// for those masks and only boundary pixels are overlaid.
 /// Raises ValueError if the colormap name is invalid or array type is unsupported.
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
-#[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None))]
+#[pyo3(name = "dispatch_single_channel", signature = (array_reference, cmap_name, cmap_values, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None, boundaries_only=None))]
 pub fn dispatch_single_channel_py<'py>(
     py: Python<'py>,
     array_reference: &Bound<'py, PyAny>,
@@ -384,6 +542,7 @@ pub fn dispatch_single_channel_py<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
     mask_alphas: Option<Vec<f32>>,
+    boundaries_only: Option<Vec<bool>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let untyped_array = array_reference.cast::<PyUntypedArray>()?;
     let dtype = untyped_array.dtype().to_string();
@@ -399,9 +558,23 @@ pub fn dispatch_single_channel_py<'py>(
 
                 // read-only views into python memory - these must live until the function returns
                 let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
-                // owned vec of ArrayView2 into numpy array
-                let masks = extracted.as_ref().map(|e| e.build_masks());
-                // just pass a reference to the vec to the colorize function
+
+                // Get boundaries_only flags, defaulting to empty if None
+                let boundaries_flags = boundaries_only.as_deref().unwrap_or(&[]);
+
+                // Compute boundaries for masks where boundaries_only is true
+                let boundary_arrays = extracted
+                    .as_ref()
+                    .map(|ext| ext.compute_boundaries(boundaries_flags));
+
+                // Build masks, using boundary arrays where applicable
+                let masks = match (&extracted, &boundary_arrays) {
+                    (Some(ext), Some(bounds)) => {
+                        Some(ext.build_masks_with_boundaries(boundaries_flags, bounds))
+                    }
+                    (Some(ext), None) => Some(ext.build_masks()),
+                    (None, _) => None,
+                };
                 let masks_slice = masks.as_deref();
 
                 let rgb = colorize::colorize_single_channel_8bit(config, masks_slice, parallel);
@@ -412,6 +585,7 @@ pub fn dispatch_single_channel_py<'py>(
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU83D { arr, cmap, limits };
 
+                // For 3D, boundaries_only is ignored (Python emits warning)
                 let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
                 let masks = extracted.as_ref().map(|e| e.build_masks());
                 let masks_slice = masks.as_deref();
@@ -428,7 +602,23 @@ pub fn dispatch_single_channel_py<'py>(
                 let config = colorize::ChannelConfigU162D { arr, cmap, limits };
 
                 let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
-                let masks = extracted.as_ref().map(|e| e.build_masks());
+
+                // Get boundaries_only flags, defaulting to empty if None
+                let boundaries_flags = boundaries_only.as_deref().unwrap_or(&[]);
+
+                // Compute boundaries for masks where boundaries_only is true
+                let boundary_arrays = extracted
+                    .as_ref()
+                    .map(|ext| ext.compute_boundaries(boundaries_flags));
+
+                // Build masks, using boundary arrays where applicable
+                let masks = match (&extracted, &boundary_arrays) {
+                    (Some(ext), Some(bounds)) => {
+                        Some(ext.build_masks_with_boundaries(boundaries_flags, bounds))
+                    }
+                    (Some(ext), None) => Some(ext.build_masks()),
+                    (None, _) => None,
+                };
                 let masks_slice = masks.as_deref();
 
                 let rgb = colorize::colorize_single_channel_16bit(config, masks_slice, parallel);
@@ -439,6 +629,7 @@ pub fn dispatch_single_channel_py<'py>(
                 let arr = py_arr.as_array();
                 let config = colorize::ChannelConfigU163D { arr, cmap, limits };
 
+                // For 3D, boundaries_only is ignored (Python emits warning)
                 let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
                 let masks = extracted.as_ref().map(|e| e.build_masks());
                 let masks_slice = masks.as_deref();
@@ -457,11 +648,13 @@ pub fn dispatch_single_channel_py<'py>(
 /// Colorizes multiple channels using specified colormaps and blends them together.
 /// Supports uint8 and uint16 data types with various blending modes.
 /// Optional masks can overlay colored regions with alpha blending on the final result.
+/// When boundaries_only contains true values (only for 2D), mask boundaries are detected
+/// for those masks and only boundary pixels are overlaid.
 /// All arrays must have the same dimensionality (2D or 3D) and data type.
 /// Raises ValueError if colormaps are invalid or array properties are inconsistent.
 #[allow(clippy::too_many_arguments)]
 #[pyfunction]
-#[pyo3(name = "dispatch_multi_channel", signature = (array_references, cmap_names, cmap_values, blending, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None))]
+#[pyo3(name = "dispatch_multi_channel", signature = (array_references, cmap_names, cmap_values, blending, limits, parallel=false, mask_arrays=None, mask_colors=None, mask_alphas=None, boundaries_only=None))]
 pub fn dispatch_multi_channel_py<'py>(
     py: Python<'py>,
     array_references: &Bound<'py, PyAny>,
@@ -473,6 +666,7 @@ pub fn dispatch_multi_channel_py<'py>(
     mask_arrays: Option<&Bound<'py, PyAny>>,
     mask_colors: Option<Vec<[u8; 3]>>,
     mask_alphas: Option<Vec<f32>>,
+    boundaries_only: Option<Vec<bool>>,
 ) -> PyResult<Bound<'py, PyArrayDyn<u8>>> {
     let mut cmaps: Vec<&[[u8; 3]; 256]> =
         Vec::with_capacity(std::cmp::min(cmap_names.len(), cmap_values.len()));
@@ -510,7 +704,23 @@ pub fn dispatch_multi_channel_py<'py>(
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
 
                 let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
-                let masks = extracted.as_ref().map(|e| e.build_masks());
+
+                // Get boundaries_only flags, defaulting to empty if None
+                let boundaries_flags = boundaries_only.as_deref().unwrap_or(&[]);
+
+                // Compute boundaries for masks where boundaries_only is true
+                let boundary_arrays = extracted
+                    .as_ref()
+                    .map(|ext| ext.compute_boundaries(boundaries_flags));
+
+                // Build masks, using boundary arrays where applicable
+                let masks = match (&extracted, &boundary_arrays) {
+                    (Some(ext), Some(bounds)) => {
+                        Some(ext.build_masks_with_boundaries(boundaries_flags, bounds))
+                    }
+                    (Some(ext), None) => Some(ext.build_masks()),
+                    (None, _) => None,
+                };
                 let masks_slice = masks.as_deref();
 
                 let rgb = colorize::merge_2d_u8(configs, blending, masks_slice, parallel).unwrap();
@@ -520,6 +730,7 @@ pub fn dispatch_multi_channel_py<'py>(
                 let py_arrs: Vec<PyReadonlyArray3<u8>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
 
+                // For 3D, boundaries_only is ignored (Python emits warning)
                 let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
                 let masks = extracted.as_ref().map(|e| e.build_masks());
                 let masks_slice = masks.as_deref();
@@ -535,7 +746,23 @@ pub fn dispatch_multi_channel_py<'py>(
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
 
                 let extracted = extract_masks_2d(mask_arrays, mask_colors, mask_alphas)?;
-                let masks = extracted.as_ref().map(|e| e.build_masks());
+
+                // Get boundaries_only flags, defaulting to empty if None
+                let boundaries_flags = boundaries_only.as_deref().unwrap_or(&[]);
+
+                // Compute boundaries for masks where boundaries_only is true
+                let boundary_arrays = extracted
+                    .as_ref()
+                    .map(|ext| ext.compute_boundaries(boundaries_flags));
+
+                // Build masks, using boundary arrays where applicable
+                let masks = match (&extracted, &boundary_arrays) {
+                    (Some(ext), Some(bounds)) => {
+                        Some(ext.build_masks_with_boundaries(boundaries_flags, bounds))
+                    }
+                    (Some(ext), None) => Some(ext.build_masks()),
+                    (None, _) => None,
+                };
                 let masks_slice = masks.as_deref();
 
                 let rgb = colorize::merge_2d_u16(configs, blending, masks_slice, parallel).unwrap();
@@ -545,6 +772,7 @@ pub fn dispatch_multi_channel_py<'py>(
                 let py_arrs: Vec<PyReadonlyArray3<u16>> = extract_arrays(array_references)?;
                 let configs = build_configs(py_arrs.iter().map(|p| p.as_array()), &cmaps, &limits);
 
+                // For 3D, boundaries_only is ignored (Python emits warning)
                 let extracted = extract_masks_3d(mask_arrays, mask_colors, mask_alphas)?;
                 let masks = extracted.as_ref().map(|e| e.build_masks());
                 let masks_slice = masks.as_deref();
@@ -555,5 +783,51 @@ pub fn dispatch_multi_channel_py<'py>(
             _ => Err(errors::DispatchError::UnsupportedNumberOfDimensions(*ndim).into()),
         },
         _ => Err(errors::DispatchError::UnsupportedDataType(dtype.clone()).into()),
+    }
+}
+
+/// Create a boundary mask from a 2D array.
+///
+/// Detects boundary pixels where not all neighbors in a 3x3 window have the same value.
+/// This is equivalent to: max_filter(arr, 3, 'reflect') != min_filter(arr, 3, 'reflect')
+/// but computed in a single pass without intermediate arrays.
+///
+/// Supports bool, uint8, int32, and uint16 input arrays.
+/// Returns a boolean array where True indicates a boundary pixel.
+#[pyfunction]
+#[pyo3(name = "create_mask_boundaries")]
+pub fn create_mask_boundaries_py<'py>(
+    py: Python<'py>,
+    array_reference: &Bound<'py, PyAny>,
+) -> PyResult<Bound<'py, PyArray2<bool>>> {
+    let untyped_array = array_reference.cast::<PyUntypedArray>()?;
+    let dtype = untyped_array.dtype().to_string();
+    let ndim = untyped_array.ndim();
+
+    if ndim != 2 {
+        return Err(errors::DispatchError::UnsupportedNumberOfDimensions(ndim).into());
+    }
+
+    match dtype.as_str() {
+        "bool" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<bool>>()?;
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
+        }
+        "uint8" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<u8>>()?;
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
+        }
+        "int32" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<i32>>()?;
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
+        }
+        "uint16" => {
+            let py_arr = array_reference.extract::<PyReadonlyArray2<u16>>()?;
+            Ok(process::find_boundaries(py_arr.as_array()).into_pyarray(py))
+        }
+        _ => Err(PyValueError::new_err(format!(
+            "create_mask_boundaries only supports bool, uint8, int32, and uint16 arrays, got dtype '{}'",
+            dtype
+        ))),
     }
 }

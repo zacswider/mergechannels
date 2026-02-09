@@ -3,8 +3,12 @@ mod cmaps;
 mod colorize;
 mod errors;
 mod interface;
+mod process;
 
-use interface::{dispatch_multi_channel_py, dispatch_single_channel_py, get_cmap_array_py};
+use interface::{
+    create_mask_boundaries_py, dispatch_multi_channel_py, dispatch_single_channel_py,
+    get_cmap_array_py,
+};
 use pyo3::prelude::*;
 
 /// This module is thread-safe and supports free-threaded Python (Python 3.13+ without GIL).
@@ -18,5 +22,6 @@ fn mergechannels(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(dispatch_single_channel_py, m)?)?;
     m.add_function(wrap_pyfunction!(dispatch_multi_channel_py, m)?)?;
     m.add_function(wrap_pyfunction!(get_cmap_array_py, m)?)?;
+    m.add_function(wrap_pyfunction!(create_mask_boundaries_py, m)?)?;
     Ok(())
 }
