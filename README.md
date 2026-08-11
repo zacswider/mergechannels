@@ -1,3 +1,5 @@
+
+
 [![CI](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml/badge.svg)](https://github.com/zacswider/mergechannels/actions/workflows/CI.yml)
 ![PyPI - License](https://img.shields.io/pypi/l/mergechannels)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mergechannels)
@@ -92,7 +94,7 @@ c.imshow(mc.merge([cells, nuclei],['I Blue', 'I Forest'], blending='min'))
 ![minimum blending with inverted colormaps](https://raw.githubusercontent.com/zacswider/README_Images/main/inverted_blending.png)
 
 #### Control display brightness
-If desired, pre-determined saturation limits can be passed to `apply_color_map` or `merge` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling"). The default behavior is to calculate use the 1.1th percentile value as the dark point and the 99.9th percentile as the bright point.
+If desired, pre-determined saturation limits can be passed to `apply_color_map` or `merge` to clip the images values to a range that best represents the contents of the image. These can be explicit pixel values passed with the `saturation_limits` argument, or as percentile values passed with the `percentiles` argument. If the latter, the percentile values will be used to calculate the saturation limits based on the distribution of pixel values in the images (this is sometimes referred to as "autoscaling"). The default behavior is to calculate using the 1st percentile value as the dark point and the 99.9th percentile as the bright point.
 
 ```python
 from skimage import data
